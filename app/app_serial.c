@@ -5,6 +5,9 @@ FDCAN_RxHeaderTypeDef CANRxHeader;
 FDCAN_FilterTypeDef CANFilter;
 uint8_t datar[8]; 
 uint8_t sizer;
+uint8_t cases;
+uint8_t flag; 
+APP_MsgTypeDef mtm;
 
 void Serial_Init( void )
 {
@@ -23,8 +26,8 @@ void Serial_Init( void )
     CANHandler.Init.NominalTimeSeg1     = 11;
     CANHandler.Init.NominalTimeSeg2     = 4;
     /*setear configuracion del modulo CAN*/
-    Status = HAL_FDCAN_Init( &CANHandler );
-    assert_error( Status == HAL_OK, FDCAN_Init_ERROR );
+    HAL_FDCAN_Init( &CANHandler );
+    
 
     /* Configure reception filter to Rx FIFO 0, este filtro solo aceptara mensajes con el ID 0x111 */
     CANFilter.IdType = FDCAN_STANDARD_ID;
@@ -33,14 +36,14 @@ void Serial_Init( void )
     CANFilter.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
     CANFilter.FilterID1 = 0x111;
     
-    Status = HAL_FDCAN_ConfigFilter( &CANHandler, &CANFilter );
-    assert_error( Status == HAL_OK, FDCAN_Config_ERROR );
+    HAL_FDCAN_ConfigFilter( &CANHandler, &CANFilter );
+    
     /*indicamos que los mensajes que no vengan con el filtro indicado sean rechazados*/
-    Status = HAL_FDCAN_ConfigGlobalFilter(&CANHandler, FDCAN_REJECT, FDCAN_REJECT, FDCAN_FILTER_REMOTE, FDCAN_FILTER_REMOTE);
-    assert_error( Status == HAL_OK, FDCAN_Config_Global_ERROR );
+    HAL_FDCAN_ConfigGlobalFilter(&CANHandler, FDCAN_REJECT, FDCAN_REJECT, FDCAN_FILTER_REMOTE, FDCAN_FILTER_REMOTE);
+    
     /* Change FDCAN instance from initialization mode to normal mode */
-    Status = HAL_FDCAN_Start( &CANHandler);
-    assert_error( Status == HAL_OK, FDCAN_Start_ERROR );
+    HAL_FDCAN_Start( &CANHandler);
+    
     /*activamos la interrupcion por recepcion en el fifo0 cuando llega algun mensaje*/
     HAL_FDCAN_ActivateNotification( &CANHandler, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0 );
 
@@ -59,8 +62,8 @@ static void CanTp_SingleFrameTx( uint8_t *data, uint8_t *size )
 {
 
     *data=*size;
-    Status = HAL_FDCAN_AddMessageToTxFifoQ( &CANHandler, &CANTxHeader, data );
-    assert_error( Status == HAL_OK, FDCAN_Add_Message_ERROR );
+    HAL_FDCAN_AddMessageToTxFifoQ( &CANHandler, &CANTxHeader, data );
+    
 
 }
 
@@ -183,25 +186,25 @@ uint8_t dayofweek(int yearM, int yearL, int month, int day){
    
     switch (day_of_week) {
         case 0:
-            x = RTC_WEEKDAY_SUNDAY;
+            x = 7;
             break;
         case 1:
-            x = RTC_WEEKDAY_MONDAY;
+            x = 1;
             break;
         case 2:
-            x = RTC_WEEKDAY_TUESDAY;
+            x = 2;
             break;
         case 3:
-            x = RTC_WEEKDAY_WEDNESDAY;
+            x = 3;
             break;
         case 4:
-            x = RTC_WEEKDAY_THURSDAY;
+            x = 4;
             break;
         case 5:
-            x = RTC_WEEKDAY_FRIDAY;;
+            x = 5;;
             break;
         case 6:
-            x = RTC_WEEKDAY_SATURDAY;
+            x = 6;
             break;
         default:
             x = 0;
@@ -252,7 +255,7 @@ void Serial_Task( void )
                 mtm.tm.tm_hour=datar[2];
                 mtm.tm.tm_min=datar[3];
                 mtm.tm.tm_sec=datar[4];
-                mtm.msg=CHANGE_TIME;
+                mtm.msg=SERIAL_MSG_TIME;
 
                 cases=OK;
 
@@ -272,7 +275,7 @@ void Serial_Task( void )
                 mtm.tm.tm_year_msb = datar[4];
                 mtm.tm.tm_year_lsb = datar[5];
                 mtm.tm.tm_wday = dayofweek(mtm.tm.tm_year_msb,mtm.tm.tm_year_lsb, mtm.tm.tm_mon, mtm.tm.tm_mday);
-                mtm.msg = CHANGE_DATE;
+                mtm.msg = SERIAL_MSG_DATE;
                 cases = OK;
                 }
             else{
@@ -285,7 +288,7 @@ void Serial_Task( void )
             if((datar[2] < 24u) && (datar[3] < 60u)){
                 mtm.tm.tm_hour=datar[2];
                 mtm.tm.tm_min=datar[3];
-                mtm.msg == CHANGE_ALARM;
+                mtm.msg == SERIAL_MSG_ALARM;
                 cases = OK;
                 
                 }

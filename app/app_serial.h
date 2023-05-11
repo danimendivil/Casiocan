@@ -1,10 +1,12 @@
 #ifndef APP_SERIAL_H__
 #define APP_SERIAL_H__
 
+#include "app_bsp.h"
+
 void Serial_Init( void );
 void Serial_Task( void );
 int valid_date(int day, int month, int yearM, int yearL);
-uint8_t dayofweek(int year, int month, int day);
+uint8_t dayofweek(int yearM, int yearL, int month, int day);
 
 #define    SERIAL_MSG_TIME     1u
 #define    SERIAL_MSG_DATE     2u
@@ -42,6 +44,7 @@ extern uint8_t flag;
 extern uint8_t sizer;
 extern uint8_t datar[8];  
 extern uint8_t cases;
+extern APP_MsgTypeDef mtm;
 
 
 
