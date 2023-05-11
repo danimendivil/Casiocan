@@ -97,8 +97,8 @@ static uint8_t CanTp_SingleFrameRx( uint8_t *data, uint8_t *size )
     return x;
 
 }
-
-void HAL_FDCAN_RxFifo0Callback( FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs ) 
+/* cppcheck-suppress misra-c2012-2.7 ; this is a library function */
+void HAL_FDCAN_RxFifo0Callback( FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs ) /* cppcheck-suppress misra-c2012-8.4 ; this is a library function */
 {
     /*A llegado un mensaje via CAN, interrogamos si fue un solo mensaje*/
     if( ( RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE ) != 0 )
@@ -243,6 +243,9 @@ void Serial_Task( void )
                     
                 }
 
+                }
+                else{
+                    
                 }
             
             break;

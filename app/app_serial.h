@@ -5,8 +5,7 @@
 
 void Serial_Init( void );
 void Serial_Task( void );
-int valid_date(int day, int month, int yearM, int yearL);
-uint8_t dayofweek(int yearM, int yearL, int month, int day);
+
 
 #define    SERIAL_MSG_TIME     1u
 #define    SERIAL_MSG_DATE     2u
