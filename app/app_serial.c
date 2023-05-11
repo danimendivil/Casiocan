@@ -102,3 +102,109 @@ void HAL_FDCAN_RxFifo0Callback( FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs
         flag = 1;  
     }
 }
+
+int valid_date(int day, int month, int yearM, int yearL)
+{
+
+    int year=(yearM * 100) + yearL;
+    int flagd;
+
+    if( (day > 0 ) && ( day <= 31 ) && ( month <= 12 ) && (month > 0) && (year >= 1900) && (year <= 2100)){
+
+
+        flag = 1;
+
+            if( (month == 1) || (month == 3) || (month == 5) || (month == 7) || (month == 8) || (month == 10) || (month == 12)){
+
+                if( day > 31){
+                    flagd=0;
+                }
+                else{}
+                }
+
+            else if( (month == 4) || (month == 6) || (month == 9) || (month == 11) ){
+
+                if( day > 30){
+                    flagd = 0;
+                }
+                else{}
+                }
+
+            else if(month == 2) {
+
+                if( ( ( (year % 4) == 0) && ( (year % 100) != 0) ) || ( (year % 400) == 0 ) ){
+
+                    if(day > 29){
+
+                        flagd = 0;
+                        }
+                        else{}
+                    }
+                else{
+
+                    if(day > 28){
+
+                        flagd = 0;
+                        }
+                        else{}
+
+                    }
+                }
+                else{}
+
+          
+   }
+
+    else{
+        flagd = 0;
+    }
+
+   return flagd;
+    
+
+}
+
+uint8_t dayofweek(int year, int month, int day){
+
+    if (month < 3) {
+        month += 12; /* cppcheck-suppress misra-c2012-17.8 ; Use of function parameter leads to better code */
+        year--;      /* cppcheck-suppress misra-c2012-17.8 ; Use of function parameter leads to better code */
+    } 
+    int q = day;
+    int m = month;
+    int k = year % 100;
+    int j = year / 100;
+    int h = q + ( (13 * (m + 1) ) / 5 ) + k + (k / 4) + (j / 4) + (5 * j);
+    int day_of_week = h % 7;
+    int x;
+   
+    switch (day_of_week) {
+        case 0:
+            x = RTC_WEEKDAY_SUNDAY;
+            break;
+        case 1:
+            x = RTC_WEEKDAY_MONDAY;
+            break;
+        case 2:
+            x = RTC_WEEKDAY_TUESDAY;
+            break;
+        case 3:
+            x = RTC_WEEKDAY_WEDNESDAY;
+            break;
+        case 4:
+            x = RTC_WEEKDAY_THURSDAY;
+            break;
+        case 5:
+            x = RTC_WEEKDAY_FRIDAY;;
+            break;
+        case 6:
+            x = RTC_WEEKDAY_SATURDAY;
+            break;
+        default:
+            x = 0;
+            break;
+        }
+
+        return x;
+
+}
