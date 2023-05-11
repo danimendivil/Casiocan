@@ -4,6 +4,7 @@ FDCAN_TxHeaderTypeDef CANTxHeader;
 FDCAN_RxHeaderTypeDef CANRxHeader;
 FDCAN_FilterTypeDef CANFilter;
 uint8_t datar[8]; 
+
 void Serial_Init( void )
 {
     CANHandler.Instance                 = FDCAN1;
@@ -50,4 +51,54 @@ void Serial_Init( void )
     CANTxHeader.DataLength  = FDCAN_DLC_BYTES_8;
 
 
+}
+
+
+static void CanTp_SingleFrameTx( uint8_t *data, uint8_t *size ) 
+{
+
+    *data=*size;
+    Status = HAL_FDCAN_AddMessageToTxFifoQ( &CANHandler, &CANTxHeader, data );
+    assert_error( Status == HAL_OK, FDCAN_Add_Message_ERROR );
+
+}
+
+static uint8_t CanTp_SingleFrameRx( uint8_t *data, uint8_t *size )
+{
+    uint8_t x;
+    
+    if(flag == 1u){
+        flag = 0u;
+       
+        
+        HAL_FDCAN_GetRxMessage( &CANHandler, FDCAN_RX_FIFO0, &CANRxHeader, datar );
+
+        *size=*data;
+
+        if(*size > 0u){
+
+            x = 1;
+
+        }
+        else{
+
+            x = 0;
+
+        }
+    }
+    else{
+        x = 0;
+    }
+
+    return x;
+
+}
+
+void HAL_FDCAN_RxFifo0Callback( FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs ) 
+{
+    /*A llegado un mensaje via CAN, interrogamos si fue un solo mensaje*/
+    if( ( RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE ) != 0 )
+    {
+        flag = 1;  
+    }
 }
