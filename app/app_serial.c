@@ -4,6 +4,7 @@ FDCAN_TxHeaderTypeDef CANTxHeader;
 FDCAN_RxHeaderTypeDef CANRxHeader;
 FDCAN_FilterTypeDef CANFilter;
 uint8_t datar[8]; 
+uint8_t sizer;
 
 void Serial_Init( void )
 {
@@ -164,7 +165,9 @@ int valid_date(int day, int month, int yearM, int yearL)
 
 }
 
-uint8_t dayofweek(int year, int month, int day){
+uint8_t dayofweek(int yearM, int yearL, int month, int day){
+
+    int year=(yearM * 100) + yearL;
 
     if (month < 3) {
         month += 12; /* cppcheck-suppress misra-c2012-17.8 ; Use of function parameter leads to better code */
@@ -207,4 +210,110 @@ uint8_t dayofweek(int year, int month, int day){
 
         return x;
 
+}
+
+void Serial_Task( void )
+{
+
+    switch(cases){
+
+        case GETMSG:
+
+            if (CanTp_SingleFrameRx(  &datar[0], &sizer ) == 1u){
+
+
+                if(datar[1]==SERIAL_MSG_TIME){
+
+                    cases=SERIAL_MSG_TIME;
+
+                }
+
+                else if(datar[1]==SERIAL_MSG_DATE){
+
+                    cases=SERIAL_MSG_DATE;
+
+                }
+
+                else if(datar[1]==SERIAL_MSG_ALARM){
+
+                    cases=SERIAL_MSG_ALARM;
+                    
+                }
+
+                }
+            
+            break;
+
+       
+        case SERIAL_MSG_TIME:
+
+            if( (datar[2] < 24u) && (datar[3] < 60u) && (datar[4] <60u)){
+
+                mtm.tm.tm_hour=datar[2];
+                mtm.tm.tm_min=datar[3];
+                mtm.tm.tm_sec=datar[4];
+                mtm.msg=CHANGE_TIME;
+
+                cases=OK;
+
+                }
+            else{
+                cases=FAILED;
+                }
+            
+             break;
+
+        case SERIAL_MSG_DATE:
+
+            if(valid_date(datar[2],datar[3], datar[4],datar[5]) == 1){
+
+                mtm.tm.tm_mday = datar[2];
+                mtm.tm.tm_mon = datar[3];
+                mtm.tm.tm_year_msb = datar[4];
+                mtm.tm.tm_year_lsb = datar[5];
+                mtm.tm.tm_wday = dayofweek(mtm.tm.tm_year_msb,mtm.tm.tm_year_lsb, mtm.tm.tm_mon, mtm.tm.tm_mday);
+                mtm.msg = CHANGE_DATE;
+                cases = OK;
+                }
+            else{
+                    cases=FAILED;
+                }
+            break;
+
+        case SERIAL_MSG_ALARM:
+
+            if((datar[2] < 24u) && (datar[3] < 60u)){
+                mtm.tm.tm_hour=datar[2];
+                mtm.tm.tm_min=datar[3];
+                mtm.msg == CHANGE_ALARM;
+                cases = OK;
+                
+                }
+            else{
+                    cases=FAILED;
+                }
+            break;
+        
+        case FAILED:
+            
+            datar[1]=0xAA;
+            sizer=1;
+            CanTp_SingleFrameTx( &datar[0],&sizer);
+            cases=GETMSG;
+            break;
+
+        case OK:
+            
+            datar[1]=0x55;
+            sizer=1;
+            CanTp_SingleFrameTx( &datar[0],&sizer);
+            cases=GETMSG;
+            break;
+
+        default:
+
+            cases=GETMSG;
+            break;
+
+    }
 }
