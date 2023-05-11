@@ -3,12 +3,38 @@ FDCAN_HandleTypeDef CANHandler;
 FDCAN_TxHeaderTypeDef CANTxHeader;
 FDCAN_RxHeaderTypeDef CANRxHeader;
 FDCAN_FilterTypeDef CANFilter;
+
 uint8_t datar[8]; 
 uint8_t sizer;
 uint8_t cases;
 uint8_t flag; 
 APP_MsgTypeDef mtm;
 
+/**
+ * @brief   **Provide a brief fucntion description (just one line)**
+ *
+ *   This function provides the initialization for the CAN comunication on CAN Clasic,
+ *   no prescaling is applied to the clock,the transmit queue will operate automatically,
+ *   the message will only be transmitted once, there will be no delay between transmissions,
+ *   one filter will be used.
+ *   The time quanta calculation is:
+ *   Ntq = fCAN / CANbaudrate
+ *   Ntq = 1.6Mhz / 100Kbps = 16 .
+ *   The sample point is:
+ *   Sp = ( CANHandler.Init.NominalTimeSeg1 +  1 / Ntq ) * 100
+ *   Sp = ( ( 11 + 1 ) / 16 ) * 100 = 75%
+ *   The filter is configurate so that it only accept messages with ID 0x111
+ *   The transmition is configurate with ID 0x122
+ *
+ * @param   <CANHandler>[in]    Holds parameters configuration for CAN
+ * @param   <CANTxHeader>[in]   Holds parameters configuration for CAN Transmition
+ * @param   <CANRxHeader>[in]   Holds parameters configuration for CAN Reception
+ * @param   <CANFilter>[in]     Holds parameters configuration for the Can Filter
+ * @retval  None 
+ *          
+ *
+ * 
+ */
 void Serial_Init( void )
 {
     CANHandler.Instance                 = FDCAN1;
@@ -57,7 +83,22 @@ void Serial_Init( void )
 
 }
 
-
+/**
+ * @brief   **Transmit a message to the CAN**
+ *
+ * This function Transmit the message pointed by the variable data, beore sending the message
+ * we make the first value of the data pointer equal to the size pointer since this indicates
+ * the size of the message that is going to be transmited. 
+ * 
+ *
+ * @param   <*data>[in] Pointer of the array that is going to be transmited
+ * @param   <*size>[in] Size of the message that is going to be transmited
+ *
+ * @retval  None
+ *          
+ *
+ * 
+ */
 static void CanTp_SingleFrameTx( uint8_t *data, uint8_t *size ) 
 {
 
@@ -67,6 +108,23 @@ static void CanTp_SingleFrameTx( uint8_t *data, uint8_t *size )
 
 }
 
+
+/**
+ * @brief   **Gets a message of the CAN communication**
+ *
+ *  The function first check if a message has arrive with the flag variable that is 1 when there is a message.
+ *  if a message is recived the flag value is cleared.
+ *  then gets the message and stores it in *data then checks if size value is greater than 1 and if a message 
+ *  is valid it returns 1 if it`s not it returns 0
+ * 
+ *
+ * @param   <*data>[in] Pointer of the array where de data is going to be store
+ * @param   <*size>[in] Size of the message that`s been recived
+ *
+ * @retval  Return is 0 if data is unvalid and 1 if it is valid
+ *
+ * 
+ */
 static uint8_t CanTp_SingleFrameRx( uint8_t *data, uint8_t *size )
 {
     uint8_t x;
@@ -97,6 +155,22 @@ static uint8_t CanTp_SingleFrameRx( uint8_t *data, uint8_t *size )
     return x;
 
 }
+
+
+/**
+ * @brief   **This is an interruption function for the CAN  **
+ *
+ * this function is an interruption that is called when a message is recived throught the CAN,
+ * when a message is recived the flag variable is turn to 1.
+ * 
+ *
+ * @param   <*hfdcan>[in] structure of CAN.
+ * @param   <*RxFifo0ITs>[in] .
+ * @param   <flag>[out] flag for new message.
+ * @retval  None
+ *
+ * 
+ */
 /* cppcheck-suppress misra-c2012-2.7 ; this is a library function */
 void HAL_FDCAN_RxFifo0Callback( FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs ) /* cppcheck-suppress misra-c2012-8.4 ; this is a library function */
 {
@@ -107,6 +181,21 @@ void HAL_FDCAN_RxFifo0Callback( FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs
     }
 }
 
+
+/**
+* @brief   **Function that checks if the date is valid**
+*
+* The fucntion checks the parameters so that they are a valid date
+* 
+*
+* @param   <day>[in]       day of the month
+* @param   <month>[in]     month of the year
+* @param   <year>[in]      year of the date
+* @retval  if the day is valid it will return 1 otherwise a 0.
+*          
+*
+* @note This is optional, just in case something very special needs to be take into account
+*/
 int valid_date(int day, int month, int yearM, int yearL)
 {
 
@@ -168,6 +257,22 @@ int valid_date(int day, int month, int yearM, int yearL)
 
 }
 
+
+/**
+* @brief   **Gets the day of the week**
+*
+* this function take the date and uses the zeller's congruence formula to get the day of the week.
+* 
+*
+* @param   <day>[in]       day of the month
+* @param   <month>[in]     month of the year
+* @param   <year>[in]      year of the date
+*
+* @retval  returns a value of the day of the week defines. 
+*          
+*
+* 
+*/
 uint8_t dayofweek(int yearM, int yearL, int month, int day){
 
     int year=(yearM * 100) + yearL;
@@ -215,6 +320,31 @@ uint8_t dayofweek(int yearM, int yearL, int month, int day){
 
 }
 
+
+
+/**
+* @brief   **This function validates and stores messages recived through CAN**
+*
+* The first state of the state machine is the GETMSG were we use the funtion Can_Tp_SingleFrameRx to see 
+* if a message has been recived, if a message has been recived it compares the values to APP_Messages defines
+* to see what is going to be the next state, if the next state is SERIAL_MSG_TIME it validates the values and 
+* if the values are correct they are store on the mtm variable, and the state is change to the OK state where it sends
+* a confirmation message if the values are wrong then the next state is FAILED where it sends an error message and the 
+* state is changed to GETMSG.
+* if the next state is SERIAL_MSG_DATE it validates the values with the valid_date() function and if the date is valid
+* it also calls the dayofweek function to get the day of the week if they are valid then they are store on the mtm variable 
+* an the state will be change to OK otherwise state will be FAILED
+* if the next state is SERIAL_MSG_ALARM it validates the data and if they are correct are store on the mtm variable and 
+* state is changed to ok, otherwise state will be FAILED
+
+* @param   <datar[8]>[in] array were CAN message is stored
+* 
+*
+* @retval  None
+*          
+*
+* 
+*/
 void Serial_Task( void )
 {
 
