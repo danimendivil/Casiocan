@@ -43,8 +43,8 @@ void SysTick_Handler( void )   /* cppcheck-suppress misra-c2012-8.4 ; this funct
 {
     HAL_IncTick( );
 }
-
-extern FDCAN_HandleTypeDef CANHandler;
+/* cppcheck-suppress misra-c2012-8.5 ; this function can`t be modify */
+extern FDCAN_HandleTypeDef CANHandler; /* cppcheck-suppress misra-c2012-8.4 ; this function can`t be modify */
     
 void TIM16_FDCAN_IT0_IRQHandler( void )  /* cppcheck-suppress misra-c2012-8.4 ; this function can`t be modify */
 {

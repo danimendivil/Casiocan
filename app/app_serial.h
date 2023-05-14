@@ -58,7 +58,7 @@ typedef struct _APP_MsgTypeDef
 /**
  * @brief  Variable for CAN configuration
  */
-extern FDCAN_HandleTypeDef CANHandler;
+extern FDCAN_HandleTypeDef CANHandler; /* cppcheck-suppress misra-c2012-8.5 ; other declaration is used on ints */
 /**
  * @brief  Variable for CAN transmition configuration
  */
@@ -66,7 +66,7 @@ extern FDCAN_TxHeaderTypeDef CANTxHeader;
 /**
  * @brief  Variable for CAN reception configuration
  */
-extern FDCAN_RxHeaderTypeDef CANRxHeader;
+extern FDCAN_RxHeaderTypeDef CANRxHeader; //Variable for CAN filter configuration
 /**
  * @brief  Variable for CAN filter configuration
  */
@@ -91,7 +91,6 @@ extern uint8_t cases;
  * @brief  Variable for MSG send by state machine
  */
 extern APP_MsgTypeDef mtm;
-
 
 
 

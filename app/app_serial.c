@@ -1,14 +1,16 @@
 #include "app_serial.h"
-FDCAN_HandleTypeDef CANHandler;
-FDCAN_TxHeaderTypeDef CANTxHeader;
-FDCAN_RxHeaderTypeDef CANRxHeader;
-FDCAN_FilterTypeDef CANFilter;
+ FDCAN_HandleTypeDef CANHandler; /* cppcheck-suppress misra-c2012-8.5 ; other declaration is used on ints */
+ FDCAN_TxHeaderTypeDef CANTxHeader;
+ 
+ FDCAN_FilterTypeDef CANFilter;
 
-uint8_t datar[8]; 
-uint8_t sizer;
-uint8_t cases;
-uint8_t flag; 
-APP_MsgTypeDef mtm;
+ uint8_t datar[8]; 
+ uint8_t sizer;
+ uint8_t cases;
+ uint8_t flag; 
+ APP_MsgTypeDef mtm;
+static uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL);
+static uint8_t dayofweek(uint8_t yearM, uint8_t yearL, uint8_t month, uint8_t day);
 
 /**
  * @brief   **Provide a brief fucntion description (just one line)**
@@ -128,6 +130,7 @@ static void CanTp_SingleFrameTx( uint8_t *data, uint8_t *size )
 static uint8_t CanTp_SingleFrameRx( uint8_t *data, uint8_t *size )
 {
     uint8_t x;
+    FDCAN_RxHeaderTypeDef CANRxHeader; 
     
     if(flag == 1u){
         flag = 0u;
@@ -196,48 +199,48 @@ void HAL_FDCAN_RxFifo0Callback( FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs
 *
 * @note This is optional, just in case something very special needs to be take into account
 */
-int valid_date(int day, int month, int yearM, int yearL)
+uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL)
 {
 
-    int year=(yearM * 100) + yearL;
-    int flagd;
+    uint32_t year = ((uint32_t)(yearM) * 100u) + (uint32_t)yearL;
+    uint32_t flagd = 0u;
 
-    if( (day > 0 ) && ( day <= 31 ) && ( month <= 12 ) && (month > 0) && (year >= 1900) && (year <= 2100)){
+    if( (day > 0u ) && ( day <= 31u ) && ( month <= 12u ) && (month > 0u) && (year >= 1900u) && (year <= 2100u)){
 
 
         flag = 1;
 
-            if( (month == 1) || (month == 3) || (month == 5) || (month == 7) || (month == 8) || (month == 10) || (month == 12)){
+            if( (month == 1u) || (month == 3u) || (month == 5u) || (month == 7u) || (month == 8u) || (month == 10u) || (month == 12u)){
 
-                if( day > 31){
-                    flagd=0;
+                if( day > 31u){
+                    flagd=0u;
                 }
                 else{}
                 }
 
-            else if( (month == 4) || (month == 6) || (month == 9) || (month == 11) ){
+            else if( (month == 4u) || (month == 6u) || (month == 9u) || (month == 11u) ){
 
-                if( day > 30){
-                    flagd = 0;
+                if( day > 30u){
+                    flagd = 0u;
                 }
                 else{}
                 }
 
-            else if(month == 2) {
+            else if(month == 2u) {
 
-                if( ( ( (year % 4) == 0) && ( (year % 100) != 0) ) || ( (year % 400) == 0 ) ){
+                if( ( ( (year % 4u) == 0u) && ( (year % 100u) != 0u) ) || ( (year % 400u) == 0u ) ){
 
-                    if(day > 29){
+                    if(day > 29u){
 
-                        flagd = 0;
+                        flagd = 0u;
                         }
                         else{}
                     }
                 else{
 
-                    if(day > 28){
+                    if(day > 28u){
 
-                        flagd = 0;
+                        flagd = 0u;
                         }
                         else{}
 
@@ -273,46 +276,46 @@ int valid_date(int day, int month, int yearM, int yearL)
 *
 * 
 */
-uint8_t dayofweek(int yearM, int yearL, int month, int day){
+uint8_t dayofweek(uint8_t yearM, uint8_t yearL, uint8_t month, uint8_t day){
 
-    int year=(yearM * 100) + yearL;
+    uint32_t year = ((uint32_t)(yearM) * 100u) + (uint32_t)yearL;
 
-    if (month < 3) {
-        month += 12; /* cppcheck-suppress misra-c2012-17.8 ; Use of function parameter leads to better code */
+    if (month < 3u) {
+        month += 12u; /* cppcheck-suppress misra-c2012-17.8 ; Use of function parameter leads to better code */
         year--;      /* cppcheck-suppress misra-c2012-17.8 ; Use of function parameter leads to better code */
     } 
-    int q = day;
-    int m = month;
-    int k = year % 100;
-    int j = year / 100;
-    int h = q + ( (13 * (m + 1) ) / 5 ) + k + (k / 4) + (j / 4) + (5 * j);
-    int day_of_week = h % 7;
-    int x;
+    uint8_t q = day;
+    uint8_t m = month;
+    uint8_t k = (uint8_t)(year % 100u);
+    uint8_t j = (uint8_t)(year / 100u);
+    uint8_t h = q + ( (13u * (m + 1u) ) / 5u ) + k + (k / 4u) + (j / 4u) + (5u * j);
+    uint8_t day_of_week = h % 7u;
+    uint8_t x;
    
     switch (day_of_week) {
         case 0:
-            x = 7;
+            x = 7u;
             break;
         case 1:
-            x = 1;
+            x = 1u;
             break;
         case 2:
-            x = 2;
+            x = 2u;
             break;
         case 3:
-            x = 3;
+            x = 3u;
             break;
         case 4:
-            x = 4;
+            x = 4u;
             break;
         case 5:
-            x = 5;;
+            x = 5u;
             break;
         case 6:
-            x = 6;
+            x = 6u;
             break;
         default:
-            x = 0;
+            x = 0u;
             break;
         }
 
@@ -372,6 +375,9 @@ void Serial_Task( void )
                     cases=SERIAL_MSG_ALARM;
                     
                 }
+                else{
+
+                }
 
                 }
                 else{
@@ -401,7 +407,7 @@ void Serial_Task( void )
 
         case SERIAL_MSG_DATE:
 
-            if(valid_date(datar[2],datar[3], datar[4],datar[5]) == 1){
+            if(valid_date(datar[2],datar[3], datar[4],datar[5]) == 1u){
 
                 mtm.tm.tm_mday = datar[2];
                 mtm.tm.tm_mon = datar[3];
@@ -421,7 +427,7 @@ void Serial_Task( void )
             if((datar[2] < 24u) && (datar[3] < 60u)){
                 mtm.tm.tm_hour=datar[2];
                 mtm.tm.tm_min=datar[3];
-                mtm.msg == SERIAL_MSG_ALARM;
+                mtm.msg = SERIAL_MSG_ALARM;
                 cases = OK;
                 
                 }
