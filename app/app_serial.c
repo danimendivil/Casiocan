@@ -6,6 +6,7 @@
 
  uint8_t datar[8]; 
  uint8_t sizer;
+ 
  uint8_t cases;
  uint8_t flag; 
  APP_MsgTypeDef mtm;
