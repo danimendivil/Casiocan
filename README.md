@@ -1,33 +1,73 @@
-This is the title {#mainpage}
+Casio Can project {#mainpage}
 ============
 
-This a subtitle
+Documentation for casio-can.
 -------------
 
-Description with **bold text** and *cursive*
+The casio-can is a clock that works with CAN communication, to configurate the clock you have to send
+a message through CAN with the following structure:
 
-- bullets
-- bullets
+CAN-ID Message id
 
-1. num bullets
-2. num bullets
+Byte 0 Single frame code
+
+Byte 1 Message type
+
+Byte 2 Parameter 1
+
+Byte 3 Parameter 2
+
+Byte 4 Parameter 3
+
+Byte 5 Parameter 4
+
+Byte 6 NA
+
+Byte 7 NA
+
+The value of the message ID has to be 0x111
 
 
-> This is just a nice quote like the ones you can find in social media
+**The value of message type will indicate the type of function to be programmed in the clock**
 
-This is how we can insert some code snippets
+1 - Time, 2- Date, 3 - Alarm
+
+**In the case of time**
+Parameter 1 will indicate the hours, Parameter 2 will indicate the minutes and Parameter 3 will indicate the seconds in BCD format
+
+**In the case of the date**
+
+Parameter 1 the day of the month, Parameter 2 will indicate the month and Parameter 3 will indicate the two most significant figures of the year and finally Parameter 4 will indicate the two least significant figures of the year in BCD format
+
+**In the case of alarm**
+
+Parameter 1 will indicate the hours, Parameter 2 will indicate the minutes in BCD format. Parameter 3 and 4 will not be used
+
+
+
+
+This is how the main function looks like
 
 ```C
-void function( void )
+int main( void )
 {
+    
+    HAL_Init();
 
+    Clock_Init();
+
+    Serial_Init();
+
+    initialise_monitor_handles();
+    
+    //Add more initilizations if need them
+    
+    for( ;; )
+    {
+        Serial_Task();
+        
+        Clock_Task();
+        //Add another task if need it
+    }
 }
 ```
-
-Some images can also be inserted 
-
-![modular](https://media-exp1.licdn.com/dms/image/C4E0BAQF8Mlpq54uB3A/company-logo_200_200/0/1632781574324?e=1669248000&v=beta&t=atxklhEXRm8FXePXyjnOV7z83zC7qdryBUWngOacWWQ)
-
-And links
-
-For more visit this nice [cheat sheet](https://www.markdownguide.org/cheat-sheet/)
