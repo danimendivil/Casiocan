@@ -6,7 +6,7 @@
 
  uint8_t datar[8]; 
  uint8_t sizer;
- 
+
  uint8_t cases;
  uint8_t flag; 
  APP_MsgTypeDef mtm;
@@ -209,7 +209,7 @@ uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL)
     if( (day > 0u ) && ( day <= 31u ) && ( month <= 12u ) && (month > 0u) && (year >= 1900u) && (year <= 2100u)){
 
 
-        flag = 1;
+        flagd = 1;
 
             if( (month == 1u) || (month == 3u) || (month == 5u) || (month == 7u) || (month == 8u) || (month == 10u) || (month == 12u)){
 
@@ -253,7 +253,7 @@ uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL)
    }
 
     else{
-        flagd = 0;
+        
     }
 
    return flagd;
@@ -433,7 +433,7 @@ void Serial_Task( void )
                 
                 }
             else{
-                    cases=FAILED;
+                   cases=FAILED;
                 }
             break;
         
