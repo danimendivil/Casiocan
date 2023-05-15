@@ -29,11 +29,7 @@ static uint8_t dayofweek(uint8_t yearM, uint8_t yearL, uint8_t month, uint8_t da
  *   The filter is configurate so that it only accept messages with ID 0x111
  *   The transmition is configurate with ID 0x122
  *
- * @param   <CANHandler>[in]    Holds parameters configuration for CAN
- * @param   <CANTxHeader>[in]   Holds parameters configuration for CAN Transmition
- * @param   <CANRxHeader>[in]   Holds parameters configuration for CAN Reception
- * @param   <CANFilter>[in]     Holds parameters configuration for the Can Filter
- * @retval  None 
+ * 
  *          
  *
  * 
@@ -340,14 +336,9 @@ uint8_t dayofweek(uint8_t yearM, uint8_t yearL, uint8_t month, uint8_t day){
 * an the state will be change to OK otherwise state will be FAILED
 * if the next state is SERIAL_MSG_ALARM it validates the data and if they are correct are store on the mtm variable and 
 * state is changed to ok, otherwise state will be FAILED
-
-* @param   <datar[8]>[in] array were CAN message is stored
 * 
 *
-* @retval  None
 *          
-*
-* 
 */
 void Serial_Task( void )
 {

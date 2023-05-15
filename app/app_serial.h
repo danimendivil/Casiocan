@@ -20,36 +20,43 @@ void Serial_Task( void );
 /** 
   * @defgroup <APP_Messages> machine states for the CAN msg.
   @{ */
-#define    SERIAL_MSG_TIME     1u
-#define    SERIAL_MSG_DATE     2u
-#define    SERIAL_MSG_ALARM    3u
+#define    SERIAL_MSG_TIME     1u   /*!< State for changing the time of the clock*/
+#define    SERIAL_MSG_DATE     2u   /*!< State for changing the date of the clock*/
+#define    SERIAL_MSG_ALARM    3u   /*!< State for changing the alarm of the clock*/
 /**
   @} */
 
 /** 
   * @defgroup <CAS_STATES> other machine states 
   @{ */
-#define    GETMSG              4u
-#define    FAILED              5u
-#define    OK                  6u
+#define    GETMSG              4u   /*!< State thats get the message from CAN transmition*/
+#define    FAILED              5u   /*!< State thats sends a message through CAN when bad information*/
+#define    OK                  6u   /*!< State thats sends a message through CAN when information is correct*/
 /**
   @} */
 
 
+/**
+  * @brief   Structure for message that are recived by CAN to store time and date in stdlib tm format 
+  */
 typedef struct _APP_TmTypeDef 
 {
-    uint32_t tm_sec;         /* seconds,  range 0 to 59          */
-    uint32_t tm_min;         /* minutes, range 0 to 59           */
-    uint32_t tm_hour;        /* hours, range 0 to 23             */
-    uint32_t tm_mday;        /* day of the month, range 1 to 31  */
-    uint32_t tm_mon;         /* month, range 0 to 11             */
-    uint32_t tm_year_msb;        /* years in rage 1900 2100          */
-    uint32_t tm_year_lsb;
-    uint32_t tm_wday;        /* day of the week, range 0 to 6    */
-    uint32_t tm_yday;        /* day in the year, range 0 to 365  */
-    uint32_t tm_isdst;       /* daylight saving time             */
+    uint32_t tm_sec;         /*!< seconds,  range 0 to 59          */
+    uint32_t tm_min;         /*!< minutes, range 0 to 59           */
+    uint32_t tm_hour;        /*!< hours, range 0 to 23             */
+    uint32_t tm_mday;        /*!< day of the month, range 1 to 31  */
+    uint32_t tm_mon;         /*!< month, range 0 to 11             */
+    uint32_t tm_year_msb;    /*!< year most significant bits in range 1900 2100       */
+    uint32_t tm_year_lsb;    /*!< year least significant bits in range 1900 2100      */
+    uint32_t tm_wday;        /*!< day of the week, range 0 to 6    */
+    uint32_t tm_yday;        /*!< day in the year, range 0 to 365  */
+    uint32_t tm_isdst;       /*!< daylight saving time             */
 }APP_TmTypeDef;
 
+
+/**
+  * @brief   structure with APP_TmTypeDef and a message 
+  */
 typedef struct _APP_MsgTypeDef
 {
     uint8_t msg;          /*!< Store the message type to send */
