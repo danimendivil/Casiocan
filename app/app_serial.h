@@ -46,6 +46,25 @@ void Serial_Task( void );
 /**
   @} */
 
+/** 
+  * @defgroup <months> months values 
+  @{ */
+#define JAN 1u     /*!<JANUARY*/
+#define FEB 2u     /*!<FEBRUARY*/
+#define MAR 3u     /*!<MARCH*/
+#define APR 4u     /*!<APRIL*/
+#define MAY 5u     /*!<MAY*/
+#define JUN 6u     /*!<JUNE*/
+#define JUL 7u     /*!<JULY*/
+#define AUG 8u     /*!<AUGUST*/
+#define SEP 9u     /*!<SEPTEMBER*/
+#define OCT 10u    /*!<OCTOBER*/
+#define NOV 11u    /*!<NOVEMBER*/
+#define DEC 12u    /*!<DECEMBER*/
+
+/**
+  @} */
+
 
 /**
   * @brief   Structure for message that are recived by CAN to store time and date in stdlib tm format 

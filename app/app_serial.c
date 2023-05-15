@@ -1,15 +1,16 @@
 #include "app_serial.h"
 
- FDCAN_HandleTypeDef CANHandler; /* cppcheck-suppress misra-c2012-8.5 ; other declaration is used on ints */
- FDCAN_TxHeaderTypeDef CANTxHeader;
- FDCAN_FilterTypeDef CANFilter;
+FDCAN_HandleTypeDef CANHandler; /* cppcheck-suppress misra-c2012-8.5 ; other declaration is used on ints */
+FDCAN_TxHeaderTypeDef CANTxHeader;
+FDCAN_FilterTypeDef CANFilter;
 
- uint8_t CAN_msg[CAN_DATA_LENGHT]; 
- uint8_t CAN_size;
+uint8_t CAN_msg[CAN_DATA_LENGHT]; 
+uint8_t CAN_size;
 
- uint8_t cases;
- uint8_t flag; 
- APP_MsgTypeDef td_message;  //time and date message
+uint8_t cases;
+uint8_t flag; 
+APP_MsgTypeDef td_message;  //time and date message
+
 static uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL);
 static uint8_t dayofweek(uint8_t yearM, uint8_t yearL, uint8_t month, uint8_t day);
 
@@ -198,63 +199,48 @@ void HAL_FDCAN_RxFifo0Callback( FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs
 */
 uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL)
 {
-
     uint32_t year = ((uint32_t)(yearM) * 100u) + (uint32_t)yearL;
     uint32_t flagd = TRUE;
 
-    if( (day > 0u ) && ( day <= 31u ) && ( month <= 12u ) && (month > 0u) && (year >= 1900u) && (year <= 2100u)){
+    if ((day > 0u ) && (day <= 31u) && (month <= DEC) && (month >= JAN) && (year >= 1900u) && (year <= 2100u)) {
 
+        flagd = TRUE;
 
-        flagd = 1;
+        if ((month == JAN) || (month == MAR) || (month == MAY) || (month == JUL) || (month == AUG) || (month == OCT) || (month == DEC)) {
 
-            if( (month == 1u) || (month == 3u) || (month == 5u) || (month == 7u) || (month == 8u) || (month == 10u) || (month == 12u)){
+            if (day > 31u) {
+                flagd = FALSE;
+            }
 
-                if( day > 31u){
-                    flagd=FALSE;
-                }
-                else{}
-                }
+        } else if ((month == APR) || (month == JUN) || (month == SEP) || (month == NOV)) {
 
-            else if( (month == 4u) || (month == 6u) || (month == 9u) || (month == 11u) ){
+            if (day > 30u) {
+                flagd = FALSE;
+            }
 
-                if( day > 30u){
+        } else if (month == FEB) {
+
+            if (((year % 4u == 0u) && (year % 100u != 0u)) || ((year % 400u) == 0u)) {
+
+                if (day > 29u) {
                     flagd = FALSE;
                 }
-                else{}
+
+            } else {
+
+                if (day > 28u) {
+                    flagd = FALSE;
                 }
 
-            else if(month == 2u) {
+            }
 
-                if( ( ( (year % 4u) == 0u) && ( (year % 100u) != 0u) ) || ( (year % 400u) == 0u ) ){
+        }
 
-                    if(day > 29u){
-
-                        flagd = FALSE;
-                        }
-                        else{}
-                    }
-                else{
-
-                    if(day > 28u){
-
-                        flagd = FALSE;
-                        }
-                        else{}
-
-                    }
-                }
-                else{}
-
-          
-   }
-
-    else{
-        
+    } else {
+        flagd = FALSE;
     }
 
-   return flagd;
-    
-
+    return flagd;
 }
 
 
@@ -320,8 +306,6 @@ uint8_t dayofweek(uint8_t yearM, uint8_t yearL, uint8_t month, uint8_t day){
 
 }
 
-
-
 /**
 * @brief   **This function validates and stores messages recived through CAN**
 *
@@ -342,39 +326,30 @@ uint8_t dayofweek(uint8_t yearM, uint8_t yearL, uint8_t month, uint8_t day){
 */
 void Serial_Task( void )
 {
-
     switch(cases){
 
         case GETMSG:
 
             if (CanTp_SingleFrameRx(  &CAN_msg[0], &CAN_size ) == TRUE){
 
-
                 if(CAN_msg[1]==SERIAL_MSG_TIME){
 
                     cases=SERIAL_MSG_TIME;
 
                 }
-
                 else if(CAN_msg[1]==SERIAL_MSG_DATE){
 
                     cases=SERIAL_MSG_DATE;
 
                 }
-
                 else if(CAN_msg[1]==SERIAL_MSG_ALARM){
 
                     cases=SERIAL_MSG_ALARM;
-                    
                 }
-                else{
+                else{}
 
                 }
-
-                }
-                else{
-                    
-                }
+                else{}
             
             break;
 
