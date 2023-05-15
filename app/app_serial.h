@@ -13,6 +13,7 @@
 *          
 */
 #include "app_bsp.h"
+#define CAN_DATA_LENGHT    8
 
 void Serial_Init( void );
 void Serial_Task( void );
@@ -25,6 +26,8 @@ void Serial_Task( void );
 #define    SERIAL_MSG_ALARM    3u   /*!< State for changing the alarm of the clock*/
 /**
   @} */
+
+
 
 /** 
   * @defgroup <BOOL> Boolean values.
@@ -93,11 +96,11 @@ extern uint8_t flag;
 /**
  * @brief  Variable for the size of CAN messages
  */
-extern uint8_t sizer;
+extern uint8_t CAN_size;
 /**
  * @brief  Array for CAN DATA
  */
-extern uint8_t datar[8];  
+extern uint8_t CAN_msg[CAN_DATA_LENGHT];  
 /**
  * @brief  Variable for Cases of the state machine
  */
@@ -105,7 +108,7 @@ extern uint8_t cases;
 /**
  * @brief  Variable for MSG send by state machine
  */
-extern APP_MsgTypeDef mtm;
+extern APP_MsgTypeDef td_message;
 
 
 

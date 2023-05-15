@@ -1,15 +1,15 @@
 #include "app_serial.h"
+
  FDCAN_HandleTypeDef CANHandler; /* cppcheck-suppress misra-c2012-8.5 ; other declaration is used on ints */
  FDCAN_TxHeaderTypeDef CANTxHeader;
- 
  FDCAN_FilterTypeDef CANFilter;
 
- uint8_t datar[8]; 
- uint8_t sizer;
+ uint8_t CAN_msg[CAN_DATA_LENGHT]; 
+ uint8_t CAN_size;
 
  uint8_t cases;
  uint8_t flag; 
- APP_MsgTypeDef mtm;
+ APP_MsgTypeDef td_message;  //time and date message
 static uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL);
 static uint8_t dayofweek(uint8_t yearM, uint8_t yearL, uint8_t month, uint8_t day);
 
@@ -133,7 +133,7 @@ static uint8_t CanTp_SingleFrameRx( uint8_t *data, uint8_t *size )
         flag = FALSE;
        
         
-        HAL_FDCAN_GetRxMessage( &CANHandler, FDCAN_RX_FIFO0, &CANRxHeader, datar );
+        HAL_FDCAN_GetRxMessage( &CANHandler, FDCAN_RX_FIFO0, &CANRxHeader, CAN_msg );
 
         *size=*data;
 
@@ -328,13 +328,13 @@ uint8_t dayofweek(uint8_t yearM, uint8_t yearL, uint8_t month, uint8_t day){
 * The first state of the state machine is the GETMSG were we use the funtion Can_Tp_SingleFrameRx to see 
 * if a message has been recived, if a message has been recived it compares the values to APP_Messages defines
 * to see what is going to be the next state, if the next state is SERIAL_MSG_TIME it validates the values and 
-* if the values are correct they are store on the mtm variable, and the state is change to the OK state where it sends
+* if the values are correct they are store on the td_message variable, and the state is change to the OK state where it sends
 * a confirmation message if the values are wrong then the next state is FAILED where it sends an error message and the 
 * state is changed to GETMSG.
 * if the next state is SERIAL_MSG_DATE it validates the values with the valid_date() function and if the date is valid
-* it also calls the dayofweek function to get the day of the week if they are valid then they are store on the mtm variable 
+* it also calls the dayofweek function to get the day of the week if they are valid then they are store on the td_message variable 
 * an the state will be change to OK otherwise state will be FAILED
-* if the next state is SERIAL_MSG_ALARM it validates the data and if they are correct are store on the mtm variable and 
+* if the next state is SERIAL_MSG_ALARM it validates the data and if they are correct are store on the td_message variable and 
 * state is changed to ok, otherwise state will be FAILED
 * 
 *
@@ -347,22 +347,22 @@ void Serial_Task( void )
 
         case GETMSG:
 
-            if (CanTp_SingleFrameRx(  &datar[0], &sizer ) == TRUE){
+            if (CanTp_SingleFrameRx(  &CAN_msg[0], &CAN_size ) == TRUE){
 
 
-                if(datar[1]==SERIAL_MSG_TIME){
+                if(CAN_msg[1]==SERIAL_MSG_TIME){
 
                     cases=SERIAL_MSG_TIME;
 
                 }
 
-                else if(datar[1]==SERIAL_MSG_DATE){
+                else if(CAN_msg[1]==SERIAL_MSG_DATE){
 
                     cases=SERIAL_MSG_DATE;
 
                 }
 
-                else if(datar[1]==SERIAL_MSG_ALARM){
+                else if(CAN_msg[1]==SERIAL_MSG_ALARM){
 
                     cases=SERIAL_MSG_ALARM;
                     
@@ -381,12 +381,12 @@ void Serial_Task( void )
        
         case SERIAL_MSG_TIME:
 
-            if( (datar[2] < 24u) && (datar[3] < 60u) && (datar[4] <60u)){
+            if( (CAN_msg[2] < 24u) && (CAN_msg[3] < 60u) && (CAN_msg[4] <60u)){
 
-                mtm.tm.tm_hour=datar[2];
-                mtm.tm.tm_min=datar[3];
-                mtm.tm.tm_sec=datar[4];
-                mtm.msg=SERIAL_MSG_TIME;
+                td_message.tm.tm_hour=CAN_msg[2];
+                td_message.tm.tm_min=CAN_msg[3];
+                td_message.tm.tm_sec=CAN_msg[4];
+                td_message.msg=SERIAL_MSG_TIME;
 
                 cases=OK;
 
@@ -399,14 +399,14 @@ void Serial_Task( void )
 
         case SERIAL_MSG_DATE:
 
-            if(valid_date(datar[2],datar[3], datar[4],datar[5]) == 1u){
+            if(valid_date(CAN_msg[2],CAN_msg[3], CAN_msg[4],CAN_msg[5]) == 1u){
 
-                mtm.tm.tm_mday = datar[2];
-                mtm.tm.tm_mon = datar[3];
-                mtm.tm.tm_year_msb = datar[4];
-                mtm.tm.tm_year_lsb = datar[5];
-                mtm.tm.tm_wday = dayofweek(mtm.tm.tm_year_msb,mtm.tm.tm_year_lsb, mtm.tm.tm_mon, mtm.tm.tm_mday);
-                mtm.msg = SERIAL_MSG_DATE;
+                td_message.tm.tm_mday = CAN_msg[2];
+                td_message.tm.tm_mon = CAN_msg[3];
+                td_message.tm.tm_year_msb = CAN_msg[4];
+                td_message.tm.tm_year_lsb = CAN_msg[5];
+                td_message.tm.tm_wday = dayofweek(td_message.tm.tm_year_msb,td_message.tm.tm_year_lsb, td_message.tm.tm_mon, td_message.tm.tm_mday);
+                td_message.msg = SERIAL_MSG_DATE;
                 cases = OK;
                 }
             else{
@@ -416,10 +416,10 @@ void Serial_Task( void )
 
         case SERIAL_MSG_ALARM:
 
-            if((datar[2] < 24u) && (datar[3] < 60u)){
-                mtm.tm.tm_hour=datar[2];
-                mtm.tm.tm_min=datar[3];
-                mtm.msg = SERIAL_MSG_ALARM;
+            if((CAN_msg[2] < 24u) && (CAN_msg[3] < 60u)){
+                td_message.tm.tm_hour=CAN_msg[2];
+                td_message.tm.tm_min=CAN_msg[3];
+                td_message.msg = SERIAL_MSG_ALARM;
                 cases = OK;
                 
                 }
@@ -430,17 +430,17 @@ void Serial_Task( void )
         
         case FAILED:
             
-            datar[1]=0xAA;
-            sizer=1;
-            CanTp_SingleFrameTx( &datar[0],&sizer);
+            CAN_msg[1]=0xAA;
+            CAN_size=1;
+            CanTp_SingleFrameTx( &CAN_msg[0],&CAN_size);
             cases=GETMSG;
             break;
 
         case OK:
             
-            datar[1]=0x55;
-            sizer=1;
-            CanTp_SingleFrameTx( &datar[0],&sizer);
+            CAN_msg[1]=0x55;
+            CAN_size=1;
+            CanTp_SingleFrameTx( &CAN_msg[0],&CAN_size);
             cases=GETMSG;
             break;
 
