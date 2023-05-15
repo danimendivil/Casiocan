@@ -27,6 +27,14 @@ void Serial_Task( void );
   @} */
 
 /** 
+  * @defgroup <BOOL> Boolean values.
+  @{ */
+#define    TRUE     1u   /*!< State for changing the time of the clock*/
+#define    FALSE     0u   /*!< State for changing the date of the clock*/
+/**
+  @} */
+
+/** 
   * @defgroup <CAS_STATES> other machine states 
   @{ */
 #define    GETMSG              4u   /*!< State thats get the message from CAN transmition*/

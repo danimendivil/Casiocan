@@ -129,8 +129,8 @@ static uint8_t CanTp_SingleFrameRx( uint8_t *data, uint8_t *size )
     uint8_t x;
     FDCAN_RxHeaderTypeDef CANRxHeader; 
     
-    if(flag == 1u){
-        flag = 0u;
+    if(flag == TRUE){
+        flag = FALSE;
        
         
         HAL_FDCAN_GetRxMessage( &CANHandler, FDCAN_RX_FIFO0, &CANRxHeader, datar );
@@ -139,17 +139,17 @@ static uint8_t CanTp_SingleFrameRx( uint8_t *data, uint8_t *size )
 
         if(*size > 0u){
 
-            x = 1;
+            x = TRUE;
 
         }
         else{
 
-            x = 0;
+            x = FALSE;
 
         }
     }
     else{
-        x = 0;
+        x = FALSE;
     }
 
     return x;
@@ -177,7 +177,7 @@ void HAL_FDCAN_RxFifo0Callback( FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs
     /*A llegado un mensaje via CAN, interrogamos si fue un solo mensaje*/
     if( ( RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE ) != 0 )
     {
-        flag = 1;  
+        flag = TRUE;  
     }
 }
 
@@ -200,7 +200,7 @@ uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL)
 {
 
     uint32_t year = ((uint32_t)(yearM) * 100u) + (uint32_t)yearL;
-    uint32_t flagd = 0u;
+    uint32_t flagd = TRUE;
 
     if( (day > 0u ) && ( day <= 31u ) && ( month <= 12u ) && (month > 0u) && (year >= 1900u) && (year <= 2100u)){
 
@@ -210,7 +210,7 @@ uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL)
             if( (month == 1u) || (month == 3u) || (month == 5u) || (month == 7u) || (month == 8u) || (month == 10u) || (month == 12u)){
 
                 if( day > 31u){
-                    flagd=0u;
+                    flagd=FALSE;
                 }
                 else{}
                 }
@@ -218,7 +218,7 @@ uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL)
             else if( (month == 4u) || (month == 6u) || (month == 9u) || (month == 11u) ){
 
                 if( day > 30u){
-                    flagd = 0u;
+                    flagd = FALSE;
                 }
                 else{}
                 }
@@ -229,7 +229,7 @@ uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL)
 
                     if(day > 29u){
 
-                        flagd = 0u;
+                        flagd = FALSE;
                         }
                         else{}
                     }
@@ -237,7 +237,7 @@ uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL)
 
                     if(day > 28u){
 
-                        flagd = 0u;
+                        flagd = FALSE;
                         }
                         else{}
 
@@ -347,7 +347,7 @@ void Serial_Task( void )
 
         case GETMSG:
 
-            if (CanTp_SingleFrameRx(  &datar[0], &sizer ) == 1u){
+            if (CanTp_SingleFrameRx(  &datar[0], &sizer ) == TRUE){
 
 
                 if(datar[1]==SERIAL_MSG_TIME){
