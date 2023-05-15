@@ -12,7 +12,7 @@ uint8_t flag;
 APP_MsgTypeDef td_message;  //time and date message
 
 static uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL);
-static uint8_t dayofweek(uint8_t yearM, uint8_t yearL, uint8_t month, uint8_t day);
+static uint8_t dayofweek(uint32_t yearM, uint32_t yearL, uint32_t month, uint32_t day);
 
 /**
  * @brief   **Provide a brief fucntion description (just one line)**
@@ -220,7 +220,7 @@ uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL)
 
         } else if (month == FEB) {
 
-            if (((year % 4u == 0u) && (year % 100u != 0u)) || ((year % 400u) == 0u)) {
+            if ((((year % 4u) == 0u) && ((year % 100u) != 0u)) || ((year % 400u) == 0u)) {
 
                 if (day > 29u) {
                     flagd = FALSE;
@@ -235,6 +235,7 @@ uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL)
             }
 
         }
+        else{}
 
     } else {
         flagd = FALSE;
@@ -259,22 +260,21 @@ uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL)
 *
 * 
 */
-uint8_t dayofweek(uint8_t yearM, uint8_t yearL, uint8_t month, uint8_t day){
+uint8_t dayofweek(uint32_t yearM, uint32_t yearL, uint32_t month, uint32_t day){
 
     uint32_t year = ((uint32_t)(yearM) * 100u) + (uint32_t)yearL;
-
-   if (month < 3) {
-        month += 12;
+    uint32_t m = month;
+   if (m < 3u) {
+        m += 12u;
         year--;
     }
-    int c = year / 100;
-    int y = year - 100 * c;
-    int m = month;
-    int d = day;
-    int w = ((13 * m + 3) / 5 + d + y + y / 4 + c / 4 - 2 * c);
+    uint32_t c = year / 100u;
+    uint32_t y = year - (100u * c);
+    uint32_t d = day;
+    uint32_t w = (( ((13u * m) + 3u) / 5u) + d + y + (y / 4u) + (c / 4u) - (2u * c));
     w %= 7;
-    if (w < 0) {
-        w += 7;
+    if (w < 0u) {
+        w += 7u;
     }
     return w;
 
