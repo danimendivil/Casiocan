@@ -13,7 +13,12 @@
 *          
 */
 #include "app_bsp.h"
-#define CAN_DATA_LENGHT    8
+/** 
+  * @defgroup <CAN_conf> values to use CAN.
+  @{ */
+#define CAN_DATA_LENGHT    8  /*!< Data size of can */
+/**
+  @} */
 
 void Serial_Init( void );
 void Serial_Task( void );
