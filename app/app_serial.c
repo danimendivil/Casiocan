@@ -263,46 +263,20 @@ uint8_t dayofweek(uint8_t yearM, uint8_t yearL, uint8_t month, uint8_t day){
 
     uint32_t year = ((uint32_t)(yearM) * 100u) + (uint32_t)yearL;
 
-    if (month < 3u) {
-        month += 12u; /* cppcheck-suppress misra-c2012-17.8 ; Use of function parameter leads to better code */
-        year--;      /* cppcheck-suppress misra-c2012-17.8 ; Use of function parameter leads to better code */
-    } 
-    uint8_t q = day;
-    uint8_t m = month;
-    uint8_t k = (uint8_t)(year % 100u);
-    uint8_t j = (uint8_t)(year / 100u);
-    uint8_t h = q + ( (13u * (m + 1u) ) / 5u ) + k + (k / 4u) + (j / 4u) + (5u * j);
-    uint8_t day_of_week = h % 7u;
-    uint8_t x;
-   
-    switch (day_of_week) {
-        case 0:
-            x = 7u;
-            break;
-        case 1:
-            x = 1u;
-            break;
-        case 2:
-            x = 2u;
-            break;
-        case 3:
-            x = 3u;
-            break;
-        case 4:
-            x = 4u;
-            break;
-        case 5:
-            x = 5u;
-            break;
-        case 6:
-            x = 6u;
-            break;
-        default:
-            x = 0u;
-            break;
-        }
-
-        return x;
+   if (month < 3) {
+        month += 12;
+        year--;
+    }
+    int c = year / 100;
+    int y = year - 100 * c;
+    int m = month;
+    int d = day;
+    int w = ((13 * m + 3) / 5 + d + y + y / 4 + c / 4 - 2 * c);
+    w %= 7;
+    if (w < 0) {
+        w += 7;
+    }
+    return w;
 
 }
 
