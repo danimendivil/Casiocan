@@ -68,6 +68,7 @@ APP_MsgTypeDef td_message;  //time and date message
 static uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL);
 static uint8_t dayofweek(uint32_t yearM, uint32_t yearL, uint32_t month, uint32_t day);
 static uint8_t valid_time(uint8_t hour,uint8_t minutes,uint8_t seconds);
+static uint8_t valid_alarm(uint8_t hour,uint8_t minutes);
 /**
  * @brief   **Init function fot serial task(CAN init)**
  *
@@ -295,11 +296,7 @@ uint8_t dayofweek(uint32_t yearM, uint32_t yearL, uint32_t month, uint32_t day){
 
 }
 /**
- * @brief   **Gets a message of the CAN communication**
- *  The function first check if a message has arrive with the flag variable that is 1 when there is a message.
- *  if a message is recived the flag value is cleared.
- *  then gets the message and stores it in *data then checks if size value is greater than 1 and if a message 
- *  is valid it returns 1 if it`s not it returns 0
+ * @brief   **The fucntion validates the parameters for time**
  * @param   hour[in]        hour to be validated
  * @param   minutes[in]     minutes to be validated
  * @param   seconds[in]     seconds to be validated
@@ -308,6 +305,21 @@ uint8_t dayofweek(uint32_t yearM, uint32_t yearL, uint32_t month, uint32_t day){
 uint8_t valid_time(uint8_t hour,uint8_t minutes,uint8_t seconds){
     uint8_t Time_is_valid = FALSE;
     if((hour < 24u) && (minutes < 60u) && (seconds < 60u))
+    {
+        Time_is_valid = TRUE;
+    }
+    return Time_is_valid;
+}
+
+/**
+ * @brief   **The fucntion validates the parameters for alarm**
+ * @param   hour[in]        hour to be validated
+ * @param   minutes[in]     minutes to be validated
+ * @retval  Time_is_valid[out]    if 0 if data is unvalid and 1 if it is valid
+ */
+uint8_t valid_alarm(uint8_t hour,uint8_t minutes){
+    uint8_t Time_is_valid = FALSE;
+    if((hour < 24u) && (minutes < 60u))
     {
         Time_is_valid = TRUE;
     }
@@ -379,7 +391,7 @@ void Serial_Task( void )
 
         case SERIAL_MSG_DATE:
 
-            if(valid_date(Data_msg[1],Data_msg[2], Data_msg[3],Data_msg[4]) == 1u)
+            if(valid_date(Data_msg[1],Data_msg[2], Data_msg[3],Data_msg[4]) == TRUE)
             {
                 td_message.tm.tm_mday = Data_msg[1];
                 td_message.tm.tm_mon = Data_msg[2];
@@ -396,7 +408,7 @@ void Serial_Task( void )
 
         case SERIAL_MSG_ALARM:
 
-            if((Data_msg[1] < 24u) && (Data_msg[2] < 60u))
+            if(valid_alarm( Data_msg[1],Data_msg[2]) == TRUE)
             {
                 td_message.tm.tm_hour=Data_msg[1];
                 td_message.tm.tm_min=Data_msg[2];
