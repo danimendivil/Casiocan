@@ -7,6 +7,9 @@
 /**
   @} */
 
+#define OK_CANID        0x55
+#define FAILED_CANID    0xAA
+
 /** 
   * @defgroup <months> months values 
   @{ */
@@ -64,7 +67,7 @@ APP_MsgTypeDef td_message;  //time and date message
 
 static uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL);
 static uint8_t dayofweek(uint32_t yearM, uint32_t yearL, uint32_t month, uint32_t day);
-
+static uint8_t valid_time(uint8_t hour,uint8_t minutes,uint8_t seconds);
 /**
  * @brief   **Init function fot serial task(CAN init)**
  *
@@ -291,6 +294,26 @@ uint8_t dayofweek(uint32_t yearM, uint32_t yearL, uint32_t month, uint32_t day){
     return w;
 
 }
+/**
+ * @brief   **Gets a message of the CAN communication**
+ *  The function first check if a message has arrive with the flag variable that is 1 when there is a message.
+ *  if a message is recived the flag value is cleared.
+ *  then gets the message and stores it in *data then checks if size value is greater than 1 and if a message 
+ *  is valid it returns 1 if it`s not it returns 0
+ * @param   hour[in]        hour to be validated
+ * @param   minutes[in]     minutes to be validated
+ * @param   seconds[in]     seconds to be validated
+ * @retval  Time_is_valid[out]    if 0 if data is unvalid and 1 if it is valid
+ */
+uint8_t valid_time(uint8_t hour,uint8_t minutes,uint8_t seconds){
+    uint8_t Time_is_valid = FALSE;
+    if((hour < 24u) && (minutes < 60u) && (seconds < 60u))
+    {
+        Time_is_valid = TRUE;
+    }
+    return Time_is_valid;
+}
+
 
 /**
 * @brief   **This function validates and stores messages recived through CAN**
@@ -340,8 +363,8 @@ void Serial_Task( void )
 
        
         case SERIAL_MSG_TIME:
-
-            if( (Data_msg[1] < 24u) && (Data_msg[2] < 60u) && (Data_msg[3] <60u))
+            
+            if( valid_time(Data_msg[1],Data_msg[2],Data_msg[3]) == TRUE)
             {
                 td_message.tm.tm_hour=Data_msg[1];
                 td_message.tm.tm_min=Data_msg[2];
@@ -387,7 +410,7 @@ void Serial_Task( void )
         
         case FAILED:
             
-            Data_msg[1]=0xAA;
+            Data_msg[1]=FAILED_CANID;
             CAN_size=1;
             CanTp_SingleFrameTx( &Data_msg[0],&CAN_size);
             cases=GETMSG;
@@ -395,7 +418,7 @@ void Serial_Task( void )
 
         case OK:
             
-            Data_msg[1]=0x55;
+            Data_msg[1]=OK_CANID;
             CAN_size=1;
             CanTp_SingleFrameTx( &Data_msg[0],&CAN_size);
             cases=GETMSG;
