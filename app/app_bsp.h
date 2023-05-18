@@ -39,10 +39,13 @@
         APP_TmTypeDef tm;     /*!< time and date in stdlib tm format */
     }APP_MsgTypeDef;
     /**
-    * @brief  Variable for Cases of the state machine
+    * @brief  Variable for state machien messages.
     */
     extern APP_MsgTypeDef td_message;
 
+    /**
+    * @brief  Variable for CAN configuration
+    */
     extern FDCAN_HandleTypeDef CANHandler; /* cppcheck-suppress misra-c2012-8.4 ; this function can`t be modify */
 
 

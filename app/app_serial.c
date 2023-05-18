@@ -2,7 +2,8 @@
 /** 
   * @defgroup CAN_conf values to use CAN.
   @{ */
-#define CAN_DATA_LENGHT    8  /*!< Data size of can */
+#define CAN_DATA_LENGHT    8    /*!< Data size of can */
+#define CAN_BYTES   0x10000U    /*!< Value for data size */
 /**
   @} */
 
@@ -25,14 +26,16 @@
 /**
   @} */
 
-#define CAN_BYTES   0x10000U
+
 
 /**
  * @brief APP Messages.
  *
  * This enumeration represents the various types of states of the machine
  */
+ 
 typedef enum
+/* cppcheck-suppress misra-c2012-2.4 ; enum is used on state machine */
 {
     SERIAL_MSG_TIME = 1u,
     SERIAL_MSG_DATE,
@@ -45,16 +48,18 @@ typedef enum
 
 
 
-FDCAN_HandleTypeDef CANHandler; /* cppcheck-suppress misra-c2012-8.5 ; other declaration is used on ints */
-FDCAN_TxHeaderTypeDef CANTxHeader;
-FDCAN_FilterTypeDef CANFilter;
+FDCAN_HandleTypeDef CANHandler; 
+/**
+ * @brief  Variable for CAN transmition configuration
+ */
+static FDCAN_TxHeaderTypeDef CANTxHeader;
 
 
+/**
+ * @brief  Flag for CAN msg recive interruption
+ */
+static uint8_t flag; 
 
-
-
-
-uint8_t flag; 
 APP_MsgTypeDef td_message;  //time and date message
 
 static uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL);
@@ -78,6 +83,11 @@ static uint8_t dayofweek(uint32_t yearM, uint32_t yearL, uint32_t month, uint32_
  */
 void Serial_Init( void )
 {
+    /**
+    * @brief  Variable for CAN filter configuration
+    */
+    FDCAN_FilterTypeDef CANFilter;
+
     CANHandler.Instance                 = FDCAN1;
     CANHandler.Init.Mode                = FDCAN_MODE_NORMAL;
     CANHandler.Init.FrameFormat         = FDCAN_FRAME_CLASSIC;
@@ -155,11 +165,11 @@ static uint8_t CanTp_SingleFrameRx( uint8_t *data, uint8_t *size )
     FDCAN_RxHeaderTypeDef CANRxHeader;
     flag = FALSE;
     HAL_FDCAN_GetRxMessage( &CANHandler, FDCAN_RX_FIFO0, &CANRxHeader, CAN_msg ); 
-    if (CAN_msg[0] > 0 && CAN_msg[0] < 8)
+    if ( (CAN_msg[0] > 0u) && (CAN_msg[0] < 8u) )
     {
-        for (uint8_t i = 0; i < CAN_msg[0];i++)
+        for (uint8_t i = 0u; i < CAN_msg[0];i++)
         {
-            *(data+i) = CAN_msg[i+1];
+            *(data+i) = CAN_msg[i+1u]; /* cppcheck-suppress misra-c2012-18.4 ; operation is needed */
         }
         *size = CAN_msg[0];
         msg_recived = 1;
@@ -297,12 +307,14 @@ uint8_t dayofweek(uint32_t yearM, uint32_t yearL, uint32_t month, uint32_t day){
 * if the next state is SERIAL_MSG_ALARM it validates the data and if they are correct are store on the td_message variable and 
 * state is changed to ok, otherwise state will be FAILED        
 */
-uint8_t cases;
-uint8_t Data_msg[CAN_DATA_LENGHT];
-uint8_t CAN_size;
+
+static uint8_t cases = GETMSG ; /* cppcheck-suppress misra-c2012-8.9 ; Function does not work if defined in serial task */
+static uint8_t Data_msg[CAN_DATA_LENGHT];/* cppcheck-suppress misra-c2012-8.9 ; Function does not work if defined in serial task */
 void Serial_Task( void )
 {
-     
+    
+    
+    uint8_t CAN_size;
     
     switch(cases){
 
@@ -310,17 +322,17 @@ void Serial_Task( void )
 
             if (CanTp_SingleFrameRx(  &Data_msg[0], &CAN_size ) == TRUE){
 
-                if(Data_msg[0] == SERIAL_MSG_TIME)
+                if(Data_msg[0] == (uint8_t)SERIAL_MSG_TIME)
                 {
-                    cases = SERIAL_MSG_TIME;
+                    cases = (uint8_t)SERIAL_MSG_TIME;
                 }
-                else if(Data_msg[0] == SERIAL_MSG_DATE)
+                else if(Data_msg[0] == (uint8_t)SERIAL_MSG_DATE)
                 {
-                    cases=SERIAL_MSG_DATE;
+                    cases = (uint8_t)SERIAL_MSG_DATE;
                 }
-                else if(Data_msg[0] == SERIAL_MSG_ALARM)
+                else if(Data_msg[0] == (uint8_t)SERIAL_MSG_ALARM)
                 {
-                    cases=SERIAL_MSG_ALARM;
+                    cases = (uint8_t)SERIAL_MSG_ALARM;
                 }  else{}
                 } 
                 else{}
