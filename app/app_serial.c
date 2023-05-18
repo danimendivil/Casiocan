@@ -136,8 +136,8 @@ void Serial_Init( void )
  * This function Transmit the message pointed by the variable data, beore sending the message
  * we make the first value of the data pointer equal to the size pointer since this indicates
  * the size of the message that is going to be transmited. 
- * @param   <*data>[in] Pointer of the array that is going to be transmited
- * @param   <*size>[in] Size of the message that is going to be transmited
+ * @param   *data[in] Pointer of the array that is going to be transmited
+ * @param   *size[in] Size of the message that is going to be transmited
  * @retval  None
  */
 static void CanTp_SingleFrameTx( uint8_t *data, uint8_t *size ) 
