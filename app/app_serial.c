@@ -1,13 +1,59 @@
 #include "app_serial.h"
+/** 
+  * @defgroup CAN_conf values to use CAN.
+  @{ */
+#define CAN_DATA_LENGHT    8  /*!< Data size of can */
+/**
+  @} */
+
+/** 
+  * @defgroup <months> months values 
+  @{ */
+#define JAN 1u     /*!<JANUARY*/
+#define FEB 2u     /*!<FEBRUARY*/
+#define MAR 3u     /*!<MARCH*/
+#define APR 4u     /*!<APRIL*/
+#define MAY 5u     /*!<MAY*/
+#define JUN 6u     /*!<JUNE*/
+#define JUL 7u     /*!<JULY*/
+#define AUG 8u     /*!<AUGUST*/
+#define SEP 9u     /*!<SEPTEMBER*/
+#define OCT 10u    /*!<OCTOBER*/
+#define NOV 11u    /*!<NOVEMBER*/
+#define DEC 12u    /*!<DECEMBER*/
+
+/**
+  @} */
+
+#define CAN_BYTES   0x10000U
+
+/**
+ * @brief APP Messages.
+ *
+ * This enumeration represents the various types of states of the machine
+ */
+typedef enum
+{
+    SERIAL_MSG_TIME = 1u,
+    SERIAL_MSG_DATE,
+    SERIAL_MSG_ALARM,
+    GETMSG,
+    FAILED,
+    OK
+}APP_Messages;
+
+
+
 
 FDCAN_HandleTypeDef CANHandler; /* cppcheck-suppress misra-c2012-8.5 ; other declaration is used on ints */
 FDCAN_TxHeaderTypeDef CANTxHeader;
 FDCAN_FilterTypeDef CANFilter;
 
-uint8_t CAN_msg[CAN_DATA_LENGHT]; 
-uint8_t CAN_size;
 
-static uint8_t cases;
+
+
+
+
 uint8_t flag; 
 APP_MsgTypeDef td_message;  //time and date message
 
@@ -86,8 +132,8 @@ void Serial_Init( void )
  */
 static void CanTp_SingleFrameTx( uint8_t *data, uint8_t *size ) 
 {
-    CANTxHeader.DataLength  = 0x00080000U;
-    *data=*size;
+    CANTxHeader.DataLength  = (CAN_BYTES)*(*size+1);
+    *data = *size;
     HAL_FDCAN_AddMessageToTxFifoQ( &CANHandler, &CANTxHeader, data );
 }
 
@@ -104,30 +150,22 @@ static void CanTp_SingleFrameTx( uint8_t *data, uint8_t *size )
  */
 static uint8_t CanTp_SingleFrameRx( uint8_t *data, uint8_t *size )
 {
-    uint8_t x;
-    FDCAN_RxHeaderTypeDef CANRxHeader; 
-    
-    if(flag == TRUE){
-        flag = FALSE;
-        
-        HAL_FDCAN_GetRxMessage( &CANHandler, FDCAN_RX_FIFO0, &CANRxHeader, CAN_msg );
-
-        *size=*data;
-
-        if(*size > 0u)
-        {
-            x = TRUE;
-        }
-        else
-        {
-            x = FALSE;
-        }
-    }
-    else
+    uint8_t CAN_msg[CAN_DATA_LENGHT]; 
+    uint8_t msg_recived = 0;
+    FDCAN_RxHeaderTypeDef CANRxHeader;
+    flag = FALSE;
+    HAL_FDCAN_GetRxMessage( &CANHandler, FDCAN_RX_FIFO0, &CANRxHeader, CAN_msg ); 
+    if (CAN_msg[0] > 0 && CAN_msg[0] < 8)
     {
-        x = FALSE;
+        for (uint8_t i = 0; i < CAN_msg[0];i++)
+        {
+            *(data+i) = CAN_msg[i+1];
+        }
+        *size = CAN_msg[0];
+        msg_recived = 1;
     }
-    return x;
+
+    return msg_recived;
 }
 
 
@@ -217,9 +255,9 @@ uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL)
 /**
 * @brief   **Gets the day of the week**
 * this function take the date and uses the zeller's congruence formula to get the day of the week.
-* @param   <day>[in]       day of the month
-* @param   <month>[in]     month of the year
-* @param   <year>[in]      year of the date
+* @param   day[in]       day of the month
+* @param   month[in]     month of the year
+* @param   year[in]      year of the date
 *
 * @retval  returns a value of the day of the week defines. 
 */
@@ -259,23 +297,28 @@ uint8_t dayofweek(uint32_t yearM, uint32_t yearL, uint32_t month, uint32_t day){
 * if the next state is SERIAL_MSG_ALARM it validates the data and if they are correct are store on the td_message variable and 
 * state is changed to ok, otherwise state will be FAILED        
 */
+uint8_t cases;
+uint8_t Data_msg[CAN_DATA_LENGHT];
+uint8_t CAN_size;
 void Serial_Task( void )
 {
+     
+    
     switch(cases){
 
         case GETMSG:
 
-            if (CanTp_SingleFrameRx(  &CAN_msg[0], &CAN_size ) == TRUE){
+            if (CanTp_SingleFrameRx(  &Data_msg[0], &CAN_size ) == TRUE){
 
-                if(CAN_msg[1]==SERIAL_MSG_TIME)
+                if(Data_msg[0] == SERIAL_MSG_TIME)
                 {
-                    cases=SERIAL_MSG_TIME;
+                    cases = SERIAL_MSG_TIME;
                 }
-                else if(CAN_msg[1]==SERIAL_MSG_DATE)
+                else if(Data_msg[0] == SERIAL_MSG_DATE)
                 {
                     cases=SERIAL_MSG_DATE;
                 }
-                else if(CAN_msg[1]==SERIAL_MSG_ALARM)
+                else if(Data_msg[0] == SERIAL_MSG_ALARM)
                 {
                     cases=SERIAL_MSG_ALARM;
                 }  else{}
@@ -286,11 +329,11 @@ void Serial_Task( void )
        
         case SERIAL_MSG_TIME:
 
-            if( (CAN_msg[2] < 24u) && (CAN_msg[3] < 60u) && (CAN_msg[4] <60u))
+            if( (Data_msg[1] < 24u) && (Data_msg[2] < 60u) && (Data_msg[3] <60u))
             {
-                td_message.tm.tm_hour=CAN_msg[2];
-                td_message.tm.tm_min=CAN_msg[3];
-                td_message.tm.tm_sec=CAN_msg[4];
+                td_message.tm.tm_hour=Data_msg[1];
+                td_message.tm.tm_min=Data_msg[2];
+                td_message.tm.tm_sec=Data_msg[3];
                 td_message.msg=SERIAL_MSG_TIME;
                 cases=OK;
                 }
@@ -301,12 +344,12 @@ void Serial_Task( void )
 
         case SERIAL_MSG_DATE:
 
-            if(valid_date(CAN_msg[2],CAN_msg[3], CAN_msg[4],CAN_msg[5]) == 1u)
+            if(valid_date(Data_msg[1],Data_msg[2], Data_msg[3],Data_msg[4]) == 1u)
             {
-                td_message.tm.tm_mday = CAN_msg[2];
-                td_message.tm.tm_mon = CAN_msg[3];
-                td_message.tm.tm_year_msb = CAN_msg[4];
-                td_message.tm.tm_year_lsb = CAN_msg[5];
+                td_message.tm.tm_mday = Data_msg[1];
+                td_message.tm.tm_mon = Data_msg[2];
+                td_message.tm.tm_year_msb = Data_msg[3];
+                td_message.tm.tm_year_lsb = Data_msg[4];
                 td_message.tm.tm_wday = dayofweek(td_message.tm.tm_year_msb,td_message.tm.tm_year_lsb, td_message.tm.tm_mon, td_message.tm.tm_mday);
                 td_message.msg = SERIAL_MSG_DATE;
                 cases = OK;
@@ -318,10 +361,10 @@ void Serial_Task( void )
 
         case SERIAL_MSG_ALARM:
 
-            if((CAN_msg[2] < 24u) && (CAN_msg[3] < 60u))
+            if((Data_msg[1] < 24u) && (Data_msg[2] < 60u))
             {
-                td_message.tm.tm_hour=CAN_msg[2];
-                td_message.tm.tm_min=CAN_msg[3];
+                td_message.tm.tm_hour=Data_msg[1];
+                td_message.tm.tm_min=Data_msg[2];
                 td_message.msg = SERIAL_MSG_ALARM;
                 cases = OK;
                 }
@@ -332,17 +375,17 @@ void Serial_Task( void )
         
         case FAILED:
             
-            CAN_msg[1]=0xAA;
+            Data_msg[1]=0xAA;
             CAN_size=1;
-            CanTp_SingleFrameTx( &CAN_msg[0],&CAN_size);
+            CanTp_SingleFrameTx( &Data_msg[0],&CAN_size);
             cases=GETMSG;
             break;
 
         case OK:
             
-            CAN_msg[1]=0x55;
+            Data_msg[1]=0x55;
             CAN_size=1;
-            CanTp_SingleFrameTx( &CAN_msg[0],&CAN_size);
+            CanTp_SingleFrameTx( &Data_msg[0],&CAN_size);
             cases=GETMSG;
             break;
 
