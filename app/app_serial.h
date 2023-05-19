@@ -1,5 +1,3 @@
-#ifndef APP_SERIAL_H__
-#define APP_SERIAL_H__
 /**
 * @file    app_serial.h
 * @brief   **Header file for app_serial.c**
@@ -12,6 +10,9 @@
 * @note    Always use the Serial_Init function first
 *          
 */
+#ifndef APP_SERIAL_H__
+#define APP_SERIAL_H__
+
 #include "app_bsp.h"
 
 
