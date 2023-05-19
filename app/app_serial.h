@@ -15,7 +15,6 @@
 
 #include "app_bsp.h"
 
-
 void Serial_Init( void );
 void Serial_Task( void );
 
