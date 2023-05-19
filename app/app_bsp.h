@@ -5,7 +5,7 @@
     #include <stdint.h>
 
     /** 
-    * @defgroup <BOOL> Boolean values.
+    * @defgroup BOOL Boolean values.
     @{ */
     #define    TRUE     1u   /*!< State for changing the time of the clock*/
     #define    FALSE    0u   /*!< State for changing the date of the clock*/
@@ -38,6 +38,7 @@
         uint8_t msg;          /*!< Store the message type to send */
         APP_TmTypeDef tm;     /*!< time and date in stdlib tm format */
     }APP_MsgTypeDef;
+    
     /**
     * @brief  Variable for state machien messages.
     */
