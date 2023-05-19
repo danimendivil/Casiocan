@@ -186,7 +186,6 @@ static void CanTp_SingleFrameTx( uint8_t *data, uint8_t *size )
     }
 }
 
-
 /**
 * @brief   **Gets a message of the CAN communication**
 *
@@ -220,7 +219,6 @@ static uint8_t CanTp_SingleFrameRx( uint8_t *data, uint8_t *size )
     return msg_recived;
 }
 
-
 /**
 * @brief   **This is an interruption function for the CAN  **
 *
@@ -245,7 +243,6 @@ void HAL_FDCAN_RxFifo0Callback( FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs
         }
     }
 }
-
 
 /**
 * @brief   **Function that checks if the date is valid**
@@ -308,7 +305,6 @@ uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL)
 
     return flagd;
 }
-
 
 /**
 * @brief   **Gets the day of the week**
@@ -382,7 +378,6 @@ uint8_t valid_alarm(uint8_t hour,uint8_t minutes)
     }
     return Time_is_valid;
 }
-
 
 /**
 * @brief   **This function validates and stores messages recived through CAN**
