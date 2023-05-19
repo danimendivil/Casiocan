@@ -3,7 +3,6 @@
   * @defgroup CAN_conf values to use CAN.
   @{ */
 #define CAN_DATA_LENGHT    8    /*!< Data size of can */
-#define CAN_BYTES   0x10000U    /*!< Value for data size */
 /**
   @} */
 
@@ -169,12 +168,12 @@ void Serial_Init( void )
 static void CanTp_SingleFrameTx( uint8_t *data, uint8_t *size ) 
 {
     uint8_t CAN_msg[CAN_DATA_LENGHT]; 
-    if(*size <= 8 )
+    if(*size <= 8u )
     {
         CAN_msg[0] = *size;
-        for(uint8_t i = 1; i < 8; i++)
+        for(uint8_t i = 1u; i < 8u; i++)
         {
-            CAN_msg[i] = *(data+i-1);
+            CAN_msg[i] = *(data+i-1u);      /* cppcheck-suppress misra-c2012-18.4 ; operators to pointers needed */
         }
         HAL_FDCAN_AddMessageToTxFifoQ( &CANHandler, &CANTxHeader, CAN_msg );
     }
@@ -201,12 +200,12 @@ static uint8_t CanTp_SingleFrameRx( uint8_t *data, uint8_t *size )
     FDCAN_RxHeaderTypeDef CANRxHeader;
 
     HAL_FDCAN_GetRxMessage( &CANHandler, FDCAN_RX_FIFO0, &CANRxHeader, CAN_msg ); 
-    if ( (CAN_msg[0] >> 4) == 0 && (CAN_msg[0] <= 8) )
+    if ( ((CAN_msg[0] >> 4u) == 0u) && (CAN_msg[0] <= 8u) )
     {
         *size = CAN_msg[0];
-        for(uint8_t i = 0; i < 7; i++)
+        for(uint8_t i = 0u; i < 7u; i++)
         {
-            *(data+i) = CAN_msg[i+1];
+            *(data+i) = CAN_msg[i+1u];      /* cppcheck-suppress misra-c2012-18.4 ; operators to pointers needed */
         }
         msg_recived = TRUE;
     }
