@@ -6,11 +6,16 @@
 /**
   @} */
 
-#define OK_CANID        0x55
-#define FAILED_CANID    0xAA
+/** 
+  * @defgroup CAN byte values for confirmation .
+  @{ */
+#define OK_CANID        0x55    /*!<correct information*/    
+#define FAILED_CANID    0xAA    /*!<incorrect information*/
+/**
+  @} */
 
 /** 
-  * @defgroup <months> months values 
+  * @defgroup months months values 
   @{ */
 #define JAN 1u     /*!<JANUARY*/
 #define FEB 2u     /*!<FEBRUARY*/
@@ -30,9 +35,8 @@
 /**
  * @brief APP Messages.
  *
- * This enumeration represents the various types of states of the machine
+ * This enumeration represents the various types of messages
  */
- 
 typedef enum
 /* cppcheck-suppress misra-c2012-2.4 ; enum is used on state machine */
 {
@@ -41,12 +45,20 @@ typedef enum
     SERIAL_MSG_ALARM,
 }APP_Messages;
 
+/**
+ * @brief State machine states.
+ *
+ * This enumeration represents the various types of states of the machine
+ */
 typedef enum
 /* cppcheck-suppress misra-c2012-2.4 ; enum is used on state machine */
 {
-    GETMSG = 4u,
-    FAILED,
-    OK
+    STATE_TIME = 1U,
+    STATE_DATE,
+    STATE_ALARM,
+    STATE_GETMSG,
+    STATE_FAILED,
+    STATE_OK
 }States;
 
 /**
@@ -54,10 +66,6 @@ typedef enum
  */
 FDCAN_HandleTypeDef CANHandler; 
 
-/**
- * @brief  Variable for CAN transmition configuration
- */
-static FDCAN_TxHeaderTypeDef CANTxHeader;
 
 /**
  * @brief  Flag for CAN msg recive interruption
@@ -72,7 +80,7 @@ APP_MsgTypeDef td_message;  //time and date message
 /**
 * @brief  Variable for cases of the state mahcine.
 */
-static uint8_t cases = GETMSG ; /* cppcheck-suppress misra-c2012-8.9 ; Function does not work if defined in serial task */
+static uint8_t cases = STATE_GETMSG ; /* cppcheck-suppress misra-c2012-8.9 ; Function does not work if defined in serial task */
 
 /**
 * @brief  Variable for the data of the state machine.
@@ -144,13 +152,6 @@ void Serial_Init( void )
     
     /*we activated the reception interruption in fifo0 when a message arrives*/
     HAL_FDCAN_ActivateNotification( &CANHandler, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0 );
-
-     /* Parameter declaration for CAN transmition */
-    CANTxHeader.IdType      = FDCAN_STANDARD_ID;
-    CANTxHeader.FDFormat    = FDCAN_CLASSIC_CAN;
-    CANTxHeader.TxFrameType = FDCAN_DATA_FRAME;
-    CANTxHeader.Identifier  = 0x122;
-    CANTxHeader.DataLength  = FDCAN_DLC_BYTES_8;
 }
 
 /**
@@ -167,6 +168,13 @@ void Serial_Init( void )
 */
 static void CanTp_SingleFrameTx( uint8_t *data, uint8_t *size ) 
 {
+    FDCAN_TxHeaderTypeDef CANTxHeader;
+     /* Parameter declaration for CAN transmition */
+    CANTxHeader.IdType      = FDCAN_STANDARD_ID;
+    CANTxHeader.FDFormat    = FDCAN_CLASSIC_CAN;
+    CANTxHeader.TxFrameType = FDCAN_DATA_FRAME;
+    CANTxHeader.Identifier  = 0x122;
+    CANTxHeader.DataLength  = FDCAN_DLC_BYTES_8;
     uint8_t CAN_msg[CAN_DATA_LENGHT]; 
     if(*size <= 8u )
     {
@@ -336,8 +344,8 @@ uint8_t dayofweek(uint32_t yearM, uint32_t yearL, uint32_t month, uint32_t day){
         w += 7u;
     }
     return w;
-
 }
+
 /**
 * @brief   **The fucntion validates the parameters for time**
 *
@@ -390,28 +398,26 @@ uint8_t valid_alarm(uint8_t hour,uint8_t minutes){
 * if the next state is SERIAL_MSG_ALARM it validates the data and if they are correct are store on the td_message variable and 
 * state is changed to ok, otherwise state will be FAILED        
 */
-
-
 void Serial_Task( void )
 {
     switch(cases){
 
-        case GETMSG:
+        case STATE_GETMSG:
 
             if (flag == TRUE)
             {
                 flag = FALSE;
                 if(Data_msg[0] == (uint8_t)SERIAL_MSG_TIME)
                 {
-                    cases = (uint8_t)SERIAL_MSG_TIME;
+                    cases = (uint8_t)STATE_TIME;
                 }
                 else if(Data_msg[0] == (uint8_t)SERIAL_MSG_DATE)
                 {
-                    cases = (uint8_t)SERIAL_MSG_DATE;
+                    cases = (uint8_t)STATE_DATE;
                 }
                 else if(Data_msg[0] == (uint8_t)SERIAL_MSG_ALARM)
                 {
-                    cases = (uint8_t)SERIAL_MSG_ALARM;
+                    cases = (uint8_t)STATE_ALARM;
                 }  
                 else{}
             } 
@@ -420,7 +426,7 @@ void Serial_Task( void )
             break;
 
        
-        case SERIAL_MSG_TIME:
+        case STATE_TIME:
             
             if( valid_time(Data_msg[1],Data_msg[2],Data_msg[3]) == TRUE)
             {
@@ -428,15 +434,15 @@ void Serial_Task( void )
                 td_message.tm.tm_min=Data_msg[2];
                 td_message.tm.tm_sec=Data_msg[3];
                 td_message.msg=SERIAL_MSG_TIME;
-                cases=OK;
+                cases = STATE_OK;
             }
             else
             {
-                cases=FAILED;
+                cases = STATE_FAILED;
             }
              break;
 
-        case SERIAL_MSG_DATE:
+        case STATE_DATE:
 
             if(valid_date(Data_msg[1],Data_msg[2], Data_msg[3],Data_msg[4]) == TRUE)
             {
@@ -446,48 +452,48 @@ void Serial_Task( void )
                 td_message.tm.tm_year_lsb = Data_msg[4];
                 td_message.tm.tm_wday = dayofweek(td_message.tm.tm_year_msb,td_message.tm.tm_year_lsb, td_message.tm.tm_mon, td_message.tm.tm_mday);
                 td_message.msg = SERIAL_MSG_DATE;
-                cases = OK;
+                cases = STATE_OK;
             }
             else
             {
-                cases=FAILED;
+                cases = STATE_FAILED;
             }
             break;
 
-        case SERIAL_MSG_ALARM:
+        case STATE_ALARM:
 
             if(valid_alarm( Data_msg[1],Data_msg[2]) == TRUE)
             {
                 td_message.tm.tm_hour=Data_msg[1];
                 td_message.tm.tm_min=Data_msg[2];
                 td_message.msg = SERIAL_MSG_ALARM;
-                cases = OK;
+                cases = STATE_OK;
             }
             else
             {
-                cases=FAILED;
+                cases = STATE_FAILED;
             }
             break;
         
-        case FAILED:
+        case STATE_FAILED:
             
             Data_msg[0]=FAILED_CANID;
             CAN_size=1;
             CanTp_SingleFrameTx( &Data_msg[0],&CAN_size);
-            cases=GETMSG;
+            cases = STATE_GETMSG;
             break;
 
-        case OK:
+        case STATE_OK:
             
             Data_msg[0]=OK_CANID;
             CAN_size=1;
             CanTp_SingleFrameTx( &Data_msg[0],&CAN_size);
-            cases=GETMSG;
+            cases = STATE_GETMSG;
             break;
  
         default:
 
-            cases=GETMSG;
+            cases = STATE_GETMSG;
             break;
     }
 }

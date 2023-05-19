@@ -29,7 +29,6 @@
         uint32_t tm_isdst;       /*!< daylight saving time             */
     }APP_TmTypeDef;
 
-
     /**
     * @brief   structure with APP_TmTypeDef and a message 
     */
@@ -38,7 +37,7 @@
         uint8_t msg;          /*!< Store the message type to send */
         APP_TmTypeDef tm;     /*!< time and date in stdlib tm format */
     }APP_MsgTypeDef;
-    
+
     /**
     * @brief  Variable for state machien messages.
     */
@@ -48,8 +47,6 @@
     * @brief  Variable for CAN configuration
     */
     extern FDCAN_HandleTypeDef CANHandler; /* cppcheck-suppress misra-c2012-8.4 ; this function can`t be modify */
-
-
-
+    
 #endif
 
