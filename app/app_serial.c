@@ -80,7 +80,6 @@ APP_MsgTypeDef td_message;  //time and date message
 /**
 * @brief  Variable for cases of the state mahcine.
 */
-static uint8_t cases = STATE_GETMSG ; /* cppcheck-suppress misra-c2012-8.9 ; Function does not work if defined in serial task */
 
 /**
 * @brief  Variable for the data of the state machine.
@@ -402,7 +401,9 @@ uint8_t valid_alarm(uint8_t hour,uint8_t minutes)
 */
 void Serial_Task( void )
 {
-    switch(cases){
+    static uint8_t cases = STATE_GETMSG ; /* cppcheck-suppress misra-c2012-8.9 ; Function does not work if defined in serial task */
+    switch(cases)
+    {
 
         case STATE_GETMSG:
 
