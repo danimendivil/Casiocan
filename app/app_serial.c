@@ -322,8 +322,8 @@ uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL)
 *
 * @retval  returns a value of the day of the week defines. 
 */
-uint8_t dayofweek(uint32_t yearM, uint32_t yearL, uint32_t month, uint32_t day){
-
+uint8_t dayofweek(uint32_t yearM, uint32_t yearL, uint32_t month, uint32_t day)
+{
     uint32_t year = ((uint32_t)(yearM) * 100u) + (uint32_t)yearL;
     uint32_t m = month;
     uint32_t c;
@@ -355,7 +355,8 @@ uint8_t dayofweek(uint32_t yearM, uint32_t yearL, uint32_t month, uint32_t day){
 *
 * @retval  Time_is_valid[out]    if 0 if data is unvalid and 1 if it is valid
 */
-uint8_t valid_time(uint8_t hour,uint8_t minutes,uint8_t seconds){
+uint8_t valid_time(uint8_t hour,uint8_t minutes,uint8_t seconds)
+{
     uint8_t Time_is_valid = FALSE;
     if((hour < 24u) && (minutes < 60u) && (seconds < 60u))
     {
@@ -372,7 +373,8 @@ uint8_t valid_time(uint8_t hour,uint8_t minutes,uint8_t seconds){
 *
 * @retval  Time_is_valid[out]    if 0 if data is unvalid and 1 if it is valid
 */
-uint8_t valid_alarm(uint8_t hour,uint8_t minutes){
+uint8_t valid_alarm(uint8_t hour,uint8_t minutes)
+{
     uint8_t Time_is_valid = FALSE;
 
     if((hour < 24u) && (minutes < 60u))
