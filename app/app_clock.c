@@ -42,10 +42,8 @@ static int tick_1000ms;
  */
 static RTC_AlarmTypeDef sAlarm;
 
-/**
- * @brief  Variable for states of the state machine
- */
-static int Clockstate = CLOCK_ST_IDLE; /* cppcheck-suppress misra-c2012-8.9 ; Function does not work if defined in serial task */
+
+ 
 
 
 /**
@@ -116,6 +114,8 @@ void Clock_Init( void )
 
 void Clock_Task( void )
 {
+    int Clockstate = CLOCK_ST_IDLE;
+    
     switch(Clockstate)
     {
 
