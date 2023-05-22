@@ -10,14 +10,14 @@ typedef enum
 /* cppcheck-suppress misra-c2012-2.4 ; enum is used on state machine */
 {
     NOT_MESSAGE = 0u,
-    CHANGE_TIME,
-    CHANGE_DATE,
-    CHANGE_ALARM,
-    DISPLAY_MSG,
-    IDLE,
-    GET_MSG,
-    MESSAGE
-}CLOCK_STATES;
+    CLOCK_ST_CHANGE_TIME,
+    CLOCK_ST_CHANGE_DATE,
+    CLOCK_ST_CHANGE_ALARM,
+    CLOCK_ST_DISPLAY_MSG,
+    CLOCK_ST_IDLE,
+    CLOCK_ST_GET_MSG,
+    CLOCK_ST_MESSAGE
+} CLOCK_STATES;
 
 /**
  * @brief  Variable for rtc configuration
@@ -38,9 +38,14 @@ static RTC_TimeTypeDef sTime;
 static int tick_1000ms;
 
 /**
+ * @brief  Variable for Alarm configuration
+ */
+static RTC_AlarmTypeDef sAlarm;
+
+/**
  * @brief  Variable for states of the state machine
  */
-static int Clockstate = IDLE; /* cppcheck-suppress misra-c2012-8.9 ; Function does not work if defined in serial task */
+static int Clockstate = CLOCK_ST_IDLE; /* cppcheck-suppress misra-c2012-8.9 ; Function does not work if defined in serial task */
 
 
 /**
@@ -84,6 +89,14 @@ void Clock_Init( void )
     
     HAL_RTC_SetDate( &hrtc, &sDate, RTC_FORMAT_BCD );
     
+    sAlarm.AlarmTime.Hours = 0x00;      
+    sAlarm.AlarmTime.Minutes = 0x00;    
+    sAlarm.AlarmTime.Seconds = 0x00;    
+    sAlarm.AlarmTime.SubSeconds = 0x00; 
+    sAlarm.Alarm = RTC_ALARM_A;         
+
+    HAL_RTC_DeactivateAlarm(&hrtc, RTC_ALARM_A);
+    
     tick_1000ms=HAL_GetTick();
 }
 
@@ -106,33 +119,33 @@ void Clock_Task( void )
     switch(Clockstate)
     {
 
-        case IDLE:
+        case CLOCK_ST_IDLE:
         {
             if( CAN_td_message.msg != (uint8_t)NOT_MESSAGE)
             {
-                Clockstate = GET_MSG;
+                Clockstate = CLOCK_ST_GET_MSG;
             }
             if( (HAL_GetTick() - tick_1000ms) >= 1000)
             {
                 tick_1000ms = HAL_GetTick();
-                Clockstate  = DISPLAY_MSG;
+                Clockstate  = CLOCK_ST_DISPLAY_MSG;
             }
             break;
         }
-        case GET_MSG:
+        case CLOCK_ST_GET_MSG:
         {
 
-            if(CAN_td_message.msg==(uint8_t)CHANGE_TIME)
+            if(CAN_td_message.msg==(uint8_t)CLOCK_ST_CHANGE_TIME)
             {
-                Clockstate = CHANGE_TIME;
+                Clockstate = CLOCK_ST_CHANGE_TIME;
             }
-            else if (CAN_td_message.msg==(uint8_t)CHANGE_DATE)
+            else if (CAN_td_message.msg==(uint8_t)CLOCK_ST_CHANGE_DATE)
             {
-                Clockstate = CHANGE_DATE;
+                Clockstate = CLOCK_ST_CHANGE_DATE;
             }
-            else if (CAN_td_message.msg==(uint8_t)CHANGE_ALARM)
+            else if (CAN_td_message.msg==(uint8_t)CLOCK_ST_CHANGE_ALARM)
             {
-                Clockstate = CHANGE_ALARM;
+                Clockstate = CLOCK_ST_CHANGE_ALARM;
             }
             else
             {
@@ -142,21 +155,21 @@ void Clock_Task( void )
 
         }
             
-        case DISPLAY_MSG:
+        case CLOCK_ST_DISPLAY_MSG:
         {
             /* Get the RTC current Time */
             HAL_RTC_GetTime( &hrtc, &sTime, RTC_FORMAT_BIN );
             /* Get the RTC current Date */
             HAL_RTC_GetDate( &hrtc, &sDate, RTC_FORMAT_BIN );
 
-            printf("time:%d:%d:%d \n\r",sTime.Hours,sTime.Minutes,sTime.Seconds); /* cppcheck-suppress misra-c2012-17.7 ; Return value has no usage */
-            printf("date:%d:%d:%ld%d \n\r",sDate.Date,sDate.Month,CAN_td_message.tm.tm_year_msb,sDate.Year); /* cppcheck-suppress misra-c2012-17.7 ; Return value has no usage */
+            (void) printf("time:%d:%d:%d \n\r",sTime.Hours,sTime.Minutes,sTime.Seconds); 
+            (void) printf("date:%d:%d:%ld%d \n\r",sDate.Date,sDate.Month,CAN_td_message.tm.tm_year_msb,sDate.Year); 
 
-            Clockstate=IDLE;
+            Clockstate=CLOCK_ST_IDLE;
             break;
         }
 
-        case CHANGE_TIME:
+        case CLOCK_ST_CHANGE_TIME:
         {
             sTime.Hours          = CAN_td_message.tm.tm_hour;
             sTime.Minutes        = CAN_td_message.tm.tm_min;
@@ -166,11 +179,11 @@ void Clock_Task( void )
             sTime.StoreOperation = RTC_STOREOPERATION_RESET;
             
             HAL_RTC_SetTime( &hrtc, &sTime, RTC_FORMAT_BCD );
-            Clockstate=DISPLAY_MSG;
+            Clockstate=CLOCK_ST_DISPLAY_MSG;
             break;
         }
         
-        case CHANGE_DATE:
+        case CLOCK_ST_CHANGE_DATE:
         {
             sDate.WeekDay   = CAN_td_message.tm.tm_wday;
             sDate.Month     = CAN_td_message.tm.tm_mon;
@@ -179,12 +192,19 @@ void Clock_Task( void )
 
             HAL_RTC_SetDate( &hrtc, &sDate, RTC_FORMAT_BCD );
 
-            Clockstate          = DISPLAY_MSG;
+            Clockstate          = CLOCK_ST_DISPLAY_MSG;
             CAN_td_message.msg  = NOT_MESSAGE;
             break;
         }
-        case CHANGE_ALARM:
+        case CLOCK_ST_CHANGE_ALARM:
         {
+            sAlarm.AlarmTime.Hours      = CAN_td_message.tm.tm_hour;      
+            sAlarm.AlarmTime.Minutes    = CAN_td_message.tm.tm_min;    
+            sAlarm.AlarmTime.Seconds    = CAN_td_message.tm.tm_sec;    
+            sAlarm.AlarmTime.SubSeconds = 0x00; 
+            sAlarm.Alarm = RTC_ALARM_A;         
+            HAL_RTC_DeactivateAlarm(&hrtc, RTC_ALARM_A);
+            HAL_RTC_SetAlarm_IT(&hrtc, &sAlarm, RTC_FORMAT_BCD);
             CAN_td_message.msg = NOT_MESSAGE;
             break;
         }
