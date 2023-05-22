@@ -1,6 +1,11 @@
 #include "app_clock.h"
 #include <stdio.h>      /* cppcheck-suppress misra-c2012-21.6 ; the stdio.h is necesary */
 
+/**
+ * @brief CLock State machine states.
+ *
+ * This enumeration represents the various types of states of the machine
+ */
 typedef enum
 /* cppcheck-suppress misra-c2012-2.4 ; enum is used on state machine */
 {
@@ -14,11 +19,29 @@ typedef enum
     MESSAGE
 }CLOCK_STATES;
 
+/**
+ * @brief  Variable for rtc configuration
+ */
 static RTC_HandleTypeDef hrtc = {0};
+
+/**
+ * @brief  Variable for rtc Date configuration
+ */
 static RTC_DateTypeDef sDate;
+/**
+ * @brief  Variable for rtc Time configuration
+ */
 static RTC_TimeTypeDef sTime;
+/**
+ * @brief  Variable for concurrent process of displaying the date every second
+ */
 static int tick_1000ms;
-int Clockstate = IDLE;
+
+/**
+ * @brief  Variable for states of the state machine
+ */
+static int Clockstate = IDLE; /* cppcheck-suppress misra-c2012-8.9 ; Function does not work if defined in serial task */
+
 
 /**
  * @brief   **This function intiates the RTC and the tick_1000ms variable**
@@ -36,11 +59,7 @@ int Clockstate = IDLE;
 void Clock_Init( void )      
 {
      HAL_Init(); 
-    
-    
     /*declare as global variable or static*/
-    
-
     hrtc.Instance             = RTC;
     hrtc.Init.HourFormat      = RTC_HOURFORMAT_24;
     hrtc.Init.AsynchPrediv    = 0x7F;
@@ -49,7 +68,6 @@ void Clock_Init( void )
     /* initilize the RTC with 24 hour format and no output signal enble */
     HAL_RTC_Init( &hrtc );
     
-
     sTime.Hours      = 0x02;
     sTime.Minutes    = 0x00;
     sTime.Seconds    = 0x00;
@@ -59,7 +77,6 @@ void Clock_Init( void )
     
     HAL_RTC_SetTime( &hrtc, &sTime, RTC_FORMAT_BCD );
     
-
     sDate.WeekDay = RTC_WEEKDAY_MONDAY;
     sDate.Month   = RTC_MONTH_APRIL;
     sDate.Date    = 0x11;
@@ -67,10 +84,7 @@ void Clock_Init( void )
     
     HAL_RTC_SetDate( &hrtc, &sDate, RTC_FORMAT_BCD );
     
-
     tick_1000ms=HAL_GetTick();
-   
-    
 }
 
 /**
@@ -86,9 +100,11 @@ void Clock_Init( void )
 *   
 * @retval  none 
 */
+
 void Clock_Task( void )
 {
-    switch(Clockstate){
+    switch(Clockstate)
+    {
 
         case IDLE:
         {
@@ -133,8 +149,8 @@ void Clock_Task( void )
             /* Get the RTC current Date */
             HAL_RTC_GetDate( &hrtc, &sDate, RTC_FORMAT_BIN );
 
-            printf("%d,%d,%d \n\r",sDate.Year,sDate.Date,sDate.Month); /* cppcheck-suppress misra-c2012-17.7 ; Return value has no usage */
-            printf("%d,%d,%d \n\r",sTime.Hours,sTime.Minutes,sTime.Seconds); /* cppcheck-suppress misra-c2012-17.7 ; Return value has no usage */
+            printf("time:%d:%d:%d \n\r",sTime.Hours,sTime.Minutes,sTime.Seconds); /* cppcheck-suppress misra-c2012-17.7 ; Return value has no usage */
+            printf("date:%d:%d:%ld%d \n\r",sDate.Date,sDate.Month,CAN_td_message.tm.tm_year_msb,sDate.Year); /* cppcheck-suppress misra-c2012-17.7 ; Return value has no usage */
 
             Clockstate=IDLE;
             break;
@@ -177,7 +193,5 @@ void Clock_Task( void )
             CAN_td_message.msg = 0;
             break;
         }
-
     }
-
 }
