@@ -2,7 +2,7 @@
 #include "app_serial.h"
 #include "app_clock.h"
 //Add more includes if need them
-
+extern void initialise_monitor_handles(void);
 int main( void )
 {
     HAL_Init();
