@@ -10,10 +10,10 @@ typedef enum
 /* cppcheck-suppress misra-c2012-2.4 ; enum is used on state machine */
 {
     NOT_MESSAGE = 0u,
-    DISPLAY_MSG,
     CHANGE_TIME,
     CHANGE_DATE,
     CHANGE_ALARM,
+    DISPLAY_MSG,
     IDLE,
     GET_MSG,
     MESSAGE
