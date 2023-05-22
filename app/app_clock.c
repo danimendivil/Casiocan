@@ -180,17 +180,17 @@ void Clock_Task( void )
             HAL_RTC_SetDate( &hrtc, &sDate, RTC_FORMAT_BCD );
 
             Clockstate          = DISPLAY_MSG;
-            CAN_td_message.msg  = 0;
+            CAN_td_message.msg  = NOT_MESSAGE;
             break;
         }
         case CHANGE_ALARM:
         {
-            CAN_td_message.msg = 0;
+            CAN_td_message.msg = NOT_MESSAGE;
             break;
         }
         default:
         {
-            CAN_td_message.msg = 0;
+            CAN_td_message.msg = NOT_MESSAGE;
             break;
         }
     }
