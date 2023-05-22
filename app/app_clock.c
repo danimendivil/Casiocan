@@ -14,10 +14,10 @@ typedef enum
     MESSAGE
 }CLOCK_STATES;
 
-RTC_HandleTypeDef hrtc = {0};
-RTC_DateTypeDef sDate;
-RTC_TimeTypeDef sTime;
-int tick_1000ms;
+static RTC_HandleTypeDef hrtc = {0};
+static RTC_DateTypeDef sDate;
+static RTC_TimeTypeDef sTime;
+static int tick_1000ms;
 int Clockstate = IDLE;
 
 /**
@@ -92,7 +92,7 @@ void Clock_Task( void )
 
         case IDLE:
         {
-            if( CAN_td_message.msg != NOT_MESSAGE)
+            if( CAN_td_message.msg != (uint8_t)NOT_MESSAGE)
             {
                 Clockstate = GET_MSG;
             }
@@ -106,15 +106,15 @@ void Clock_Task( void )
         case GET_MSG:
         {
 
-            if(CAN_td_message.msg==CHANGE_TIME)
+            if(CAN_td_message.msg==(uint8_t)CHANGE_TIME)
             {
                 Clockstate = CHANGE_TIME;
             }
-            else if (CAN_td_message.msg==CHANGE_DATE)
+            else if (CAN_td_message.msg==(uint8_t)CHANGE_DATE)
             {
                 Clockstate = CHANGE_DATE;
             }
-            else if (CAN_td_message.msg==CHANGE_ALARM)
+            else if (CAN_td_message.msg==(uint8_t)CHANGE_ALARM)
             {
                 Clockstate = CHANGE_ALARM;
             }
@@ -133,8 +133,8 @@ void Clock_Task( void )
             /* Get the RTC current Date */
             HAL_RTC_GetDate( &hrtc, &sDate, RTC_FORMAT_BIN );
 
-            printf("%d,%d,%d \n\r",sDate.Year,sDate.Date,sDate.Month);
-            printf("%d,%d,%d \n\r",sTime.Hours,sTime.Minutes,sTime.Seconds);
+            printf("%d,%d,%d \n\r",sDate.Year,sDate.Date,sDate.Month); /* cppcheck-suppress misra-c2012-17.7 ; Return value has no usage */
+            printf("%d,%d,%d \n\r",sTime.Hours,sTime.Minutes,sTime.Seconds); /* cppcheck-suppress misra-c2012-17.7 ; Return value has no usage */
 
             Clockstate=IDLE;
             break;
