@@ -1,16 +1,19 @@
 #include "app_bsp.h"
 #include "app_serial.h"
-//Add more includes as needed
-
+#include "app_clock.h"
+//Add more includes if need them
+extern void initialise_monitor_handles(void);
 int main( void )
 {
     HAL_Init();
     Serial_Init();
-    //Add more initilizations as needed
+    Clock_Init();
+    //Add more initilizations if need them
     
     for( ;; )
     {
         Serial_Task();
-        //Add another task as needed
+        Clock_Task();
+        //Add another task if need it
     }
 }

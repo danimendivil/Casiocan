@@ -75,7 +75,7 @@ static uint8_t flag;
 /**
 * @brief  Variable for state machien messages.
 */
-APP_MsgTypeDef td_message;  //time and date message
+APP_MsgTypeDef CAN_td_message;  //time and date message
 
 /**
 * @brief  Variable for cases of the state mahcine.
@@ -90,6 +90,8 @@ static uint8_t Data_msg[CAN_DATA_LENGHT];/* cppcheck-suppress misra-c2012-8.9 ; 
 * @brief  Variable for the size of the message recived by CAN.
 */
 static uint8_t CAN_size;
+
+static uint8_t cases = STATE_GETMSG ; /* cppcheck-suppress misra-c2012-8.9 ; Function does not work if defined in serial task */
 
 static uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL);
 static uint8_t dayofweek(uint32_t yearM, uint32_t yearL, uint32_t month, uint32_t day);
@@ -385,18 +387,18 @@ uint8_t valid_alarm(uint8_t hour,uint8_t minutes)
 * The first state of the state machine is the GETMSG were we use the funtion Can_Tp_SingleFrameRx to see 
 * if a message has been recived, if a message has been recived it compares the values to APP_Messages defines
 * to see what is going to be the next state, if the next state is SERIAL_MSG_TIME it validates the values and 
-* if the values are correct they are store on the td_message variable, and the state is change to the OK state where it sends
+* if the values are correct they are store on the CAN_td_message variable, and the state is change to the OK state where it sends
 * a confirmation message if the values are wrong then the next state is FAILED where it sends an error message and the 
 * state is changed to GETMSG.
 * if the next state is SERIAL_MSG_DATE it validates the values with the valid_date() function and if the date is valid
-* it also calls the dayofweek function to get the day of the week if they are valid then they are store on the td_message variable 
+* it also calls the dayofweek function to get the day of the week if they are valid then they are store on the CAN_td_message variable 
 * an the state will be change to OK otherwise state will be FAILED
-* if the next state is SERIAL_MSG_ALARM it validates the data and if they are correct are store on the td_message variable and 
+* if the next state is SERIAL_MSG_ALARM it validates the data and if they are correct are store on the CAN_td_message variable and 
 * state is changed to ok, otherwise state will be FAILED        
 */
 void Serial_Task( void )
 {
-    static uint8_t cases = STATE_GETMSG ; /* cppcheck-suppress misra-c2012-8.9 ; Function does not work if defined in serial task */
+    
     switch(cases)
     {
 
@@ -428,10 +430,8 @@ void Serial_Task( void )
             
             if( valid_time(Data_msg[1],Data_msg[2],Data_msg[3]) == TRUE)
             {
-                td_message.tm.tm_hour=Data_msg[1];
-                td_message.tm.tm_min=Data_msg[2];
-                td_message.tm.tm_sec=Data_msg[3];
-                td_message.msg=SERIAL_MSG_TIME;
+                CAN_td_message.tm.tm_hour=Data_msg[1];
+                CAN_td_message.msg=SERIAL_MSG_TIME;
                 cases = STATE_OK;
             }
             else
@@ -444,12 +444,12 @@ void Serial_Task( void )
 
             if(valid_date(Data_msg[1],Data_msg[2], Data_msg[3],Data_msg[4]) == TRUE)
             {
-                td_message.tm.tm_mday = Data_msg[1];
-                td_message.tm.tm_mon = Data_msg[2];
-                td_message.tm.tm_year_msb = Data_msg[3];
-                td_message.tm.tm_year_lsb = Data_msg[4];
-                td_message.tm.tm_wday = dayofweek(td_message.tm.tm_year_msb,td_message.tm.tm_year_lsb, td_message.tm.tm_mon, td_message.tm.tm_mday);
-                td_message.msg = SERIAL_MSG_DATE;
+                CAN_td_message.tm.tm_mday = Data_msg[1];
+                CAN_td_message.tm.tm_mon = Data_msg[2];
+                CAN_td_message.tm.tm_year_msb = Data_msg[3];
+                CAN_td_message.tm.tm_year_lsb = Data_msg[4];
+                CAN_td_message.tm.tm_wday = dayofweek(CAN_td_message.tm.tm_year_msb,CAN_td_message.tm.tm_year_lsb, CAN_td_message.tm.tm_mon, CAN_td_message.tm.tm_mday);
+                CAN_td_message.msg = SERIAL_MSG_DATE;
                 cases = STATE_OK;
             }
             else
@@ -462,9 +462,9 @@ void Serial_Task( void )
 
             if(valid_alarm( Data_msg[1],Data_msg[2]) == TRUE)
             {
-                td_message.tm.tm_hour=Data_msg[1];
-                td_message.tm.tm_min=Data_msg[2];
-                td_message.msg = SERIAL_MSG_ALARM;
+                CAN_td_message.tm.tm_hour=Data_msg[1];
+                CAN_td_message.tm.tm_min=Data_msg[2];
+                CAN_td_message.msg = SERIAL_MSG_ALARM;
                 cases = STATE_OK;
             }
             else

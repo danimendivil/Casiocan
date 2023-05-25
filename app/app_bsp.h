@@ -41,7 +41,7 @@
     /**
     * @brief  Variable for state machien messages.
     */
-    extern APP_MsgTypeDef td_message;
+    extern APP_MsgTypeDef CAN_td_message;
 
     /**
     * @brief  Variable for CAN configuration
