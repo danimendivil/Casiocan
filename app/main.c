@@ -12,8 +12,19 @@ static void hearth_beat(void);
 static void init_watchdog(void);
 static void peth_the_dog(void);
 
+/**
+* @brief  Variable for concurrent process of watchdog refresh.
+*/
 static int tick_Dog;
+
+/**
+* @brief  Variable for concurrent process of hearth beat.
+*/
 static int tick_hearth;
+
+/**
+* @brief  Variable for watchdog configuration.
+*/
 static WWDG_HandleTypeDef hwwdg;
 
 int main( void )
