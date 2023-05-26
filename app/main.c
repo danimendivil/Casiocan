@@ -2,8 +2,10 @@
 #include "app_serial.h"
 #include "app_clock.h"
 //Add more includes if need them
-#define hearth_tick_value   300
-#define watchdog_refresh    34
+#define hearth_tick_value   300u
+#define watchdog_refresh    34u
+#define watchdog_window     94
+#define watchdog_counter    127
 
 extern void initialise_monitor_handles(void);
 
@@ -15,12 +17,12 @@ static void peth_the_dog(void);
 /**
 * @brief  Variable for concurrent process of watchdog refresh.
 */
-static int tick_Dog;
+static uint32_t tick_Dog;
 
 /**
 * @brief  Variable for concurrent process of hearth beat.
 */
-static int tick_hearth;
+static uint32_t tick_hearth;
 
 /**
 * @brief  Variable for watchdog configuration.
@@ -73,14 +75,14 @@ void hearth_init(void)
 /**
 * @brief   **hearth_beat function**
 *
-*   This function toggle the LED on GPIO_PIN_0 every hearth_tick_value wich is 300
+*   This function toggle the LED on GPIO_PIN_0 every hearth_tick_value wich is 300ms
 */
 void hearth_beat(void)
 {
     if( (HAL_GetTick() - tick_hearth) >= hearth_tick_value )
     {    
-    HAL_GPIO_TogglePin( GPIOC, GPIO_PIN_0 );   
-    tick_hearth = HAL_GetTick(); 
+        HAL_GPIO_TogglePin( GPIOC, GPIO_PIN_0 );   
+        tick_hearth = HAL_GetTick(); 
     }  
 }
 
@@ -104,8 +106,8 @@ void init_watchdog(void)
 
     hwwdg.Instance          = WWDG;
     hwwdg.Init.Prescaler    = WWDG_PRESCALER_16;
-    hwwdg.Init.Window       = 94;
-    hwwdg.Init.Counter      = 127;
+    hwwdg.Init.Window       = watchdog_window;
+    hwwdg.Init.Counter      = watchdog_counter;
     hwwdg.Init.EWIMode      = WWDG_EWI_DISABLE;
     
     HAL_WWDG_Init(&hwwdg);
@@ -116,8 +118,11 @@ void init_watchdog(void)
 /**
 * @brief   **Refresh function for Watchdog**
 *
-*   This function refresh the watchdog every 34ms since this is
-*   the value calculated in the init function
+*   This function refresh the watchdog since if the watchdog is not refresh
+*   before it`s timeout it will trigger a reset on the microcontroller,
+*   because if it`s not refresh it would mean that the program is not working properly
+*   in this case the reset is every 34ms that value is previusly calculated on the init_watchdog
+*   function.
 */
 void peth_the_dog(void)
 {

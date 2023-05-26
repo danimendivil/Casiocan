@@ -2,7 +2,17 @@
  * Archivo con la funciones de las incilaizaciones auxiliares de la libreria
 -------------------------------------------------------------------------------------------------*/
 #include "app_bsp.h"
-
+/**
+* @brief   **HAL_MspInit**
+*
+*   This function initializes the RCC Oscillators according to the specified parameters in the RCC_OscInitTypeDef structure
+*   The frequency set is 64MHz with the internal 16MHz HSI oscilator. According to the formulas:
+*   fVCO = fPLLIN x ( N / M ) = 16MHz x (8 / 1) = 128MHz
+*   fPLLP = fVCO / P = 128MHz / 2 = 64MHz
+*   fPLLQ = fVCO / Q = 128MHz / 2 = 64MHz
+*   fPLLR = fVCO / R = 128MHz / 2 = 64MHz
+*
+*/
 void HAL_MspInit( void )   /* cppcheck-suppress misra-c2012-8.4 ; this is a library function */
 {
     RCC_OscInitTypeDef RCC_OscInitStruct = {0};
@@ -14,13 +24,6 @@ void HAL_MspInit( void )   /* cppcheck-suppress misra-c2012-8.4 ; this is a libr
     /** Configure the main internal regulator output voltage*/
     HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1);
 
-    /* Initializes the RCC Oscillators according to the specified parameters in the RCC_OscInitTypeDef structure
-    The frequency set is 64MHz with the internal 16MHz HSI oscilator. According to the formulas:
-    fVCO = fPLLIN x ( N / M ) = 16MHz x (8 / 1) = 128MHz
-    fPLLP = fVCO / P = 128MHz / 2 = 64MHz
-    fPLLQ = fVCO / Q = 128MHz / 2 = 64MHz
-    fPLLR = fVCO / R = 128MHz / 2 = 64MHz
-    */
     RCC_OscInitStruct.OscillatorType      = RCC_OSCILLATORTYPE_HSI;
     RCC_OscInitStruct.HSIState            = RCC_HSI_ON;
     RCC_OscInitStruct.HSIDiv              = RCC_HSI_DIV1;
@@ -38,7 +41,7 @@ void HAL_MspInit( void )   /* cppcheck-suppress misra-c2012-8.4 ; this is a libr
     RCC_ClkInitStruct.ClockType       = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1;
     RCC_ClkInitStruct.SYSCLKSource    = RCC_SYSCLKSOURCE_PLLCLK;
     RCC_ClkInitStruct.AHBCLKDivider   = RCC_SYSCLK_DIV1;
-    RCC_ClkInitStruct.APB1CLKDivider  = RCC_HCLK_DIV1;
+    RCC_ClkInitStruct.APB1CLKDivider  = RCC_HCLK_DIV2;
     HAL_RCC_ClockConfig( &RCC_ClkInitStruct, FLASH_LATENCY_2 );
     
 }
