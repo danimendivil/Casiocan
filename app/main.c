@@ -2,10 +2,21 @@
 #include "app_serial.h"
 #include "app_clock.h"
 //Add more includes if need them
-#define hearth_tick_value   300u
-#define watchdog_refresh    34u
-#define watchdog_window     94
-#define watchdog_counter    127
+/** 
+  * @defgroup Hearth tick value.
+  @{ */
+#define HEARTH_TICK_VALUE   300u    /*!<hearth toggle value*/        
+/**
+  @} */
+
+/** 
+  * @defgroup Watchdog values.
+  @{ */
+#define WATCHDOG_REFRESH    34u     /*!<value to refresh the watchdog*/ 
+#define WATCHDOG_WINDOW     94      /*!<window watchdog value*/ 
+#define WATCHDOG_COUNTER    127     /*!<counter watchdog value*/
+/**
+  @} */
 
 extern void initialise_monitor_handles(void);
 
@@ -75,11 +86,11 @@ void hearth_init(void)
 /**
 * @brief   **hearth_beat function**
 *
-*   This function toggle the LED on GPIO_PIN_0 every hearth_tick_value wich is 300ms
+*   This function toggle the LED on GPIO_PIN_0 every HEARTH_TICK_VALUE wich is 300ms
 */
 void hearth_beat(void)
 {
-    if( (HAL_GetTick() - tick_hearth) >= hearth_tick_value )
+    if( (HAL_GetTick() - tick_hearth) >= HEARTH_TICK_VALUE )
     {    
         HAL_GPIO_TogglePin( GPIOC, GPIO_PIN_0 );   
         tick_hearth = HAL_GetTick(); 
@@ -106,8 +117,8 @@ void init_watchdog(void)
 
     hwwdg.Instance          = WWDG;
     hwwdg.Init.Prescaler    = WWDG_PRESCALER_16;
-    hwwdg.Init.Window       = watchdog_window;
-    hwwdg.Init.Counter      = watchdog_counter;
+    hwwdg.Init.Window       = WATCHDOG_WINDOW;
+    hwwdg.Init.Counter      = WATCHDOG_COUNTER;
     hwwdg.Init.EWIMode      = WWDG_EWI_DISABLE;
     
     HAL_WWDG_Init(&hwwdg);
@@ -127,7 +138,7 @@ void init_watchdog(void)
 void peth_the_dog(void)
 {
 
-    if( (HAL_GetTick() - tick_Dog) >= watchdog_refresh)
+    if( (HAL_GetTick() - tick_Dog) >= WATCHDOG_REFRESH)
     {
         tick_Dog = HAL_GetTick(); 
         HAL_WWDG_Refresh(&hwwdg);     
