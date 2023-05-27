@@ -122,7 +122,7 @@ void Serial_Init( void )
     CANHandler.Instance                 = FDCAN1;
     CANHandler.Init.Mode                = FDCAN_MODE_NORMAL;
     CANHandler.Init.FrameFormat         = FDCAN_FRAME_CLASSIC;
-    CANHandler.Init.ClockDivider        = FDCAN_CLOCK_DIV1;
+    CANHandler.Init.ClockDivider        = FDCAN_CLOCK_DIV4;
     CANHandler.Init.TxFifoQueueMode     = FDCAN_TX_FIFO_OPERATION;
     CANHandler.Init.AutoRetransmission  = DISABLE;
     CANHandler.Init.TransmitPause       = DISABLE;
