@@ -53,18 +53,18 @@
     @{ */
     typedef struct LCD_HandleTypeDef
     {
-        SPI_HandleTypeDef   *SpiHandler; /* SPI handler address of the spi to use with the LCD*/
-        GPIO_TypeDef        *RstPort;   /*port where the pin to control the LCD reset pin is*/
-        uint32_t            RstPin; /*pin to control the LCD reset pin */
-        GPIO_TypeDef        *RsPort; /*port where the pin to control the LCD RS pin*/
-        uint32_t            RsPin;  /*pin to control the LCD RS pin */
-        GPIO_TypeDef        *CsPort; /*port where the pin to control the LCD chip select is*/
-        uint32_t            CsPin;  /*pin to control the LCD chip select pin */
-        GPIO_TypeDef        *BklPort; /*port where the pin to control the LCD backlight is*/
-        uint32_t            BklPin;  /*pin to control the LCD backlight pin */
-        uint8_t             screen   /*state of lcd screen */
-        //agregar más elementos si se requieren
-    }LCD_HandleTypeDef;
+        SPI_HandleTypeDef   *SpiHandler; /* SPI handler address of the spi to use with the LCD */
+        GPIO_TypeDef        *RstPort;    /* Port where the pin to control the LCD reset pin is */
+        uint32_t            RstPin;      /* Pin to control the LCD reset pin */
+        GPIO_TypeDef        *RsPort;     /* Port where the pin to control the LCD RS pin is */
+        uint32_t            RsPin;       /* Pin to control the LCD RS pin */
+        GPIO_TypeDef        *CsPort;     /* Port where the pin to control the LCD chip select is */
+        uint32_t            CsPin;       /* Pin to control the LCD chip select pin */
+        GPIO_TypeDef        *BklPort;    /* Port where the pin to control the LCD backlight is */
+        uint32_t            BklPin;      /* Pin to control the LCD backlight pin */
+        uint8_t             screen;      /* State of the LCD screen */
+        // Add more elements if needed
+    } LCD_HandleTypeDef;
     /**
     @} */
     

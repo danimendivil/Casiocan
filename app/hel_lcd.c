@@ -64,9 +64,9 @@ uint8_t HEL_LCD_Init( LCD_HandleTypeDef *hlcd )
     hlcd->SpiHandler->Init.TIMode         = SPI_TIMODE_DISABLED;
     
     HAL_GPIO_WritePin( hlcd->CsPort, hlcd->CsPin, SET );
-    SPI_state=HAL_SPI_Init( hlcd->SpiHandler );
+    SPI_state = HAL_SPI_Init( hlcd->SpiHandler );
     
-
+     /*LCD initialization rutine*/
     HAL_GPIO_WritePin( GPIOD, hlcd->CsPin, SET );       
     HAL_GPIO_WritePin( GPIOD, hlcd->RstPin, RESET );    
 
@@ -94,12 +94,12 @@ uint8_t HEL_LCD_Command( LCD_HandleTypeDef *hlcd, uint8_t cmd )
     HAL_GPIO_WritePin( hlcd->RsPort, hlcd->RsPin, RESET );
     HAL_GPIO_WritePin( hlcd->CsPort, hlcd->CsPin, RESET );
 
-    uint8_t LCD_Command_State = HAL_SPI_Transmit( hlcd->SpiHandler, &cmd, 1, 5000 );
+    uint8_t SPI_STATUS = HAL_SPI_Transmit( hlcd->SpiHandler, &cmd, 1, 5000 );
 
     HAL_GPIO_WritePin( hlcd->CsPort, hlcd->CsPin, SET );
-    HAL_Delay(30);
+    HAL_Delay(10);
 
-    return LCD_Command_State;
+    return SPI_STATUS;
 }
 
 uint8_t HEL_LCD_Data( LCD_HandleTypeDef *hlcd, uint8_t data )
@@ -107,11 +107,22 @@ uint8_t HEL_LCD_Data( LCD_HandleTypeDef *hlcd, uint8_t data )
     HAL_GPIO_WritePin( hlcd->RsPort, hlcd->RsPin, SET );
     HAL_GPIO_WritePin( hlcd->CsPort, hlcd->CsPin, RESET );
     
-    uint8_t ret = HAL_SPI_Transmit( hlcd->SpiHandler, &data, 1, 5000 );
+    uint8_t SPI_STATUS = HAL_SPI_Transmit( hlcd->SpiHandler, &data, 1, 5000 );
 
     HAL_GPIO_WritePin( hlcd->CsPort, hlcd->CsPin, SET );
     
-    HAL_Delay(30);
 
-    return ret;
+    return SPI_STATUS;
+}
+
+uint8_t HEL_LCD_String( LCD_HandleTypeDef *hlcd, char *str )
+{
+    uint8_t str_lenght = strlen(str);
+    uint8_t Data_status;
+
+    for(uint8_t i = 0; i < str_lenght;i++)
+    {
+        Data_status=HEL_LCD_Data(hlcd, *(str+i) );
+    }
+    return Data_status;
 }

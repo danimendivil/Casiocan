@@ -8,6 +8,7 @@
     void HEL_LCD_MspInit( LCD_HandleTypeDef *hlcd )__attribute__((weak));
     uint8_t HEL_LCD_Command( LCD_HandleTypeDef *hlcd, uint8_t cmd );
     uint8_t HEL_LCD_Data( LCD_HandleTypeDef *hlcd, uint8_t data );
+    uint8_t HEL_LCD_String( LCD_HandleTypeDef *hlcd, char *str );
     /** 
     * @defgroup Row positions this are the values of the first and second row of the lcd
     @{ */

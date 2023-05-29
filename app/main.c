@@ -13,7 +13,7 @@
 /** 
   * @defgroup Watchdog values.
   @{ */
-#define WATCHDOG_REFRESH    34u     /*!<value to refresh the watchdog*/ 
+#define WATCHDOG_REFRESH    68u     /*!<value to refresh the watchdog*/ 
 #define WATCHDOG_WINDOW     94      /*!<window watchdog value*/ 
 #define WATCHDOG_COUNTER    127     /*!<counter watchdog value*/
 /**
@@ -40,26 +40,26 @@ static uint32_t tick_hearth;
 * @brief  Variable for watchdog configuration.
 */
 static WWDG_HandleTypeDef hwwdg;
-LCD_HandleTypeDef LCD;
 
 int main( void )
 {
-    HAL_Init();
-    Serial_Init();
-    Clock_Init();
-    hearth_init();
-    init_watchdog();
     
-    //Add more initilizations if need them
+  HAL_Init();
+  Serial_Init();
+  Clock_Init();
+  hearth_init();
+  init_watchdog();
     
-    for( ;; )
-    {
-        Serial_Task();
-        Clock_Task();
-        hearth_beat();
-        peth_the_dog();
-        //Add another task if need it
-    }
+  //Add more initilizations if need them
+    
+  for( ;; )
+  {
+    Serial_Task();
+    Clock_Task();
+    hearth_beat();
+    peth_the_dog();
+    //Add another task if need it
+  }
 }
 
 /**
@@ -107,11 +107,11 @@ void hearth_beat(void)
 *   The watchdog timeout calculation is:
 *   tWWDG= tPCLK * 4096 * 2 ^ WDGTB[1:0] * (T 5:0[ ]+ 1) 
 *   using a prescaler of 16 and a counter value of 126 the timeout is:
-*   tWWDG= (1/64000) * 4096 * 2 ^ 4 * (127 + 1) = 131.07ms
+*   tWWDG= (1/32000) * 4096 * 2 ^ 4 * (127 + 1) = 262.614ms
 *   now we do the calculation with the window value of 94
-*   tWWDG= (1/64000) * 4096 * 2 ^ 4 * (94 + 1) = 97.28ms
+*   tWWDG= (1/32000) * 4096 * 2 ^ 4 * (94 + 1) = 194.56ms
 *   now we substract the timeout value of the counter with the timeout value of the window
-*   refresh_min_value = 131.07ms-97.28ms = 33.792ms
+*   refresh_min_value = 194.56ms-194.56ms = 67.584ms
 *   thats the minimum value to refresh the watchdog.
 */
 void init_watchdog(void)
