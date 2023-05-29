@@ -1,6 +1,7 @@
 #include "app_bsp.h"
 #include "app_serial.h"
 #include "app_clock.h"
+#include "hel_lcd.h"
 //Add more includes if need them
 /** 
   * @defgroup Hearth tick value.
@@ -39,6 +40,7 @@ static uint32_t tick_hearth;
 * @brief  Variable for watchdog configuration.
 */
 static WWDG_HandleTypeDef hwwdg;
+LCD_HandleTypeDef LCD;
 
 int main( void )
 {
@@ -47,6 +49,7 @@ int main( void )
     Clock_Init();
     hearth_init();
     init_watchdog();
+    
     //Add more initilizations if need them
     
     for( ;; )
