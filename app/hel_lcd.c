@@ -137,6 +137,16 @@ uint8_t HEL_LCD_SetCursor( LCD_HandleTypeDef *hlcd, uint8_t row, uint8_t col )
     pos=(pos | row) + col;
 
     uint8_t Cursor_Status=HEL_LCD_Command(&LCD, pos );
-    
+
     return Cursor_Status;
+}
+
+void HEL_LCD_Backlight( LCD_HandleTypeDef *hlcd, uint8_t state )
+{
+    if(state==TOGGLE)
+    {
+        state = !(hlcd->screen);
+    }
+    HAL_GPIO_WritePin( hlcd->BklPort, LCD.BklPin, state );
+    hlcd->screen=state;
 }
