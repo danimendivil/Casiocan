@@ -1,5 +1,6 @@
 #include "hel_lcd.h"
-
+#define     contrast_command    0x70
+#define     max_contrast        16
 void HEL_LCD_MspInit( LCD_HandleTypeDef *hlcd )
 {
     HAL_Init(); 
@@ -136,7 +137,7 @@ uint8_t HEL_LCD_SetCursor( LCD_HandleTypeDef *hlcd, uint8_t row, uint8_t col )
     uint8_t pos=0x80;
     pos=(pos | row) + col;
 
-    uint8_t Cursor_Status=HEL_LCD_Command(&LCD, pos );
+    uint8_t Cursor_Status=HEL_LCD_Command(hlcd, pos );
 
     return Cursor_Status;
 }
@@ -147,6 +148,21 @@ void HEL_LCD_Backlight( LCD_HandleTypeDef *hlcd, uint8_t state )
     {
         state = !(hlcd->screen);
     }
-    HAL_GPIO_WritePin( hlcd->BklPort, LCD.BklPin, state );
+    HAL_GPIO_WritePin( hlcd->BklPort, hlcd->BklPin, state );
     hlcd->screen=state;
+}
+
+uint8_t HEL_LCD_Contrast( LCD_HandleTypeDef *hlcd, uint8_t contrast )
+{
+    uint8_t contrast_state;
+    uint8_t contrast_level = contrast_command;
+    if (contrast < max_contrast )
+    {
+        HEL_LCD_Command(hlcd,(contrast_level + contrast));
+    }
+    else
+    {
+       contrast_state = FALSE;  
+    }
+    return contrast_state;   
 }
