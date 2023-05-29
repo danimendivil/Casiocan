@@ -123,6 +123,20 @@ uint8_t HEL_LCD_String( LCD_HandleTypeDef *hlcd, char *str )
     for(uint8_t i = 0; i < str_lenght;i++)
     {
         Data_status=HEL_LCD_Data(hlcd, *(str+i) );
+        if(Data_status == HAL_ERROR)
+        {
+            i = str_lenght+1;
+        }
     }
     return Data_status;
+}
+
+uint8_t HEL_LCD_SetCursor( LCD_HandleTypeDef *hlcd, uint8_t row, uint8_t col )
+{
+    uint8_t pos=0x80;
+    pos=(pos | row) + col;
+
+    uint8_t Cursor_Status=HEL_LCD_Command(&LCD, pos );
+    
+    return Cursor_Status;
 }
