@@ -1,7 +1,7 @@
 #include "app_bsp.h"
 #include "app_serial.h"
 #include "app_clock.h"
-
+#include "hel_lcd.h"
 //Add more includes if need them
 /** 
   * @defgroup Hearth tick value.

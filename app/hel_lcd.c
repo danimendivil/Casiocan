@@ -2,29 +2,29 @@
 /** 
 * @defgroup Contrast conf This values are used fot he contrast configuration
 @{ */
-#define     max_contrast        16u     /*!< max value of contrast(4 bit register)*/
+#define     MAX-CONTRAST        16u     /*!< max value of contrast(4 bit register)*/
 /**
 @} */
 
 /** 
 * @defgroup Cursor postion values .
 @{ */
-#define     cursor_position     0x80u   /*!< cursor position command value*/
+#define     CURSOR_POSITION     0x80u   /*!< cursor position command value*/
 /**
 @} */
 
 /** 
 * @defgroup LCD command values .
 @{ */
-#define     wakeup              0x30    /*!< wakeup command*/
-#define     function_set        0x39    /*!< function set comman */
-#define     internal_osc_freq   0x14    /*!< internal osc frequency command */
-#define     power_control       0x56    /*!< power control command */
-#define     follower_control    0x6d    /*!< follower control command */
-#define     contrast_command    0x70    /*!< constrast command */
-#define     display_on          0x0D    /*!< display on command */
-#define     entry_mode          0x06    /*!< entry mode command */
-#define     clear_screen        0x01    /*!< clear screen command */
+#define     WAKEUP              0x30    /*!< wakeup command*/
+#define     FUNCTION_SET        0x39    /*!< function set comman */
+#define     INTERNAL_OSC_FREQ   0x14    /*!< internal osc frequency command */
+#define     POWER_CONTROL       0x56    /*!< power control command */
+#define     FOLLOWER_CONTROL    0x6d    /*!< follower control command */
+#define     CONTRAST_COMMAND    0x70    /*!< constrast command */
+#define     DISPLAT_ON          0x0D    /*!< display on command */
+#define     ENTRY_MODE          0x06    /*!< entry mode command */
+#define     CLEAR_SCREEN        0x01    /*!< clear screen command */
 /**
 @} */
     
@@ -40,58 +40,27 @@
 uint8_t HEL_LCD_Init( LCD_HandleTypeDef *hlcd )
 {
     uint8_t SPI_state;
-    /*Reset pin configuration*/
-    hlcd->RstPort     =   GPIOD;
-    hlcd->RstPin      =   GPIO_PIN_2;
-    /*LCD rs pin configuration*/
-    hlcd->RsPort      =   GPIOD;
-    hlcd->RsPin       =   GPIO_PIN_4;
-    /*Chip select pint configuration*/
-    hlcd->CsPort      =   GPIOD;
-    hlcd->CsPin       =   GPIO_PIN_3;
-    /*Backliht pin configuration*/
-    hlcd->BklPort     =   GPIOB;
-    hlcd->BklPin      =   GPIO_PIN_4;
-
-    HEL_LCD_MspInit(hlcd);
-    /*SPI init*/
-    HAL_GPIO_WritePin( hlcd->BklPort, hlcd->BklPin, SET );
-
-    hlcd->SpiHandler->Instance            = SPI1;
-    hlcd->SpiHandler->Init.Mode           = SPI_MODE_MASTER;
-    hlcd->SpiHandler->Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
-    hlcd->SpiHandler->Init.Direction      = SPI_DIRECTION_2LINES;
-    hlcd->SpiHandler->Init.CLKPhase       = SPI_PHASE_2EDGE;
-    hlcd->SpiHandler->Init.CLKPolarity    = SPI_POLARITY_HIGH;
-    hlcd->SpiHandler->Init.DataSize       = SPI_DATASIZE_8BIT;
-    hlcd->SpiHandler->Init.FirstBit       = SPI_FIRSTBIT_MSB;
-    hlcd->SpiHandler->Init.NSS            = SPI_NSS_SOFT;
-    hlcd->SpiHandler->Init.CRCCalculation = SPI_CRCCALCULATION_DISABLED;
-    hlcd->SpiHandler->Init.TIMode         = SPI_TIMODE_DISABLED;
-    
-    HAL_GPIO_WritePin( hlcd->CsPort, hlcd->CsPin, SET );
-    SPI_state = HAL_SPI_Init( hlcd->SpiHandler );
-    
-     /*LCD initialization rutine*/
+    /*LCD initialization rutine*/
     HAL_GPIO_WritePin( GPIOD, hlcd->CsPin, SET );       
     HAL_GPIO_WritePin( GPIOD, hlcd->RstPin, RESET );    
 
     HAL_GPIO_WritePin( GPIOD, hlcd->RstPin, SET );
+    HAL_Delay(1);
+        /*SPI STATE WILL LATER BE USED ON FUNCTIONAL SAFETY*/
+    SPI_state =  HEL_LCD_Command(hlcd, WAKEUP ); 
 
-    (void) HEL_LCD_Command(hlcd, wakeup ); 
-
-    (void) HEL_LCD_Command(hlcd, wakeup ); 
-    (void) HEL_LCD_Command(hlcd, wakeup ); 
-    (void) HEL_LCD_Command(hlcd, function_set ); 
-    (void) HEL_LCD_Command(hlcd, internal_osc_freq ); 
-    (void) HEL_LCD_Command(hlcd, power_control ); 
-    (void) HEL_LCD_Command(hlcd, follower_control ); 
+    SPI_state =  HEL_LCD_Command(hlcd, WAKEUP ); 
+    SPI_state =  HEL_LCD_Command(hlcd, WAKEUP ); 
+    SPI_state =  HEL_LCD_Command(hlcd, FUNCTION_SET ); 
+    SPI_state =  HEL_LCD_Command(hlcd, INTERNAL_OSC_FREQ ); 
+    SPI_state =  HEL_LCD_Command(hlcd, POWER_CONTROL ); 
+    SPI_state =  HEL_LCD_Command(hlcd, FOLLOWER_CONTROL ); 
      
-    (void) HEL_LCD_Command(hlcd, contrast_command ); 
-    (void) HEL_LCD_Command(hlcd, display_on ); 
-    (void) HEL_LCD_Command(hlcd, entry_mode ); 
-    (void) HEL_LCD_Command(hlcd, clear_screen ); 
-
+    SPI_state =  HEL_LCD_Command(hlcd, CONTRAST_COMMAND ); 
+    SPI_state =  HEL_LCD_Command(hlcd, DISPLAT_ON ); 
+    SPI_state =  HEL_LCD_Command(hlcd, ENTRY_MODE ); 
+    SPI_state =  HEL_LCD_Command(hlcd, CLEAR_SCREEN ); 
+    HAL_Delay(1);
     return SPI_state;
 }
 
@@ -114,7 +83,6 @@ uint8_t HEL_LCD_Command( LCD_HandleTypeDef *hlcd, uint8_t cmd )
     uint8_t SPI_STATUS = HAL_SPI_Transmit( hlcd->SpiHandler, &cmd, 1, 5000 );
 
     HAL_GPIO_WritePin( hlcd->CsPort, hlcd->CsPin, SET );
-    HAL_Delay(10);
 
     return SPI_STATUS;
 }
@@ -173,7 +141,7 @@ uint8_t HEL_LCD_String( LCD_HandleTypeDef *hlcd, char *str )
 /**
 * @brief   **This function sets the cursor on the LCD**
 *
-*   The function asigns the variable pos the value of cursor_position
+*   The function asigns the variable pos the value of CURSOR_POSITION
 *   wich is 0x80, thats the value of the command,
 *   set cursor in this LCD and adds the values of the position and row
 * 
@@ -183,7 +151,7 @@ uint8_t HEL_LCD_String( LCD_HandleTypeDef *hlcd, char *str )
 */
 uint8_t HEL_LCD_SetCursor( LCD_HandleTypeDef *hlcd, uint8_t row, uint8_t col )
 {
-    uint8_t pos = cursor_position;
+    uint8_t pos = CURSOR_POSITION;
     pos=(pos | row) + col;
 
     uint8_t Cursor_Status=HEL_LCD_Command(hlcd, pos );
@@ -215,9 +183,9 @@ void HEL_LCD_Backlight( LCD_HandleTypeDef *hlcd, uint8_t state )
 /**
 * @brief   **This function sets the contrast of the LCD**
 *
-*   The function asigns the variable contrast_level the value of contrast_command
+*   The function asigns the variable contrast_level the value of CONTRAST_COMMAND
 *   wich is 0x70, thats the value of the command, then checks if
-*   the value of the contrast is less than max_contrast wich is 16
+*   the value of the contrast is less than MAX-CONTRAST wich is 16
 *   since thats the max value that the lcd contrast has, if it is 
 *   less then this value is added to the contrast_level and is transmited 
 *   with the HEL_LCD_Command function  
@@ -228,8 +196,8 @@ void HEL_LCD_Backlight( LCD_HandleTypeDef *hlcd, uint8_t state )
 uint8_t HEL_LCD_Contrast( LCD_HandleTypeDef *hlcd, uint8_t contrast )
 {
     uint8_t contrast_state = FALSE;
-    uint8_t contrast_level = contrast_command;
-    if (contrast < max_contrast )
+    uint8_t contrast_level = CONTRAST_COMMAND;
+    if (contrast < MAX-CONTRAST )
     {
         contrast_state = HEL_LCD_Command(hlcd,(contrast_level + contrast));
     }

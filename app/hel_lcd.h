@@ -7,8 +7,8 @@
     /** 
      * @defgroup Row_positions this are the values of the first and second row of the lcd
      @{ */
-    #define first_row       0       /*!< first_row value */     /* cppcheck-suppress misra-c2012-2.5 ; tags will later be used*/
-    #define second_row      0x40    /*!< second_row value */    /* cppcheck-suppress misra-c2012-2.5 ; tags will later be used*/
+    #define FIRST_ROW       0       /*!< first_row value */     /* cppcheck-suppress misra-c2012-2.5 ; tags will later be used*/
+    #define SECOND_ROW      0x40    /*!< second_row value */    /* cppcheck-suppress misra-c2012-2.5 ; tags will later be used*/
     /**
        @} */
 
