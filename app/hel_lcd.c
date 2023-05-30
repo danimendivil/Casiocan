@@ -2,7 +2,6 @@
 /** 
 * @defgroup Contrast conf This values are used fot he contrast configuration
 @{ */
-#define     contrast_command    0x70u    /*!< contrast command value*/
 #define     max_contrast        16u     /*!< max value of contrast(4 bit register)*/
 /**
 @} */
@@ -14,37 +13,21 @@
 /**
 @} */
 
+/** 
+* @defgroup LCD command values .
+@{ */
+#define     wakeup              0x30    /*!< wakeup command*/
+#define     function_set        0x39    /*!< function set comman */
+#define     internal_osc_freq   0x14    /*!< internal osc frequency command */
+#define     power_control       0x56    /*!< power control command */
+#define     follower_control    0x6d    /*!< follower control command */
+#define     contrast_command    0x70    /*!< constrast command */
+#define     display_on          0x0D    /*!< display on command */
+#define     entry_mode          0x06    /*!< entry mode command */
+#define     clear_screen        0x01    /*!< clear screen command */
 /**
-* @brief   **This function initializes the GPIO ports for the LCD**
-*
-*  This function initializate the RstPin,CsPin,RsPin and BklPin
-*  this pins has to be previusly assigned.
-*
-* @retval  none
-*/
-void HEL_LCD_MspInit( LCD_HandleTypeDef *hlcd ) /* cppcheck-suppress misra-c2012-8.7 ; function will later be used*/
-{
-    HAL_Init(); 
-    GPIO_InitTypeDef GPIO_InitStruct;
-    __GPIOD_CLK_ENABLE(); /* habilitamos reloj del puerto C */
-
-    GPIO_InitStruct.Pin   = hlcd->RstPin|hlcd->CsPin|hlcd->RsPin;              /*pines a configurar*/
-    GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP; /*salida tipo push-pull*/
-    GPIO_InitStruct.Pull  = GPIO_NOPULL;        /*pin sin pull-up ni pull-down*/
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;     /*pin a baja velocidad*/
-    /*inicializamos pines con los parametros anteriores*/
-    HAL_GPIO_Init( hlcd->RstPort, &GPIO_InitStruct );
-
-    __GPIOB_CLK_ENABLE(); /* habilitamos reloj del puerto C */
-
-    GPIO_InitStruct.Pin   = hlcd->BklPin;              /*pines a configurar*/
-    GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP; /*salida tipo push-pull*/
-    GPIO_InitStruct.Pull  = GPIO_NOPULL;        /*pin sin pull-up ni pull-down*/
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;     /*pin a baja velocidad*/
-    /*inicializamos pines con los parametros anteriores*/
-    HAL_GPIO_Init( hlcd->BklPort, &GPIO_InitStruct );
-}
-
+@} */
+    
 /**
 * @brief   **This function initializes the parameters for the LCD and SPI**
 *
@@ -95,19 +78,19 @@ uint8_t HEL_LCD_Init( LCD_HandleTypeDef *hlcd )
 
     HAL_GPIO_WritePin( GPIOD, hlcd->RstPin, SET );
 
-    (void) HEL_LCD_Command(hlcd, 0x30 ); /*wakeup*/
+    (void) HEL_LCD_Command(hlcd, wakeup ); 
 
-    (void) HEL_LCD_Command(hlcd, 0x30 ); /*wakeup*/
-    (void) HEL_LCD_Command(hlcd, 0x30 ); /*wakeup*/
-    (void) HEL_LCD_Command(hlcd, 0x39 ); /*function set*/
-    (void) HEL_LCD_Command(hlcd, 0x14 ); /*internal osc frequency*/
-    (void) HEL_LCD_Command(hlcd, 0x56 ); /*power controll*/
-    (void) HEL_LCD_Command(hlcd, 0x6d ); /*follower control*/
+    (void) HEL_LCD_Command(hlcd, wakeup ); 
+    (void) HEL_LCD_Command(hlcd, wakeup ); 
+    (void) HEL_LCD_Command(hlcd, function_set ); 
+    (void) HEL_LCD_Command(hlcd, internal_osc_freq ); 
+    (void) HEL_LCD_Command(hlcd, power_control ); 
+    (void) HEL_LCD_Command(hlcd, follower_control ); 
      
-    (void) HEL_LCD_Command(hlcd, 0x70 ); /*constrast*/
-    (void) HEL_LCD_Command(hlcd, 0x0D ); /*display on*/
-    (void) HEL_LCD_Command(hlcd, 0x06 ); /*entry mode*/
-    (void) HEL_LCD_Command(hlcd, 0x01 ); /*clear screen*/
+    (void) HEL_LCD_Command(hlcd, contrast_command ); 
+    (void) HEL_LCD_Command(hlcd, display_on ); 
+    (void) HEL_LCD_Command(hlcd, entry_mode ); 
+    (void) HEL_LCD_Command(hlcd, clear_screen ); 
 
     return SPI_state;
 }
@@ -177,10 +160,11 @@ uint8_t HEL_LCD_String( LCD_HandleTypeDef *hlcd, char *str )
 
     for(uint8_t i = 0; i < str_lenght;i++)
     {
-        Data_status=HEL_LCD_Data(hlcd, *(str+i) );  /* cppcheck-suppress misra-c2012-18.4 ; pointer operator needed*/
+        Data_status=HEL_LCD_Data(hlcd, str[i] ); 
+         
         if(Data_status == HAL_ERROR)
         {
-            i = str_lenght+1u;   /* cppcheck-suppress misra-c2012-14.2 ; loop need to be stoped if condition is met*/
+            i = str_lenght+1u;   /* cppcheck-suppress misra-c2012-14.2 ; loop needs to be stoped if condition is met*/
         }
     }
     return Data_status;

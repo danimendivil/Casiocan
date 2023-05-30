@@ -117,3 +117,34 @@ void HAL_SPI_MspInit( SPI_HandleTypeDef *hspi )     /* cppcheck-suppress misra-c
     HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 }
 
+/* cppcheck-suppress misra-c2012-8.4 ; this is a library function */
+/**
+* @brief   **This function initializes the GPIO ports for the LCD**
+*
+*  This function initializate the RstPin,CsPin,RsPin and BklPin
+*  this pins has to be previusly assigned.
+*
+* @retval  none
+*/
+void HEL_LCD_MspInit( LCD_HandleTypeDef *hlcd ) /* cppcheck-suppress misra-c2012-8.7 ; function will later be used*/
+{
+    HAL_Init(); 
+    GPIO_InitTypeDef GPIO_InitStruct;
+    __GPIOD_CLK_ENABLE(); /* habilitamos reloj del puerto C */
+
+    GPIO_InitStruct.Pin   = hlcd->RstPin|hlcd->CsPin|hlcd->RsPin;              /*pines a configurar*/
+    GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP; /*salida tipo push-pull*/
+    GPIO_InitStruct.Pull  = GPIO_NOPULL;        /*pin sin pull-up ni pull-down*/
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;     /*pin a baja velocidad*/
+    /*inicializamos pines con los parametros anteriores*/
+    HAL_GPIO_Init( hlcd->RstPort, &GPIO_InitStruct );
+
+    __GPIOB_CLK_ENABLE(); /* habilitamos reloj del puerto C */
+
+    GPIO_InitStruct.Pin   = hlcd->BklPin;              /*pines a configurar*/
+    GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP; /*salida tipo push-pull*/
+    GPIO_InitStruct.Pull  = GPIO_NOPULL;        /*pin sin pull-up ni pull-down*/
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;     /*pin a baja velocidad*/
+    /*inicializamos pines con los parametros anteriores*/
+    HAL_GPIO_Init( hlcd->BklPort, &GPIO_InitStruct );
+}

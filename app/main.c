@@ -1,6 +1,7 @@
 #include "app_bsp.h"
 #include "app_serial.h"
 #include "app_clock.h"
+
 //Add more includes if need them
 /** 
   * @defgroup Hearth tick value.
@@ -42,7 +43,6 @@ static WWDG_HandleTypeDef hwwdg;
 
 int main( void )
 {
-    
   HAL_Init();
   Serial_Init();
   Clock_Init();
