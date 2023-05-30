@@ -2,7 +2,7 @@
 /** 
 * @defgroup Contrast conf This values are used fot he contrast configuration
 @{ */
-#define     MAX-CONTRAST        16u     /*!< max value of contrast(4 bit register)*/
+#define     MAX_CONTRAST        16u     /*!< max value of contrast(4 bit register)*/
 /**
 @} */
 
@@ -39,6 +39,7 @@
 */
 uint8_t HEL_LCD_Init( LCD_HandleTypeDef *hlcd )
 {
+    HEL_LCD_MspInit(hlcd );
     uint8_t SPI_state;
     /*LCD initialization rutine*/
     HAL_GPIO_WritePin( GPIOD, hlcd->CsPin, SET );       
@@ -197,7 +198,7 @@ uint8_t HEL_LCD_Contrast( LCD_HandleTypeDef *hlcd, uint8_t contrast )
 {
     uint8_t contrast_state = FALSE;
     uint8_t contrast_level = CONTRAST_COMMAND;
-    if (contrast < MAX-CONTRAST )
+    if (contrast < MAX_CONTRAST )
     {
         contrast_state = HEL_LCD_Command(hlcd,(contrast_level + contrast));
     }
