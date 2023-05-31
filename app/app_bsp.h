@@ -15,8 +15,8 @@
   /** 
   * @defgroup Display Display task values.
   @{ */
-  #define    DISPLAY_MESSAGE     1u   /*!< State for changing the time of the clock*/
-  #define    NO_DISPLAY_MESSAGE    0u   /*!< State for changing the date of the clock*/
+  #define    DISPLAY_MESSAGE        1u   /*!< State for changing the time of the clock*/
+  #define    NO_DISPLAY_MESSAGE     0u   /*!< State for changing the date of the clock*/
   /**
   @} */
 

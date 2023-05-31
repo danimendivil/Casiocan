@@ -92,7 +92,7 @@ void Display_Task( void )
 
         case STATE_PRINTH_WDAY:
             HEL_LCD_SetCursor(&LCDHandle,FIRST_ROW,0);
-            week(&fila_1[13],1);
+            week(&fila_1[13],ClockMsg.tm.tm_wday);
             HEL_LCD_String(&LCDHandle, fila_1);
             LCD_State = STATE_PRINTH_HOUR;
         break;

@@ -44,9 +44,8 @@ static WWDG_HandleTypeDef hwwdg;
 int main( void )
 {
   HAL_Init();
-  //Display_Init();  
+  Display_Init();  
   Clock_Init();
-  Display_Init();
   hearth_init();
   init_watchdog();
     
@@ -56,7 +55,7 @@ int main( void )
   {
     Serial_Task();
     Clock_Task();
-    //Display_Task();
+    Display_Task();
     hearth_beat();
     peth_the_dog();
     //Add another task if need it
