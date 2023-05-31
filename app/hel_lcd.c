@@ -27,7 +27,7 @@
 #define     CLEAR_SCREEN        0x01    /*!< clear screen command */
 /**
 @} */
-    
+
 /**
 * @brief   **This function initializes the parameters for the LCD and SPI**
 *
@@ -39,7 +39,6 @@
 */
 uint8_t HEL_LCD_Init( LCD_HandleTypeDef *hlcd )
 {
-    HEL_LCD_MspInit(hlcd );
     uint8_t SPI_state;
     /*LCD initialization rutine*/
     HAL_GPIO_WritePin( GPIOD, hlcd->CsPin, SET );       

@@ -147,4 +147,5 @@ void HEL_LCD_MspInit( LCD_HandleTypeDef *hlcd ) /* cppcheck-suppress misra-c2012
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;     /*pin a baja velocidad*/
     /*inicializamos pines con los parametros anteriores*/
     HAL_GPIO_Init( hlcd->BklPort, &GPIO_InitStruct );
+    HAL_GPIO_WritePin( hlcd->BklPort, hlcd->BklPin, SET );
 }

@@ -1,7 +1,7 @@
 #include "app_bsp.h"
 #include "app_serial.h"
 #include "app_clock.h"
-#include "hel_lcd.h"
+#include "app_display.h"
 //Add more includes if need them
 /** 
   * @defgroup Hearth tick value.
@@ -19,7 +19,7 @@
 /**
   @} */
 
-extern void initialise_monitor_handles(void);
+
 
 static void hearth_init(void);
 static void hearth_beat(void);
@@ -43,9 +43,11 @@ static WWDG_HandleTypeDef hwwdg;
 
 int main( void )
 {
+  
   HAL_Init();
-  Serial_Init();
+  Display_Init();  
   Clock_Init();
+  Display_Init();
   hearth_init();
   init_watchdog();
     
