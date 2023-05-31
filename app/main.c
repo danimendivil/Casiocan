@@ -57,6 +57,7 @@ int main( void )
   {
     Serial_Task();
     Clock_Task();
+    Display_Task();
     hearth_beat();
     peth_the_dog();
     //Add another task if need it

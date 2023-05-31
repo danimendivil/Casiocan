@@ -1,6 +1,6 @@
 #include "app_clock.h"
 #include <stdio.h>      /* cppcheck-suppress misra-c2012-21.6 ; the stdio.h is necesary */
-
+APP_MsgTypeDef ClockMsg;
 /**
  * @brief CLock State machine states.
  *
@@ -108,14 +108,11 @@ void Clock_Init( void )
 *   
 * @retval  none 
 */
-
+int Clockstate = CLOCK_ST_IDLE;
 void Clock_Task( void )
 {
-    int Clockstate = CLOCK_ST_IDLE;
-    
     switch(Clockstate)
     {
-
         case CLOCK_ST_IDLE:
         {
             if( CAN_td_message.msg != (uint8_t)NOT_MESSAGE)
@@ -158,10 +155,17 @@ void Clock_Task( void )
             HAL_RTC_GetTime( &hrtc, &sTime, RTC_FORMAT_BIN );
             /* Get the RTC current Date */
             HAL_RTC_GetDate( &hrtc, &sDate, RTC_FORMAT_BIN );
+            ClockMsg.tm.tm_year_msb = CAN_td_message.tm.tm_year_msb;
+            ClockMsg.tm.tm_mon = sDate.Month;
+            ClockMsg.tm.tm_mday = sDate.Date;
+            ClockMsg.tm.tm_year_lsb = sDate.Year;
+            ClockMsg.tm.tm_wday = sDate.WeekDay;
 
-            (void) printf("time:%d:%d:%d \n\r",sTime.Hours,sTime.Minutes,sTime.Seconds); 
-            (void) printf("date:%d:%d:%ld%d \n\r",sDate.Date,sDate.Month,CAN_td_message.tm.tm_year_msb,sDate.Year); 
+            ClockMsg.tm.tm_hour = sTime.Hours;
+            ClockMsg.tm.tm_min = sTime.Minutes;
+            ClockMsg.tm.tm_sec = sTime.Seconds;
 
+            ClockMsg.msg = DISPLAY_MESSAGE;
             Clockstate=CLOCK_ST_IDLE;
             break;
         }
@@ -193,6 +197,7 @@ void Clock_Task( void )
             CAN_td_message.msg  = NOT_MESSAGE;
             break;
         }
+        
         case CLOCK_ST_CHANGE_ALARM:
         {
             sAlarm.AlarmTime.Hours      = CAN_td_message.tm.tm_hour;      
