@@ -43,9 +43,6 @@ static int tick_1000ms;
 static RTC_AlarmTypeDef sAlarm;
 
 
- 
-
-
 /**
  * @brief   **This function intiates the RTC and the tick_1000ms variable**
  *
@@ -56,7 +53,7 @@ static RTC_AlarmTypeDef sAlarm;
  *  Then we set the parameters to set the time to 2:00:00 and date to Monday, April 17, 2023
  *  And we initialize the tick_1000ms for the concurrent process
  * 
- * @retval  none 
+ * @retval  None 
  */
  
 void Clock_Init( void )      
