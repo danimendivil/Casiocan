@@ -19,6 +19,8 @@ LCD_HandleTypeDef LCDHandle;
 SPI_HandleTypeDef SpiHandle;
 static void month(char *mon,char pos);
 static void week(char *week,char pos);
+static uint8_t bcdToDecimal(uint8_t bcdValue);
+
 void Display_Init( void )
 {
     LCDHandle.SpiHandler  =   &SpiHandle;
@@ -54,11 +56,12 @@ void Display_Init( void )
 
     HEL_LCD_Init(&LCDHandle );
 }
-char fila_1[]=" XXX,XX XXXX XX ";
-char fila_2[] = "00:00:00";
-uint8_t LCD_State  = STATE_IDLE;
+    char fila_1[]=" XXX,XX XXXX XX ";
+    char fila_2[] = "00:00:00";
+    uint8_t LCD_State  = STATE_IDLE;
 void Display_Task( void )
 {
+    
     
     switch(LCD_State)
     {
@@ -83,6 +86,7 @@ void Display_Task( void )
         break;
 
         case STATE_PRINTH_YEAR:
+            ClockMsg.tm.tm_year_msb = bcdToDecimal(ClockMsg.tm.tm_year_msb);
             fila_1[8]   = ( (ClockMsg.tm.tm_year_msb / 10u) + 48u);
             fila_1[9]   = ( (ClockMsg.tm.tm_year_msb % 10u) + 48u);
             fila_1[10]  = ( (ClockMsg.tm.tm_year_lsb / 10u) + 48u);
@@ -143,7 +147,12 @@ void week(char *week,char pos)
    }
 }
 
-void funcion_de_prueba(void){
 
-    
+uint8_t bcdToDecimal(uint8_t bcdValue) 
+{
+    uint8_t tens = (bcdValue >> 4) & 0x0F;  // Extract the tens digit
+    uint8_t ones = bcdValue & 0x0F;         // Extract the ones digit
+    uint8_t decimalValue = (tens * 10) + ones;  // Compute the decimal value
+
+    return decimalValue;
 }
