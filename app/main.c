@@ -44,6 +44,7 @@ static WWDG_HandleTypeDef hwwdg;
 int main( void )
 {
   HAL_Init();
+  Serial_Init();
   Display_Init();  
   Clock_Init();
   hearth_init();

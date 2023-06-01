@@ -69,8 +69,8 @@ void Clock_Init( void )
     HAL_RTC_Init( &hrtc );
     
     sTime.Hours      = 0x02;
-    sTime.Minutes    = 0x00;
-    sTime.Seconds    = 0x00;
+    sTime.Minutes    = 0x20;
+    sTime.Seconds    = 0x25;
     sTime.SubSeconds = 0x00;
     sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
     sTime.StoreOperation = RTC_STOREOPERATION_RESET;
@@ -181,6 +181,7 @@ void Clock_Task( void )
             
             HAL_RTC_SetTime( &hrtc, &sTime, RTC_FORMAT_BCD );
             Clockstate=CLOCK_ST_DISPLAY_MSG;
+            CAN_td_message.msg  = NOT_MESSAGE;
             break;
         }
         

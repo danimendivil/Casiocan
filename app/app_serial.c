@@ -431,6 +431,8 @@ void Serial_Task( void )
             if( valid_time(Data_msg[1],Data_msg[2],Data_msg[3]) == TRUE)
             {
                 CAN_td_message.tm.tm_hour=Data_msg[1];
+                CAN_td_message.tm.tm_min=Data_msg[2];
+                CAN_td_message.tm.tm_sec=Data_msg[3];
                 CAN_td_message.msg=SERIAL_MSG_TIME;
                 cases = STATE_OK;
             }
@@ -441,7 +443,7 @@ void Serial_Task( void )
              break;
 
         case STATE_DATE:
-
+        
             if(valid_date(Data_msg[1],Data_msg[2], Data_msg[3],Data_msg[4]) == TRUE)
             {
                 CAN_td_message.tm.tm_mday = Data_msg[1];
