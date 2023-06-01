@@ -17,9 +17,9 @@
 /** 
 * @defgroup Data size of states .
 @{ */
-#define TIME_DATA_SIZE  4U
-#define DATE_DATA_SIZE  6U
-#define ALARM_DATA_SIZE 3U
+#define TIME_DATA_SIZE  4U      /*!<Data size needed for time state*/
+#define DATE_DATA_SIZE  6U      /*!<Data size needed for date state*/
+#define ALARM_DATA_SIZE 3U      /*!<Data size needed for alarm state*/
 /**
   @} */
 
@@ -106,7 +106,7 @@ static uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yea
 static uint8_t dayofweek(uint32_t yearM, uint32_t yearL, uint32_t month, uint32_t day);
 static uint8_t valid_time(uint8_t hour,uint8_t minutes,uint8_t seconds);
 static uint8_t valid_alarm(uint8_t hour,uint8_t minutes);
-
+static uint8_t bcdToDecimal(uint8_t bcdValue); 
 /**
 * @brief   **Init function fot serial task(CAN init)**
 *
@@ -253,6 +253,26 @@ void HAL_FDCAN_RxFifo0Callback( FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs
             flag = TRUE;  
         }
     }
+}
+
+/**
+ * @brief   **This function gets the decimal value of a bcd  **
+ *
+ *  In this function, the input bcdValue is assumed to be an 8-bit value representing a number in BCD format. 
+ *  The function extracts the tens digit and ones digit from the BCD value using bitwise operations and masks. 
+ *  Then, it calculates the decimal value by multiplying the tens digit by 10 and adding the ones digit.
+ *
+ * @param   bcdValue[in] Indicates the bcd value that we want on decimal
+ *
+ * @retval  is a uint8_t can be any value        
+ */
+uint8_t bcdToDecimal(uint8_t bcdValue) 
+{
+    uint8_t tens = (bcdValue >> 4u) & 0x0Fu;  // Extract the tens digit
+    uint8_t ones = bcdValue & 0x0Fu;         // Extract the ones digit
+    uint8_t decimalValue = (tens * 10u) + ones;  // Compute the decimal value
+
+    return decimalValue;
 }
 
 /**
@@ -457,7 +477,7 @@ void Serial_Task( void )
             {
                 CAN_td_message.tm.tm_mday = Data_msg[1];
                 CAN_td_message.tm.tm_mon = Data_msg[2];
-                CAN_td_message.tm.tm_year_msb = Data_msg[3];
+                CAN_td_message.tm.tm_year_msb = bcdToDecimal(Data_msg[3]);
                 CAN_td_message.tm.tm_year_lsb = Data_msg[4];
                 CAN_td_message.tm.tm_wday = dayofweek(CAN_td_message.tm.tm_year_msb,CAN_td_message.tm.tm_year_lsb, CAN_td_message.tm.tm_mon, CAN_td_message.tm.tm_mday);
                 CAN_td_message.msg = SERIAL_MSG_DATE;

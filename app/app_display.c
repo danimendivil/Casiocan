@@ -4,14 +4,14 @@
 /** 
   * @defgroup <Lcd state machine> this are defines for the states
   @{ */
-#define    STATE_IDLE               0
-#define    STATE_PRINTH_MONTH       1
-#define    STATE_PRINTH_DAY         2
-#define    STATE_PRINTH_YEAR        3
-#define    STATE_PRINTH_WDAY        4
-#define    STATE_PRINTH_HOUR        5
-#define    STATE_PRINTH_MINUTES     6
-#define    STATE_PRINTH_SECONDS     7
+#define    STATE_IDLE               0       /*!<Idle state value*/
+#define    STATE_PRINTH_MONTH       1       /*!<month state value*/
+#define    STATE_PRINTH_DAY         2       /*!<day state value*/
+#define    STATE_PRINTH_YEAR        3       /*!<year state value*/
+#define    STATE_PRINTH_WDAY        4       /*!<week day state value*/  
+#define    STATE_PRINTH_HOUR        5       /*!<hour state value*/
+#define    STATE_PRINTH_MINUTES     6       /*!<minutes state value*/
+#define    STATE_PRINTH_SECONDS     7       /*!<seconds state value*/
 /**
   @} */
 
@@ -44,7 +44,6 @@ static uint8_t LCD_State  = STATE_IDLE;    /* cppcheck-suppress misra-c2012-8.9 
 
 static void month(char *mon,char pos);
 static void week(char *week,char pos);
-static uint8_t bcdToDecimal(uint8_t bcdValue);
 
 /**
  * @brief   **This function intiates the LCD and the SPI **
@@ -136,7 +135,6 @@ void Display_Task( void )
         break;
 
         case STATE_PRINTH_YEAR:
-            ClockMsg.tm.tm_year_msb = bcdToDecimal(ClockMsg.tm.tm_year_msb);
             fila_1[8]   = ( (ClockMsg.tm.tm_year_msb / 10u) + 48u);
             fila_1[9]   = ( (ClockMsg.tm.tm_year_msb % 10u) + 48u);
             fila_1[10]  = ( (ClockMsg.tm.tm_year_lsb / 10u) + 48u);
@@ -168,6 +166,7 @@ void Display_Task( void )
             fila_2[6] = ((ClockMsg.tm.tm_sec / 10u) + 48u);
             fila_2[7] = ((ClockMsg.tm.tm_sec % 10u) + 48u);
             (void)HEL_LCD_String(&LCDHandle, fila_2);
+            
             LCD_State = STATE_IDLE;
         break;
 
@@ -223,22 +222,3 @@ void week(char *week,char pos)
    }
 }
 
-/**
- * @brief   **This function gets the decimal value of a bcd  **
- *
- *  In this function, the input bcdValue is assumed to be an 8-bit value representing a number in BCD format. 
- *  The function extracts the tens digit and ones digit from the BCD value using bitwise operations and masks. 
- *  Then, it calculates the decimal value by multiplying the tens digit by 10 and adding the ones digit.
- *
- * @param   bcdValue[in] Indicates the bcd value that we want on decimal
- *
- * @retval  is a uint8_t can be any value        
- */
-uint8_t bcdToDecimal(uint8_t bcdValue) 
-{
-    uint8_t tens = (bcdValue >> 4u) & 0x0Fu;  // Extract the tens digit
-    uint8_t ones = bcdValue & 0x0Fu;         // Extract the ones digit
-    uint8_t decimalValue = (tens * 10u) + ones;  // Compute the decimal value
-
-    return decimalValue;
-}
