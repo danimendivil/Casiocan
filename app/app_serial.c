@@ -15,6 +15,15 @@
   @} */
 
 /** 
+* @defgroup Data size of states .
+@{ */
+#define TIME_DATA_SIZE  4U
+#define DATE_DATA_SIZE  6U
+#define ALARM_DATA_SIZE 3U
+/**
+  @} */
+
+/** 
   * @defgroup months months values 
   @{ */
 #define JAN 0x01u     /*!<JANUARY*/
@@ -407,15 +416,15 @@ void Serial_Task( void )
             if (flag == TRUE)
             {
                 flag = FALSE;
-                if((Data_msg[0] == (uint8_t)SERIAL_MSG_TIME) && CAN_size == 4 )
+                if((Data_msg[0] == (uint8_t)SERIAL_MSG_TIME) && (CAN_size == TIME_DATA_SIZE) )
                 {
                     cases = (uint8_t)STATE_TIME;
                 }
-                else if(Data_msg[0] == (uint8_t)SERIAL_MSG_DATE&& CAN_size == 6)
+                else if( (Data_msg[0] == (uint8_t)SERIAL_MSG_DATE) && (CAN_size == DATE_DATA_SIZE))
                 {
                     cases = (uint8_t)STATE_DATE;
                 }
-                else if((Data_msg[0] == (uint8_t)SERIAL_MSG_ALARM)&& CAN_size == 3)
+                else if((Data_msg[0] == (uint8_t)SERIAL_MSG_ALARM) && (CAN_size == ALARM_DATA_SIZE))
                 {
                     cases = (uint8_t)STATE_ALARM;
                 }  

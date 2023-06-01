@@ -42,7 +42,10 @@ static int tick_1000ms;
  */
 static RTC_AlarmTypeDef sAlarm;
 
-
+/**
+ * @brief  Variable for clock state machine
+ */
+int Clockstate = CLOCK_ST_IDLE; /* cppcheck-suppress misra-c2012-8.4 ; if defined on function function doesn`t work */
 /**
  * @brief   **This function intiates the RTC and the tick_1000ms variable**
  *
@@ -108,7 +111,6 @@ void Clock_Init( void )
 *   
 * @retval  none 
 */
-int Clockstate = CLOCK_ST_IDLE;
 void Clock_Task( void )
 {
     switch(Clockstate)
