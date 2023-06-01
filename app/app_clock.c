@@ -1,6 +1,6 @@
 #include "app_clock.h"
 #include <stdio.h>      /* cppcheck-suppress misra-c2012-21.6 ; the stdio.h is necesary */
-APP_MsgTypeDef ClockMsg;
+
 /**
  * @brief CLock State machine states.
  *
@@ -19,6 +19,10 @@ typedef enum
     CLOCK_ST_MESSAGE
 } CLOCK_STATES;
 
+/**
+ * @brief  Variable for clock message to lcd
+ */
+APP_MsgTypeDef ClockMsg;
 /**
  * @brief  Variable for rtc configuration
  */
