@@ -411,7 +411,7 @@ void Serial_Task( void )
                 {
                     cases = (uint8_t)STATE_TIME;
                 }
-                else if(Data_msg[0] == (uint8_t)SERIAL_MSG_DATE)
+                else if(Data_msg[0] == (uint8_t)SERIAL_MSG_DATE&& CAN_size == 6)
                 {
                     cases = (uint8_t)STATE_DATE;
                 }
