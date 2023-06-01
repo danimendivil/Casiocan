@@ -17,18 +17,18 @@
 /** 
   * @defgroup months months values 
   @{ */
-#define JAN 1u     /*!<JANUARY*/
-#define FEB 2u     /*!<FEBRUARY*/
-#define MAR 3u     /*!<MARCH*/
-#define APR 4u     /*!<APRIL*/
-#define MAY 5u     /*!<MAY*/
-#define JUN 6u     /*!<JUNE*/
-#define JUL 7u     /*!<JULY*/
-#define AUG 8u     /*!<AUGUST*/
-#define SEP 9u     /*!<SEPTEMBER*/
-#define OCT 10u    /*!<OCTOBER*/
-#define NOV 11u    /*!<NOVEMBER*/
-#define DEC 12u    /*!<DECEMBER*/
+#define JAN 0x01u     /*!<JANUARY*/
+#define FEB 0x02u     /*!<FEBRUARY*/
+#define MAR 0x03u     /*!<MARCH*/
+#define APR 0x04u     /*!<APRIL*/
+#define MAY 0x05u     /*!<MAY*/
+#define JUN 0x06u     /*!<JUNE*/
+#define JUL 0x07u     /*!<JULY*/
+#define AUG 0x08u     /*!<AUGUST*/
+#define SEP 0x09u     /*!<SEPTEMBER*/
+#define OCT 0x10u    /*!<OCTOBER*/
+#define NOV 0x11u    /*!<NOVEMBER*/
+#define DEC 0x12u    /*!<DECEMBER*/
 /**
   @} */
 
@@ -211,7 +211,7 @@ static uint8_t CanTp_SingleFrameRx( uint8_t *data, uint8_t *size )
     if ( ((CAN_msg[0] >> 4u) == 0u) && (CAN_msg[0] <= 8u) )
     {
         *size = CAN_msg[0];
-        for(uint8_t i = 0u; i < 7u; i++)
+        for(uint8_t i = 0u; i < CAN_msg[0]; i++)
         {
             *(data+i) = CAN_msg[i+1u];      /* cppcheck-suppress misra-c2012-18.4 ; operators to pointers needed */
         }
@@ -262,21 +262,21 @@ uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL)
     uint32_t year = ((uint32_t)(yearM) * 100u) + (uint32_t)yearL;
     uint32_t flagd = TRUE;
 
-    if ((day > 0u ) && (day <= 31u) && (month <= DEC) && (month >= JAN) && (year >= 1900u) && (year <= 2100u)) 
+    if ((day > 0x00u ) && (day <= 0x031u) && (month <= DEC) && (month >= JAN) && (yearM >= 0x19u) && (yearM <= 0x20u)) 
     {
 
         flagd = TRUE;
 
         if ((month == JAN) || (month == MAR) || (month == MAY) || (month == JUL) || (month == AUG) || (month == OCT) || (month == DEC)) 
         {
-            if (day > 31u)
+            if (day > 0x31u)
             {
                 flagd = FALSE;
             }
         } 
         else if ((month == APR) || (month == JUN) || (month == SEP) || (month == NOV)) 
         {
-            if (day > 30u) 
+            if (day > 0x30u) 
             {
                 flagd = FALSE;
             }
@@ -286,14 +286,14 @@ uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL)
         {
             if ((((year % 4u) == 0u) && ((year % 100u) != 0u)) || ((year % 400u) == 0u)) 
             {
-                if (day > 29u) 
+                if (day > 0x29u) 
                 {
                     flagd = FALSE;
                 }
             } 
             else 
             {
-                if (day > 28u) 
+                if (day > 0x28u) 
                 {
                     flagd = FALSE;
                 }
@@ -355,7 +355,7 @@ uint8_t dayofweek(uint32_t yearM, uint32_t yearL, uint32_t month, uint32_t day)
 uint8_t valid_time(uint8_t hour,uint8_t minutes,uint8_t seconds)
 {
     uint8_t Time_is_valid = FALSE;
-    if((hour < 24u) && (minutes < 60u) && (seconds < 60u))
+    if((hour < 0x24u) && (minutes < 0x60u) && (seconds < 0x60u))
     {
         Time_is_valid = TRUE;
     }
@@ -374,7 +374,7 @@ uint8_t valid_alarm(uint8_t hour,uint8_t minutes)
 {
     uint8_t Time_is_valid = FALSE;
 
-    if((hour < 24u) && (minutes < 60u))
+    if((hour < 0x24u) && (minutes < 0x60u))
     {
         Time_is_valid = TRUE;
     }
@@ -407,7 +407,7 @@ void Serial_Task( void )
             if (flag == TRUE)
             {
                 flag = FALSE;
-                if(Data_msg[0] == (uint8_t)SERIAL_MSG_TIME)
+                if((Data_msg[0] == (uint8_t)SERIAL_MSG_TIME) && CAN_size == 4 )
                 {
                     cases = (uint8_t)STATE_TIME;
                 }
@@ -415,7 +415,7 @@ void Serial_Task( void )
                 {
                     cases = (uint8_t)STATE_DATE;
                 }
-                else if(Data_msg[0] == (uint8_t)SERIAL_MSG_ALARM)
+                else if((Data_msg[0] == (uint8_t)SERIAL_MSG_ALARM)&& CAN_size == 3)
                 {
                     cases = (uint8_t)STATE_ALARM;
                 }  
