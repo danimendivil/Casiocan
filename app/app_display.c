@@ -142,3 +142,8 @@ void week(char *week,char pos)
         *(week+i)=*(sem+i+pos);
    }
 }
+
+void funcion_de_prueba(void){
+
+    
+}
