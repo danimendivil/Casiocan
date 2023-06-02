@@ -60,23 +60,6 @@
   * @brief  Variable for CAN configuration
   */
   extern FDCAN_HandleTypeDef CANHandler; /* cppcheck-suppress misra-c2012-8.4 ; this function can`t be modify */
-    
-  /**
-  * @brief   LCD_HandleTypedef Pins and ports of the lcd
-  */
-  typedef struct LCD_HandleTypeDef
-  {
-    SPI_HandleTypeDef   *SpiHandler; /*!< SPI handler address of the spi to use with the LCD */
-    GPIO_TypeDef        *RstPort;    /*!< Port where the pin to control the LCD reset pin is */
-    uint32_t            RstPin;      /*!< Pin to control the LCD reset pin */
-    GPIO_TypeDef        *RsPort;     /*!< Port where the pin to control the LCD RS pin is */
-    uint32_t            RsPin;       /*!< Pin to control the LCD RS pin */
-    GPIO_TypeDef        *CsPort;     /*!< Port where the pin to control the LCD chip select is */
-    uint32_t            CsPin;       /*!< Pin to control the LCD chip select pin */
-    GPIO_TypeDef        *BklPort;    /*!< Port where the pin to control the LCD backlight is */
-    uint32_t            BklPin;      /*!< Pin to control the LCD backlight pin */
-    uint8_t             screen;      /*!< State of the LCD screen */
-    // Add more elements if needed
-  } LCD_HandleTypeDef;   
+     
 #endif
 

@@ -2,6 +2,7 @@
  * Archivo con la funciones de las incilaizaciones auxiliares de la libreria
 -------------------------------------------------------------------------------------------------*/
 #include "app_bsp.h"
+#include "hel_lcd.h"
 /**
 * @brief   **HAL_MspInit**
 *

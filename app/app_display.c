@@ -25,23 +25,6 @@ static LCD_HandleTypeDef LCDHandle;
  */
 static SPI_HandleTypeDef SpiHandle;     /* cppcheck-suppress misra-c2012-8.9 ; the function stops working if defined in there*/
 
-/**
- * @brief  Variable for displaying the first row of the lcd
- */
-/* cppcheck-suppress misra-c2012-8.9 ; the function stops working if defined in there*/
-static char fila_1[] =" XXX,XX XXXX XX "; /* cppcheck-suppress misra-c2012-7.4 ; string need to be modify*/
-
-/**
- * @brief  Variable for displaying the second row of the lcd
- */
-/* cppcheck-suppress misra-c2012-8.9 ; the function stops working if defined in there*/
-static char fila_2[] = "00:00:00";        /* cppcheck-suppress misra-c2012-7.4 ; string need to be modify*/ 
-
-/**
- * @brief  Variable for display state machine 
- */
-static uint8_t LCD_State  = STATE_IDLE;    /* cppcheck-suppress misra-c2012-8.9 ; the function stops working if defined in there*/
-
 static void month(char *mon,char pos);
 static void week(char *week,char pos);
 
@@ -70,8 +53,6 @@ void Display_Init( void )
     LCDHandle.BklPort     =   GPIOB;
     LCDHandle.BklPin      =   GPIO_PIN_4;
 
-    HEL_LCD_MspInit(&LCDHandle);
-
     LCDHandle.SpiHandler->Instance            = SPI1;
     LCDHandle.SpiHandler->Init.Mode           = SPI_MODE_MASTER;
     LCDHandle.SpiHandler->Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
@@ -83,9 +64,6 @@ void Display_Init( void )
     LCDHandle.SpiHandler->Init.NSS            = SPI_NSS_SOFT;
     LCDHandle.SpiHandler->Init.CRCCalculation = SPI_CRCCALCULATION_DISABLED;
     LCDHandle.SpiHandler->Init.TIMode         = SPI_TIMODE_DISABLED;
-    
-    HAL_GPIO_WritePin( LCDHandle.CsPort, LCDHandle.CsPin, SET );
-    HAL_SPI_Init( LCDHandle.SpiHandler );
 
     (void)HEL_LCD_Init(&LCDHandle );
 }
@@ -113,6 +91,9 @@ void Display_Init( void )
  */    
 void Display_Task( void )
 {
+    static uint8_t LCD_State  = STATE_IDLE;
+    static char fila_2[] = "00:00:00";
+    static char fila_1[] =" XXX,XX XXXX XX ";
     switch(LCD_State)
     {
         case STATE_IDLE:
