@@ -2,6 +2,7 @@
  * Archivo con la funciones de las incilaizaciones auxiliares de la libreria
 -------------------------------------------------------------------------------------------------*/
 #include "app_bsp.h"
+#include "hel_lcd.h"
 /**
 * @brief   **HAL_MspInit**
 *
@@ -147,4 +148,5 @@ void HEL_LCD_MspInit( LCD_HandleTypeDef *hlcd ) /* cppcheck-suppress misra-c2012
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;     /*pin a baja velocidad*/
     /*inicializamos pines con los parametros anteriores*/
     HAL_GPIO_Init( hlcd->BklPort, &GPIO_InitStruct );
+    HAL_GPIO_WritePin( hlcd->BklPort, hlcd->BklPin, SET );
 }

@@ -15,20 +15,29 @@
   @} */
 
 /** 
+* @defgroup Data size of states .
+@{ */
+#define TIME_DATA_SIZE  4U      /*!<Data size needed for time state*/
+#define DATE_DATA_SIZE  6U      /*!<Data size needed for date state*/
+#define ALARM_DATA_SIZE 3U      /*!<Data size needed for alarm state*/
+/**
+  @} */
+
+/** 
   * @defgroup months months values 
   @{ */
-#define JAN 1u     /*!<JANUARY*/
-#define FEB 2u     /*!<FEBRUARY*/
-#define MAR 3u     /*!<MARCH*/
-#define APR 4u     /*!<APRIL*/
-#define MAY 5u     /*!<MAY*/
-#define JUN 6u     /*!<JUNE*/
-#define JUL 7u     /*!<JULY*/
-#define AUG 8u     /*!<AUGUST*/
-#define SEP 9u     /*!<SEPTEMBER*/
-#define OCT 10u    /*!<OCTOBER*/
-#define NOV 11u    /*!<NOVEMBER*/
-#define DEC 12u    /*!<DECEMBER*/
+#define JAN 0x01u     /*!<JANUARY*/
+#define FEB 0x02u     /*!<FEBRUARY*/
+#define MAR 0x03u     /*!<MARCH*/
+#define APR 0x04u     /*!<APRIL*/
+#define MAY 0x05u     /*!<MAY*/
+#define JUN 0x06u     /*!<JUNE*/
+#define JUL 0x07u     /*!<JULY*/
+#define AUG 0x08u     /*!<AUGUST*/
+#define SEP 0x09u     /*!<SEPTEMBER*/
+#define OCT 0x10u    /*!<OCTOBER*/
+#define NOV 0x11u    /*!<NOVEMBER*/
+#define DEC 0x12u    /*!<DECEMBER*/
 /**
   @} */
 
@@ -91,13 +100,11 @@ static uint8_t Data_msg[CAN_DATA_LENGHT];/* cppcheck-suppress misra-c2012-8.9 ; 
 */
 static uint8_t CAN_size;
 
-static uint8_t cases = STATE_GETMSG ; /* cppcheck-suppress misra-c2012-8.9 ; Function does not work if defined in serial task */
-
 static uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL);
 static uint8_t dayofweek(uint32_t yearM, uint32_t yearL, uint32_t month, uint32_t day);
 static uint8_t valid_time(uint8_t hour,uint8_t minutes,uint8_t seconds);
 static uint8_t valid_alarm(uint8_t hour,uint8_t minutes);
-
+static uint8_t bcdToDecimal(uint8_t bcdValue); 
 /**
 * @brief   **Init function fot serial task(CAN init)**
 *
@@ -211,7 +218,7 @@ static uint8_t CanTp_SingleFrameRx( uint8_t *data, uint8_t *size )
     if ( ((CAN_msg[0] >> 4u) == 0u) && (CAN_msg[0] <= 8u) )
     {
         *size = CAN_msg[0];
-        for(uint8_t i = 0u; i < 7u; i++)
+        for(uint8_t i = 0u; i < CAN_msg[0]; i++)
         {
             *(data+i) = CAN_msg[i+1u];      /* cppcheck-suppress misra-c2012-18.4 ; operators to pointers needed */
         }
@@ -247,6 +254,26 @@ void HAL_FDCAN_RxFifo0Callback( FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs
 }
 
 /**
+ * @brief   **This function gets the decimal value of a bcd  **
+ *
+ *  In this function, the input bcdValue is assumed to be an 8-bit value representing a number in BCD format. 
+ *  The function extracts the tens digit and ones digit from the BCD value using bitwise operations and masks. 
+ *  Then, it calculates the decimal value by multiplying the tens digit by 10 and adding the ones digit.
+ *
+ * @param   bcdValue[in] Indicates the bcd value that we want on decimal
+ *
+ * @retval  is a uint8_t can be any value        
+ */
+uint8_t bcdToDecimal(uint8_t bcdValue) 
+{
+    uint8_t tens = (bcdValue >> 4u) & 0x0Fu;  // Extract the tens digit
+    uint8_t ones = bcdValue & 0x0Fu;         // Extract the ones digit
+    uint8_t decimalValue = (tens * 10u) + ones;  // Compute the decimal value
+
+    return decimalValue;
+}
+
+/**
 * @brief   **Function that checks if the date is valid**
 *
 * The fucntion checks the parameters so that they are a valid date
@@ -262,21 +289,21 @@ uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL)
     uint32_t year = ((uint32_t)(yearM) * 100u) + (uint32_t)yearL;
     uint32_t flagd = TRUE;
 
-    if ((day > 0u ) && (day <= 31u) && (month <= DEC) && (month >= JAN) && (year >= 1900u) && (year <= 2100u)) 
+    if ((day > 0x00u ) && (day <= 0x031u) && (month <= DEC) && (month >= JAN) && (yearM >= 0x19u) && (yearM <= 0x20u)) 
     {
 
         flagd = TRUE;
 
         if ((month == JAN) || (month == MAR) || (month == MAY) || (month == JUL) || (month == AUG) || (month == OCT) || (month == DEC)) 
         {
-            if (day > 31u)
+            if (day > 0x31u)
             {
                 flagd = FALSE;
             }
         } 
         else if ((month == APR) || (month == JUN) || (month == SEP) || (month == NOV)) 
         {
-            if (day > 30u) 
+            if (day > 0x30u) 
             {
                 flagd = FALSE;
             }
@@ -286,14 +313,14 @@ uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL)
         {
             if ((((year % 4u) == 0u) && ((year % 100u) != 0u)) || ((year % 400u) == 0u)) 
             {
-                if (day > 29u) 
+                if (day > 0x29u) 
                 {
                     flagd = FALSE;
                 }
             } 
             else 
             {
-                if (day > 28u) 
+                if (day > 0x28u) 
                 {
                     flagd = FALSE;
                 }
@@ -355,7 +382,7 @@ uint8_t dayofweek(uint32_t yearM, uint32_t yearL, uint32_t month, uint32_t day)
 uint8_t valid_time(uint8_t hour,uint8_t minutes,uint8_t seconds)
 {
     uint8_t Time_is_valid = FALSE;
-    if((hour < 24u) && (minutes < 60u) && (seconds < 60u))
+    if((hour < 0x24u) && (minutes < 0x60u) && (seconds < 0x60u))
     {
         Time_is_valid = TRUE;
     }
@@ -374,7 +401,7 @@ uint8_t valid_alarm(uint8_t hour,uint8_t minutes)
 {
     uint8_t Time_is_valid = FALSE;
 
-    if((hour < 24u) && (minutes < 60u))
+    if((hour < 0x24u) && (minutes < 0x60u))
     {
         Time_is_valid = TRUE;
     }
@@ -398,24 +425,24 @@ uint8_t valid_alarm(uint8_t hour,uint8_t minutes)
 */
 void Serial_Task( void )
 {
+    static uint8_t cases = STATE_GETMSG;
     
     switch(cases)
     {
-
         case STATE_GETMSG:
 
             if (flag == TRUE)
             {
                 flag = FALSE;
-                if(Data_msg[0] == (uint8_t)SERIAL_MSG_TIME)
+                if((Data_msg[0] == (uint8_t)SERIAL_MSG_TIME) && (CAN_size == TIME_DATA_SIZE) )
                 {
                     cases = (uint8_t)STATE_TIME;
                 }
-                else if(Data_msg[0] == (uint8_t)SERIAL_MSG_DATE)
+                else if( (Data_msg[0] == (uint8_t)SERIAL_MSG_DATE) && (CAN_size == DATE_DATA_SIZE))
                 {
                     cases = (uint8_t)STATE_DATE;
                 }
-                else if(Data_msg[0] == (uint8_t)SERIAL_MSG_ALARM)
+                else if((Data_msg[0] == (uint8_t)SERIAL_MSG_ALARM) && (CAN_size == ALARM_DATA_SIZE))
                 {
                     cases = (uint8_t)STATE_ALARM;
                 }  
@@ -431,6 +458,8 @@ void Serial_Task( void )
             if( valid_time(Data_msg[1],Data_msg[2],Data_msg[3]) == TRUE)
             {
                 CAN_td_message.tm.tm_hour=Data_msg[1];
+                CAN_td_message.tm.tm_min=Data_msg[2];
+                CAN_td_message.tm.tm_sec=Data_msg[3];
                 CAN_td_message.msg=SERIAL_MSG_TIME;
                 cases = STATE_OK;
             }
@@ -441,12 +470,12 @@ void Serial_Task( void )
              break;
 
         case STATE_DATE:
-
+        
             if(valid_date(Data_msg[1],Data_msg[2], Data_msg[3],Data_msg[4]) == TRUE)
             {
                 CAN_td_message.tm.tm_mday = Data_msg[1];
                 CAN_td_message.tm.tm_mon = Data_msg[2];
-                CAN_td_message.tm.tm_year_msb = Data_msg[3];
+                CAN_td_message.tm.tm_year_msb = bcdToDecimal(Data_msg[3]);
                 CAN_td_message.tm.tm_year_lsb = Data_msg[4];
                 CAN_td_message.tm.tm_wday = dayofweek(CAN_td_message.tm.tm_year_msb,CAN_td_message.tm.tm_year_lsb, CAN_td_message.tm.tm_mon, CAN_td_message.tm.tm_mday);
                 CAN_td_message.msg = SERIAL_MSG_DATE;

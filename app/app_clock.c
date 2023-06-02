@@ -20,6 +20,10 @@ typedef enum
 } CLOCK_STATES;
 
 /**
+ * @brief  Variable for clock message to lcd
+ */
+APP_MsgTypeDef ClockMsg;
+/**
  * @brief  Variable for rtc configuration
  */
 static RTC_HandleTypeDef hrtc = {0};
@@ -41,6 +45,7 @@ static int tick_1000ms;
  * @brief  Variable for Alarm configuration
  */
 static RTC_AlarmTypeDef sAlarm;
+
 
 
 /**
@@ -69,8 +74,8 @@ void Clock_Init( void )
     HAL_RTC_Init( &hrtc );
     
     sTime.Hours      = 0x02;
-    sTime.Minutes    = 0x00;
-    sTime.Seconds    = 0x00;
+    sTime.Minutes    = 0x20;
+    sTime.Seconds    = 0x25;
     sTime.SubSeconds = 0x00;
     sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
     sTime.StoreOperation = RTC_STOREOPERATION_RESET;
@@ -108,14 +113,11 @@ void Clock_Init( void )
 *   
 * @retval  none 
 */
-
 void Clock_Task( void )
 {
-    int Clockstate = CLOCK_ST_IDLE;
-    
+    static int Clockstate = CLOCK_ST_IDLE; 
     switch(Clockstate)
     {
-
         case CLOCK_ST_IDLE:
         {
             if( CAN_td_message.msg != (uint8_t)NOT_MESSAGE)
@@ -158,10 +160,17 @@ void Clock_Task( void )
             HAL_RTC_GetTime( &hrtc, &sTime, RTC_FORMAT_BIN );
             /* Get the RTC current Date */
             HAL_RTC_GetDate( &hrtc, &sDate, RTC_FORMAT_BIN );
+            ClockMsg.tm.tm_year_msb = CAN_td_message.tm.tm_year_msb;
+            ClockMsg.tm.tm_mon = sDate.Month;
+            ClockMsg.tm.tm_mday = sDate.Date;
+            ClockMsg.tm.tm_year_lsb = sDate.Year;
+            ClockMsg.tm.tm_wday = sDate.WeekDay;
 
-            (void) printf("time:%d:%d:%d \n\r",sTime.Hours,sTime.Minutes,sTime.Seconds); 
-            (void) printf("date:%d:%d:%ld%d \n\r",sDate.Date,sDate.Month,CAN_td_message.tm.tm_year_msb,sDate.Year); 
+            ClockMsg.tm.tm_hour = sTime.Hours;
+            ClockMsg.tm.tm_min = sTime.Minutes;
+            ClockMsg.tm.tm_sec = sTime.Seconds;
 
+            ClockMsg.msg = DISPLAY_MESSAGE;
             Clockstate=CLOCK_ST_IDLE;
             break;
         }
@@ -177,6 +186,7 @@ void Clock_Task( void )
             
             HAL_RTC_SetTime( &hrtc, &sTime, RTC_FORMAT_BCD );
             Clockstate=CLOCK_ST_DISPLAY_MSG;
+            CAN_td_message.msg  = NOT_MESSAGE;
             break;
         }
         
@@ -193,6 +203,7 @@ void Clock_Task( void )
             CAN_td_message.msg  = NOT_MESSAGE;
             break;
         }
+        
         case CLOCK_ST_CHANGE_ALARM:
         {
             sAlarm.AlarmTime.Hours      = CAN_td_message.tm.tm_hour;      
