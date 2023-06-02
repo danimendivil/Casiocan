@@ -64,7 +64,7 @@ void Display_Init( void )
     LCDHandle.SpiHandler->Init.NSS            = SPI_NSS_SOFT;
     LCDHandle.SpiHandler->Init.CRCCalculation = SPI_CRCCALCULATION_DISABLED;
     LCDHandle.SpiHandler->Init.TIMode         = SPI_TIMODE_DISABLED;
-
+    HAL_SPI_Init( LCDHandle.SpiHandler );
     (void)HEL_LCD_Init(&LCDHandle );
 }
 

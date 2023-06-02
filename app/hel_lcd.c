@@ -41,7 +41,6 @@ uint8_t HEL_LCD_Init( LCD_HandleTypeDef *hlcd )
 {
     HEL_LCD_MspInit(hlcd);
     HAL_GPIO_WritePin( hlcd->CsPort, hlcd->CsPin, SET );
-    HAL_SPI_Init( hlcd->SpiHandler );
     uint8_t SPI_state;
     /*LCD initialization rutine*/
     HAL_GPIO_WritePin( GPIOD, hlcd->CsPin, SET );       
