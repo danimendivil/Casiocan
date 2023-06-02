@@ -92,8 +92,8 @@ void Display_Init( void )
 void Display_Task( void )
 {
     static uint8_t LCD_State  = STATE_IDLE;
-    static char fila_2[] = "00:00:00";
-    static char fila_1[] =" XXX,XX XXXX XX ";
+    static char fila_2[] = "00:00:00";  /* cppcheck-suppress misra-c2012-7.4 ; string need to be modify*/
+    static char fila_1[] =" XXX,XX XXXX XX ";   /* cppcheck-suppress misra-c2012-7.4 ; string need to be modify*/
     switch(LCD_State)
     {
         case STATE_IDLE:
