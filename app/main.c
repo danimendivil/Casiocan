@@ -2,6 +2,7 @@
 #include "app_serial.h"
 #include "app_clock.h"
 #include "app_display.h"
+
 //Add more includes if need them
 /** 
   * @defgroup Hearth tick value.
@@ -46,6 +47,11 @@ static uint32_t tick_hearth;
 */
 static WWDG_HandleTypeDef hwwdg;
 
+/**
+* @brief  Variable for functional safety.
+*/
+HAL_StatusTypeDef Status;
+
 int main( void )
 {
   HAL_Init();
@@ -56,7 +62,7 @@ int main( void )
   init_watchdog();
     
   //Add more initilizations if need them
-    
+ 
   for( ;; )
   {
     Serial_Task();
@@ -122,7 +128,7 @@ void hearth_beat(void)
 */
 void init_watchdog(void)
 {
-    __HAL_RCC_WWDG_CLK_ENABLE( );
+    __HAL_RCC_WWDG_CLK_ENABLE();
 
     hwwdg.Instance          = WWDG;
     hwwdg.Init.Prescaler    = WWDG_PRESCALER_16;
@@ -130,7 +136,8 @@ void init_watchdog(void)
     hwwdg.Init.Counter      = WATCHDOG_COUNTER;
     hwwdg.Init.EWIMode      = WWDG_EWI_DISABLE;
     
-    HAL_WWDG_Init(&hwwdg);
+    Status = HAL_WWDG_Init(&hwwdg);
+    assert_error( Status == HAL_OK, HHWG_INIT_ERROR );
     
     tick_Dog = HAL_GetTick();
 }
@@ -150,7 +157,8 @@ void peth_the_dog(void)
     if( (HAL_GetTick() - tick_Dog) >= WATCHDOG_REFRESH)
     {
         tick_Dog = HAL_GetTick(); 
-        HAL_WWDG_Refresh(&hwwdg);     
+        Status = HAL_WWDG_Refresh(&hwwdg); 
+        assert_error( Status == HAL_OK, HHWG_REFRESH_ERROR );    
     }
 }
 
@@ -172,6 +180,7 @@ void safe_state( uint8_t *file, uint32_t line, uint8_t error )
   __HAL_RCC_RTCAPB_CLK_DISABLE();
 
   __SPI1_CLK_DISABLE();
+
                                         
   __HAL_RCC_GPIOC_CLK_ENABLE();                   
   GPIO_InitStruct.Pin = ALL_PINS; 

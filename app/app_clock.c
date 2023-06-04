@@ -63,7 +63,7 @@ static RTC_AlarmTypeDef sAlarm;
  
 void Clock_Init( void )      
 {
-     HAL_Init(); 
+    HAL_Init(); 
     /*declare as global variable or static*/
     hrtc.Instance             = RTC;
     hrtc.Init.HourFormat      = RTC_HOURFORMAT_24;
@@ -71,8 +71,9 @@ void Clock_Init( void )
     hrtc.Init.SynchPrediv     = 0xFF;
     hrtc.Init.OutPut          = RTC_OUTPUT_DISABLE;
     /* initilize the RTC with 24 hour format and no output signal enble */
-    HAL_RTC_Init( &hrtc );
-    
+    Status = HAL_RTC_Init( &hrtc );
+    assert_error( Status == HAL_OK, RTC_INIT_ERROR );
+
     sTime.Hours      = 0x02;
     sTime.Minutes    = 0x20;
     sTime.Seconds    = 0x25;
@@ -80,14 +81,16 @@ void Clock_Init( void )
     sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
     sTime.StoreOperation = RTC_STOREOPERATION_RESET;
     
-    HAL_RTC_SetTime( &hrtc, &sTime, RTC_FORMAT_BCD );
+    Status = HAL_RTC_SetTime( &hrtc, &sTime, RTC_FORMAT_BCD );
+    assert_error( Status == HAL_OK, RTC_SETTIME_ERROR );
     
     sDate.WeekDay = RTC_WEEKDAY_MONDAY;
     sDate.Month   = RTC_MONTH_APRIL;
     sDate.Date    = 0x11;
     sDate.Year    = 0x22;
     
-    HAL_RTC_SetDate( &hrtc, &sDate, RTC_FORMAT_BCD );
+    Status = HAL_RTC_SetDate( &hrtc, &sDate, RTC_FORMAT_BCD );
+    assert_error( Status == HAL_OK, RTC_SETDATE_ERROR );
     
     sAlarm.AlarmTime.Hours = 0x00;      
     sAlarm.AlarmTime.Minutes = 0x00;    
@@ -95,7 +98,8 @@ void Clock_Init( void )
     sAlarm.AlarmTime.SubSeconds = 0x00; 
     sAlarm.Alarm = RTC_ALARM_A;         
 
-    HAL_RTC_DeactivateAlarm(&hrtc, RTC_ALARM_A);
+    Status = HAL_RTC_DeactivateAlarm(&hrtc, RTC_ALARM_A);
+    assert_error( Status == HAL_OK, RTC_SDESACTIVATE_ALARM_ERROR );
     
     tick_1000ms=HAL_GetTick();
 }
@@ -157,9 +161,11 @@ void Clock_Task( void )
         case CLOCK_ST_DISPLAY_MSG:
         {
             /* Get the RTC current Time */
-            HAL_RTC_GetTime( &hrtc, &sTime, RTC_FORMAT_BIN );
+            Status = HAL_RTC_GetTime( &hrtc, &sTime, RTC_FORMAT_BIN );
+            assert_error( Status == HAL_OK, RTC_GET_TIME_ERROR );
             /* Get the RTC current Date */
-            HAL_RTC_GetDate( &hrtc, &sDate, RTC_FORMAT_BIN );
+            Status = HAL_RTC_GetDate( &hrtc, &sDate, RTC_FORMAT_BIN );
+            assert_error( Status == HAL_OK, RTC_GET_DATE_ERROR );
             ClockMsg.tm.tm_year_msb = CAN_td_message.tm.tm_year_msb;
             ClockMsg.tm.tm_mon = sDate.Month;
             ClockMsg.tm.tm_mday = sDate.Date;
@@ -184,7 +190,8 @@ void Clock_Task( void )
             sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
             sTime.StoreOperation = RTC_STOREOPERATION_RESET;
             
-            HAL_RTC_SetTime( &hrtc, &sTime, RTC_FORMAT_BCD );
+            Status = HAL_RTC_SetTime( &hrtc, &sTime, RTC_FORMAT_BCD );
+            assert_error( Status == HAL_OK, RTC_SETTIME_ERROR );
             Clockstate=CLOCK_ST_DISPLAY_MSG;
             CAN_td_message.msg  = NOT_MESSAGE;
             break;
@@ -197,7 +204,8 @@ void Clock_Task( void )
             sDate.Date      = CAN_td_message.tm.tm_mday;
             sDate.Year      = CAN_td_message.tm.tm_year_lsb;
 
-            HAL_RTC_SetDate( &hrtc, &sDate, RTC_FORMAT_BCD );
+            Status = HAL_RTC_SetDate( &hrtc, &sDate, RTC_FORMAT_BCD );
+            assert_error( Status == HAL_OK, RTC_SETDATE_ERROR );
 
             Clockstate          = CLOCK_ST_DISPLAY_MSG;
             CAN_td_message.msg  = NOT_MESSAGE;
@@ -211,8 +219,10 @@ void Clock_Task( void )
             sAlarm.AlarmTime.Seconds    = CAN_td_message.tm.tm_sec;    
             sAlarm.AlarmTime.SubSeconds = 0x00; 
             sAlarm.Alarm = RTC_ALARM_A;         
-            HAL_RTC_DeactivateAlarm(&hrtc, RTC_ALARM_A);
-            HAL_RTC_SetAlarm_IT(&hrtc, &sAlarm, RTC_FORMAT_BCD);
+            Status = HAL_RTC_DeactivateAlarm(&hrtc, RTC_ALARM_A);
+            assert_error( Status == HAL_OK, RTC_SDESACTIVATE_ALARM_ERROR );
+            Status = HAL_RTC_SetAlarm_IT(&hrtc, &sAlarm, RTC_FORMAT_BCD);
+            assert_error( Status == HAL_OK, RTC_SET_ALARM_ERROR );
             CAN_td_message.msg = NOT_MESSAGE;
             break;
         }

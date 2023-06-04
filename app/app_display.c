@@ -64,8 +64,10 @@ void Display_Init( void )
     LCDHandle.SpiHandler->Init.NSS            = SPI_NSS_SOFT;
     LCDHandle.SpiHandler->Init.CRCCalculation = SPI_CRCCALCULATION_DISABLED;
     LCDHandle.SpiHandler->Init.TIMode         = SPI_TIMODE_DISABLED;
-    HAL_SPI_Init( LCDHandle.SpiHandler );
-    (void)HEL_LCD_Init(&LCDHandle );
+    Status = HAL_SPI_Init( LCDHandle.SpiHandler );
+    assert_error( Status == HAL_OK, SPI_INIT_ERROR );
+    Status = HEL_LCD_Init(&LCDHandle );
+    assert_error( Status == HAL_OK, SPI_COMMAND_ERROR );
 }
 
 /**
@@ -124,14 +126,17 @@ void Display_Task( void )
         break;
 
         case STATE_PRINTH_WDAY:
-            (void)HEL_LCD_SetCursor(&LCDHandle,FIRST_ROW,0);
+            Status = HEL_LCD_SetCursor(&LCDHandle,FIRST_ROW,0);
+            assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR );
             week(&fila_1[13],ClockMsg.tm.tm_wday);
-            (void)HEL_LCD_String(&LCDHandle, fila_1);
+            Status = HEL_LCD_String(&LCDHandle, fila_1);
+            assert_error( Status == HAL_OK, SPI_STRING_ERROR );
             LCD_State = STATE_PRINTH_HOUR;
         break;
         
         case STATE_PRINTH_HOUR:
-            (void)HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,3 );
+            Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,3 );
+            assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR );
             fila_2[0] = ((ClockMsg.tm.tm_hour / 10u) + 48u);
             fila_2[1] = ((ClockMsg.tm.tm_hour % 10u) + 48u);
             LCD_State = STATE_PRINTH_MINUTES;
@@ -146,8 +151,8 @@ void Display_Task( void )
         case STATE_PRINTH_SECONDS:
             fila_2[6] = ((ClockMsg.tm.tm_sec / 10u) + 48u);
             fila_2[7] = ((ClockMsg.tm.tm_sec % 10u) + 48u);
-            (void)HEL_LCD_String(&LCDHandle, fila_2);
-            
+            Status = HEL_LCD_String(&LCDHandle, fila_2);
+            assert_error( Status == HAL_OK, SPI_STRING_ERROR );
             LCD_State = STATE_IDLE;
         break;
 

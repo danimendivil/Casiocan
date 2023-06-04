@@ -50,3 +50,4 @@ void TIM16_FDCAN_IT0_IRQHandler( void )  /* cppcheck-suppress misra-c2012-8.4 ; 
 {
     HAL_FDCAN_IRQHandler( &CANHandler );
 }
+

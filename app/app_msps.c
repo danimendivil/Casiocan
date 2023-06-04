@@ -23,7 +23,8 @@ void HAL_MspInit( void )   /* cppcheck-suppress misra-c2012-8.4 ; this is a libr
     __HAL_RCC_PWR_CLK_ENABLE();
 
     /** Configure the main internal regulator output voltage*/
-    HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1);
+    Status = HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1);
+    assert_error( Status == HAL_OK, PWREX_CONTROL_VOLTAGE_ERROR );
 
     RCC_OscInitStruct.OscillatorType      = RCC_OSCILLATORTYPE_HSI;
     RCC_OscInitStruct.HSIState            = RCC_HSI_ON;
@@ -36,14 +37,16 @@ void HAL_MspInit( void )   /* cppcheck-suppress misra-c2012-8.4 ; this is a libr
     RCC_OscInitStruct.PLL.PLLP            = RCC_PLLP_DIV2;
     RCC_OscInitStruct.PLL.PLLQ            = RCC_PLLQ_DIV2;
     RCC_OscInitStruct.PLL.PLLR            = RCC_PLLR_DIV2;
-    HAL_RCC_OscConfig( &RCC_OscInitStruct );
+    Status = HAL_RCC_OscConfig( &RCC_OscInitStruct );
+    assert_error( Status == HAL_OK, RCC_OSC_CONF_ERROR );
     
     /** Initializes the CPU, AHB and APB buses clocks*/
     RCC_ClkInitStruct.ClockType       = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1;
     RCC_ClkInitStruct.SYSCLKSource    = RCC_SYSCLKSOURCE_PLLCLK;
     RCC_ClkInitStruct.AHBCLKDivider   = RCC_SYSCLK_DIV1;
     RCC_ClkInitStruct.APB1CLKDivider  = RCC_HCLK_DIV2;
-    HAL_RCC_ClockConfig( &RCC_ClkInitStruct, FLASH_LATENCY_2 );
+    Status = HAL_RCC_ClockConfig( &RCC_ClkInitStruct, FLASH_LATENCY_2 );
+    assert_error( Status == HAL_OK, RCC_CLOCK_CONF_ERROR );
     
 }
 
@@ -77,25 +80,29 @@ void HAL_RTC_MspInit( RTC_HandleTypeDef* hrtc )   /* cppcheck-suppress misra-c20
     __HAL_RCC_PWR_CLK_ENABLE();
     
     /*Eanlble backup domain*/
-    HAL_PWREx_ControlVoltageScaling( PWR_REGULATOR_VOLTAGE_SCALE1 );
+    Status = HAL_PWREx_ControlVoltageScaling( PWR_REGULATOR_VOLTAGE_SCALE1 );
+    assert_error( Status == HAL_OK, PWREX_CONTROL_VOLTAGE_ERROR );
     HAL_PWR_EnableBkUpAccess();
     __HAL_RCC_LSEDRIVE_CONFIG( RCC_LSEDRIVE_LOW );
 
     /*reset previous RTC source clock*/
     PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_RTC;
     PeriphClkInitStruct.RTCClockSelection = RCC_RTCCLKSOURCE_NONE;
-    HAL_RCCEx_PeriphCLKConfig( &PeriphClkInitStruct );
-    
+    Status = HAL_RCCEx_PeriphCLKConfig( &PeriphClkInitStruct );
+    assert_error( Status == HAL_OK, RCCEX_PRIPH_CLK_CONF_ERROR );
+
     /* Configure LSE/LSI as RTC clock source */
     RCC_OscInitStruct.OscillatorType =  RCC_OSCILLATORTYPE_LSI | RCC_OSCILLATORTYPE_LSE;
     RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
     RCC_OscInitStruct.LSEState = RCC_LSE_ON;
     RCC_OscInitStruct.LSIState = RCC_LSI_OFF;
-    HAL_RCC_OscConfig( &RCC_OscInitStruct );
+    Status = HAL_RCC_OscConfig( &RCC_OscInitStruct );
+    assert_error( Status == HAL_OK, RCC_OSC_CONF_ERROR );
 
     /*Set LSE as source clock*/
     PeriphClkInitStruct.RTCClockSelection = RCC_RTCCLKSOURCE_LSE;
-    HAL_RCCEx_PeriphCLKConfig( &PeriphClkInitStruct );
+    Status = HAL_RCCEx_PeriphCLKConfig( &PeriphClkInitStruct );
+    assert_error( Status == HAL_OK, RCCEX_PRIPH_CLK_CONF_ERROR );
       
     /* Peripheral clock enable */
     __HAL_RCC_RTC_ENABLE();
