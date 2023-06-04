@@ -19,7 +19,12 @@
 /**
   @} */
 
-
+/** 
+  * @defgroup PIN value configuration.
+  @{ */  
+#define ALL_PINS            0xFF    /*!<value to configure all pins of GPIOC port*/
+/**
+  @} */
 
 static void hearth_init(void);
 static void hearth_beat(void);
@@ -146,5 +151,48 @@ void peth_the_dog(void)
     {
         tick_Dog = HAL_GetTick(); 
         HAL_WWDG_Refresh(&hwwdg);     
+    }
+}
+
+void safe_state( uint8_t *file, uint32_t line, uint8_t error )
+{
+  GPIO_InitTypeDef GPIO_InitStruct;
+  /*disable all maskable interrupts*/
+  HAL_Init();
+  __disable_irq();
+    
+  __HAL_RCC_FDCAN_CLK_DISABLE();
+  __HAL_RCC_GPIOD_CLK_DISABLE();
+  __GPIOB_CLK_DISABLE();
+
+  __HAL_RCC_SYSCFG_CLK_DISABLE();
+  __HAL_RCC_PWR_CLK_DISABLE();
+
+  __HAL_RCC_RTC_DISABLE();
+  __HAL_RCC_RTCAPB_CLK_DISABLE();
+
+  __SPI1_CLK_DISABLE();
+                                        
+  __HAL_RCC_GPIOC_CLK_ENABLE();                   
+  GPIO_InitStruct.Pin = ALL_PINS; 
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;     
+  GPIO_InitStruct.Pull = GPIO_NOPULL;             
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;    
+    
+  HAL_GPIO_Init( GPIOC, &GPIO_InitStruct );
+    /*set all outputs to a safe state, you must think what will be the so called safe state 
+    for the pins and peripherals*/
+    
+    /*disable all timers included the WWDG*/
+    
+    /*output the error code using the leds connected to port C*/
+    HAL_GPIO_WritePin( GPIOC, ALL_PINS , RESET );
+    HAL_GPIO_WritePin( GPIOC, error , SET );        
+    
+    while( 1u )
+    {
+        /*Waiting for the user to press the reset button, 
+        you can also set a break point here and using 
+        the debugger you can visualize the three parameters file, line and error*/
     }
 }

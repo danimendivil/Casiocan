@@ -26,6 +26,14 @@
   /*external link to fucntion that will act as the safe state*/
   extern void safe_state(uint8_t *file, uint32_t line, uint8_t error);
 
+  extern HAL_StatusTypeDef Status;
+
+  typedef enum _App_ErrorsCode
+  {
+      WWDG_RET_ERROR = 1u,
+          
+  } App_ErrorsCode;
+
   /**
   * @brief   Structure for message that are recived by CAN to store time and date in stdlib tm format 
   */
