@@ -123,6 +123,9 @@ void HAL_SPI_MspInit( SPI_HandleTypeDef *hspi )     /* cppcheck-suppress misra-c
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF1_SPI1;
     HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+    HAL_NVIC_SetPriority(SPI1_IRQn, 2, 0);
+    HAL_NVIC_EnableIRQ(SPI1_IRQn);
 }
 
 /* cppcheck-suppress misra-c2012-8.4 ; this is a library function */

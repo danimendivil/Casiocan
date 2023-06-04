@@ -54,13 +54,13 @@ HAL_StatusTypeDef Status;
 
 int main( void )
 {
+ 
   HAL_Init();
   Serial_Init();
   Display_Init();  
   Clock_Init();
   hearth_init();
   init_watchdog();
-    
   //Add more initilizations if need them
  
   for( ;; )
@@ -137,8 +137,8 @@ void init_watchdog(void)
     hwwdg.Init.EWIMode      = WWDG_EWI_DISABLE;
     
     Status = HAL_WWDG_Init(&hwwdg);
-    assert_error( Status == HAL_OK, HHWG_INIT_ERROR );
-    
+    assert_error( Status == HAL_OK, WWDG_INIT_ERROR );
+    __HAL_WWDG_ENABLE_IT(&hwwdg, WWDG_IT_EWI);
     tick_Dog = HAL_GetTick();
 }
 
@@ -158,7 +158,7 @@ void peth_the_dog(void)
     {
         tick_Dog = HAL_GetTick(); 
         Status = HAL_WWDG_Refresh(&hwwdg); 
-        assert_error( Status == HAL_OK, HHWG_REFRESH_ERROR );    
+        assert_error( Status == HAL_OK, WWDG_REFRESH_ERROR );    
     }
 }
 
@@ -181,8 +181,11 @@ void safe_state( uint8_t *file, uint32_t line, uint8_t error )
 
   __SPI1_CLK_DISABLE();
 
-                                        
-  __HAL_RCC_GPIOC_CLK_ENABLE();                   
+
+  __HAL_RCC_GPIOC_CLK_ENABLE(); 
+
+  
+
   GPIO_InitStruct.Pin = ALL_PINS; 
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;     
   GPIO_InitStruct.Pull = GPIO_NOPULL;             
