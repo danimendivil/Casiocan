@@ -125,6 +125,7 @@ void hearth_beat(void)
 *   now we substract the timeout value of the counter with the timeout value of the window
 *   refresh_min_value = 194.56ms-194.56ms = 67.584ms
 *   thats the minimum value to refresh the watchdog.
+*   @note   this function also enables flash interrupts
 */
 void init_watchdog(void)
 {
@@ -140,6 +141,8 @@ void init_watchdog(void)
     assert_error( Status == HAL_OK, WWDG_INIT_ERROR );
     __HAL_WWDG_ENABLE_IT(&hwwdg, WWDG_IT_EWI);
     tick_Dog = HAL_GetTick();
+
+    HAL_NVIC_EnableIRQ(FLASH_IRQn);
 }
 
 /**
@@ -162,6 +165,20 @@ void peth_the_dog(void)
     }
 }
 
+/**
+* @brief   **safe state function**
+*
+*   This function is a safe state for the application, when an error occurs
+*   it will call this function where first is going to disable all the interruptions
+*   and clocks, it will enable all port C were leds are conected to show the error
+*   that called the function.
+*
+* @param   *file[in] Pointer to the file that trigger the function
+* @param   line[in]   value of the line that trigger the function
+* @param   error[in] value of the error that trigger the function
+* @retval  None
+*/
+
 void safe_state( uint8_t *file, uint32_t line, uint8_t error )
 {
   GPIO_InitTypeDef GPIO_InitStruct;
@@ -183,8 +200,6 @@ void safe_state( uint8_t *file, uint32_t line, uint8_t error )
 
 
   __HAL_RCC_GPIOC_CLK_ENABLE(); 
-
-  
 
   GPIO_InitStruct.Pin = ALL_PINS; 
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;     

@@ -70,3 +70,18 @@ void HAL_WWDG_EarlyWakeupCallback( WWDG_HandleTypeDef *hwwdg )
     Status = HAL_ERROR;
     assert_error( Status == HAL_OK, WWDG_EARLY_WAKEUP_ERROR );
 }
+
+void FLASH_IRQHandler(void)
+{
+    
+    if (__HAL_FLASH_GET_FLAG(FLASH_FLAG_ECCC) != RESET)
+    {
+        Status = HAL_ERROR;
+        assert_error( Status == HAL_OK, ECC_ONE_ERROR );
+    }
+    if (__HAL_FLASH_GET_FLAG(FLASH_FLAG_ECCD) != RESET)
+    {
+        Status = HAL_ERROR;
+        assert_error( Status == HAL_OK, ECC_TWO_ERROR );
+    }
+}

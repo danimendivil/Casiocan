@@ -26,11 +26,19 @@
   /*external link to fucntion that will act as the safe state*/
   extern void safe_state(uint8_t *file, uint32_t line, uint8_t error);
 
+  /**
+ * @brief  Variable for functional safety
+ */
   extern HAL_StatusTypeDef Status;
 
+  /**
+  * @brief Enum for Errors.
+  *
+  * This enumeration represents the various types of errors that can be trigger
+  * during execution
+  */
   typedef enum _App_ErrorsCode
   {
-    
     FDCAN_CONFIG_ERROR = 1u,
     FDCAN_CONFIG_FILTER_ERROR,
     FDCAN_CALLBACK_ERROR,
@@ -58,7 +66,9 @@
     RCC_OSC_CONF_ERROR,
     RCC_CLOCK_CONF_ERROR,
     RCCEX_PRIPH_CLK_CONF_ERROR,
-    HARDFAULT_ERROR
+    HARDFAULT_ERROR,
+    ECC_ONE_ERROR,
+    ECC_TWO_ERROR
           
   } App_ErrorsCode;
 
