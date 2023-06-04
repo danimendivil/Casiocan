@@ -20,6 +20,12 @@
   /**
   @} */
 
+  /*macro to detect erros, wehere if expr is evaluated to false is an error*/
+  #define assert_error(expr, error)         ((expr) ? (void)0U : safe_state((uint8_t *)__FILE__, __LINE__, (error)))
+
+  /*external link to fucntion that will act as the safe state*/
+  extern void safe_state(uint8_t *file, uint32_t line, uint8_t error);
+
   /**
   * @brief   Structure for message that are recived by CAN to store time and date in stdlib tm format 
   */
