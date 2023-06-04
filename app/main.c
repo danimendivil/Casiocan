@@ -178,7 +178,7 @@ void peth_the_dog(void)
 * @param   error[in] value of the error that trigger the function
 * @retval  None
 */
-
+/* cppcheck-suppress misra-c2012-2.7 ;  function cannot be modify */
 void safe_state( uint8_t *file, uint32_t line, uint8_t error )
 {
   GPIO_InitTypeDef GPIO_InitStruct;
@@ -216,7 +216,7 @@ void safe_state( uint8_t *file, uint32_t line, uint8_t error )
     HAL_GPIO_WritePin( GPIOC, ALL_PINS , RESET );
     HAL_GPIO_WritePin( GPIOC, error , SET );        
     
-    while( 1u )
+    for( ;; )
     {
         /*Waiting for the user to press the reset button, 
         you can also set a break point here and using 

@@ -53,25 +53,28 @@ void TIM16_FDCAN_IT0_IRQHandler( void )  /* cppcheck-suppress misra-c2012-8.4 ; 
     HAL_FDCAN_IRQHandler( &CANHandler );
 }
 
-void HAL_FDCAN_ErrorCallback(FDCAN_HandleTypeDef *hfdcan)
+/* cppcheck-suppress misra-c2012-2.7 ; this is a library function */
+void HAL_FDCAN_ErrorCallback(FDCAN_HandleTypeDef *hfdcan)   /* cppcheck-suppress misra-c2012-8.4 ; this function can`t be modify */
 {
     Status = HAL_ERROR;
     assert_error( Status == HAL_OK, FDCAN_CALLBACK_ERROR );
 }
 
-void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
+/* cppcheck-suppress misra-c2012-2.7 ; this is a library function */
+void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi) /* cppcheck-suppress misra-c2012-8.4 ; this function can`t be modify */
 {
     Status = HAL_ERROR;
     assert_error( Status == HAL_OK, SPI_CALLBACK_ERROR );
 }
 
-void HAL_WWDG_EarlyWakeupCallback( WWDG_HandleTypeDef *hwwdg )
+/* cppcheck-suppress misra-c2012-2.7 ; this is a library function */
+void HAL_WWDG_EarlyWakeupCallback( WWDG_HandleTypeDef *hwwdg )  /* cppcheck-suppress misra-c2012-8.4 ; this function can`t be modify */
 {
     Status = HAL_ERROR;
     assert_error( Status == HAL_OK, WWDG_EARLY_WAKEUP_ERROR );
 }
 
-void FLASH_IRQHandler(void)
+void FLASH_IRQHandler(void)     /* cppcheck-suppress misra-c2012-8.4 ; this function can`t be modify */
 {
     
     if (__HAL_FLASH_GET_FLAG(FLASH_FLAG_ECCC) != RESET)

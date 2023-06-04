@@ -38,7 +38,7 @@
   * during execution
   */
   typedef enum _App_ErrorsCode
-  {
+  { /* cppcheck-suppress misra-c2012-2.4 ; enum is used on functional safety */
     FDCAN_CONFIG_ERROR = 1u,
     FDCAN_CONFIG_FILTER_ERROR,
     FDCAN_CALLBACK_ERROR,
@@ -68,9 +68,8 @@
     RCCEX_PRIPH_CLK_CONF_ERROR,
     HARDFAULT_ERROR,
     ECC_ONE_ERROR,
-    ECC_TWO_ERROR
-          
-  } App_ErrorsCode;
+    ECC_TWO_ERROR      
+  } App_ErrorsCode;   /* cppcheck-suppress misra-c2012-2.3 ; enum is used on functional safety */
 
   /**
   * @brief   Structure for message that are recived by CAN to store time and date in stdlib tm format 
