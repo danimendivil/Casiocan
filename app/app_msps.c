@@ -24,7 +24,7 @@ void HAL_MspInit( void )   /* cppcheck-suppress misra-c2012-8.4 ; this is a libr
 
     /** Configure the main internal regulator output voltage*/
     Status = HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1);
-    assert_error( Status == HAL_OK, PWREX_CONTROL_VOLTAGE_ERROR );
+    assert_error( Status == HAL_OK, PWREX_CONTROL_VOLTAGE_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
 
     RCC_OscInitStruct.OscillatorType      = RCC_OSCILLATORTYPE_HSI;
     RCC_OscInitStruct.HSIState            = RCC_HSI_ON;
@@ -38,7 +38,7 @@ void HAL_MspInit( void )   /* cppcheck-suppress misra-c2012-8.4 ; this is a libr
     RCC_OscInitStruct.PLL.PLLQ            = RCC_PLLQ_DIV2;
     RCC_OscInitStruct.PLL.PLLR            = RCC_PLLR_DIV2;
     Status = HAL_RCC_OscConfig( &RCC_OscInitStruct );
-    assert_error( Status == HAL_OK, RCC_OSC_CONF_ERROR );
+    assert_error( Status == HAL_OK, RCC_OSC_CONF_ERROR );   /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     
     /** Initializes the CPU, AHB and APB buses clocks*/
     RCC_ClkInitStruct.ClockType       = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1;
@@ -46,7 +46,7 @@ void HAL_MspInit( void )   /* cppcheck-suppress misra-c2012-8.4 ; this is a libr
     RCC_ClkInitStruct.AHBCLKDivider   = RCC_SYSCLK_DIV1;
     RCC_ClkInitStruct.APB1CLKDivider  = RCC_HCLK_DIV2;
     Status = HAL_RCC_ClockConfig( &RCC_ClkInitStruct, FLASH_LATENCY_2 );
-    assert_error( Status == HAL_OK, RCC_CLOCK_CONF_ERROR );
+    assert_error( Status == HAL_OK, RCC_CLOCK_CONF_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     
 }
 
@@ -81,7 +81,7 @@ void HAL_RTC_MspInit( RTC_HandleTypeDef* hrtc )   /* cppcheck-suppress misra-c20
     
     /*Eanlble backup domain*/
     Status = HAL_PWREx_ControlVoltageScaling( PWR_REGULATOR_VOLTAGE_SCALE1 );
-    assert_error( Status == HAL_OK, PWREX_CONTROL_VOLTAGE_ERROR );
+    assert_error( Status == HAL_OK, PWREX_CONTROL_VOLTAGE_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     HAL_PWR_EnableBkUpAccess();
     __HAL_RCC_LSEDRIVE_CONFIG( RCC_LSEDRIVE_LOW );
 
@@ -89,7 +89,7 @@ void HAL_RTC_MspInit( RTC_HandleTypeDef* hrtc )   /* cppcheck-suppress misra-c20
     PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_RTC;
     PeriphClkInitStruct.RTCClockSelection = RCC_RTCCLKSOURCE_NONE;
     Status = HAL_RCCEx_PeriphCLKConfig( &PeriphClkInitStruct );
-    assert_error( Status == HAL_OK, RCCEX_PRIPH_CLK_CONF_ERROR );
+    assert_error( Status == HAL_OK, RCCEX_PRIPH_CLK_CONF_ERROR );   /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
 
     /* Configure LSE/LSI as RTC clock source */
     RCC_OscInitStruct.OscillatorType =  RCC_OSCILLATORTYPE_LSI | RCC_OSCILLATORTYPE_LSE;
@@ -97,12 +97,12 @@ void HAL_RTC_MspInit( RTC_HandleTypeDef* hrtc )   /* cppcheck-suppress misra-c20
     RCC_OscInitStruct.LSEState = RCC_LSE_ON;
     RCC_OscInitStruct.LSIState = RCC_LSI_OFF;
     Status = HAL_RCC_OscConfig( &RCC_OscInitStruct );
-    assert_error( Status == HAL_OK, RCC_OSC_CONF_ERROR );
+    assert_error( Status == HAL_OK, RCC_OSC_CONF_ERROR );   /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
 
     /*Set LSE as source clock*/
     PeriphClkInitStruct.RTCClockSelection = RCC_RTCCLKSOURCE_LSE;
     Status = HAL_RCCEx_PeriphCLKConfig( &PeriphClkInitStruct );
-    assert_error( Status == HAL_OK, RCCEX_PRIPH_CLK_CONF_ERROR );
+    assert_error( Status == HAL_OK, RCCEX_PRIPH_CLK_CONF_ERROR );   /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
       
     /* Peripheral clock enable */
     __HAL_RCC_RTC_ENABLE();

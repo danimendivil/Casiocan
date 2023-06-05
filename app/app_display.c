@@ -65,9 +65,9 @@ void Display_Init( void )
     LCDHandle.SpiHandler->Init.CRCCalculation = SPI_CRCCALCULATION_DISABLED;
     LCDHandle.SpiHandler->Init.TIMode         = SPI_TIMODE_DISABLED;
     Status = HAL_SPI_Init( LCDHandle.SpiHandler );
-    assert_error( Status == HAL_OK, SPI_INIT_ERROR );
+    assert_error( Status == HAL_OK, SPI_INIT_ERROR );       /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     Status = HEL_LCD_Init(&LCDHandle );
-    assert_error( Status == HAL_OK, SPI_COMMAND_ERROR );
+    assert_error( Status == HAL_OK, SPI_COMMAND_ERROR );        /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
 }
 
 /**
@@ -127,16 +127,16 @@ void Display_Task( void )
 
         case STATE_PRINTH_WDAY:
             Status = HEL_LCD_SetCursor(&LCDHandle,FIRST_ROW,0);
-            assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR );
+            assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
             week(&fila_1[13],ClockMsg.tm.tm_wday);
             Status = HEL_LCD_String(&LCDHandle, fila_1);
-            assert_error( Status == HAL_OK, SPI_STRING_ERROR );
+            assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
             LCD_State = STATE_PRINTH_HOUR;
         break;
         
         case STATE_PRINTH_HOUR:
             Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,3 );
-            assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR );
+            assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
             fila_2[0] = ((ClockMsg.tm.tm_hour / 10u) + 48u);
             fila_2[1] = ((ClockMsg.tm.tm_hour % 10u) + 48u);
             LCD_State = STATE_PRINTH_MINUTES;
@@ -152,7 +152,7 @@ void Display_Task( void )
             fila_2[6] = ((ClockMsg.tm.tm_sec / 10u) + 48u);
             fila_2[7] = ((ClockMsg.tm.tm_sec % 10u) + 48u);
             Status = HEL_LCD_String(&LCDHandle, fila_2);
-            assert_error( Status == HAL_OK, SPI_STRING_ERROR );
+            assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
             LCD_State = STATE_IDLE;
         break;
 

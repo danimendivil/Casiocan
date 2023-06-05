@@ -135,10 +135,10 @@ void init_watchdog(void)
     hwwdg.Init.Prescaler    = WWDG_PRESCALER_16;
     hwwdg.Init.Window       = WATCHDOG_WINDOW;
     hwwdg.Init.Counter      = WATCHDOG_COUNTER;
-    hwwdg.Init.EWIMode      = WWDG_EWI_DISABLE;
+    hwwdg.Init.EWIMode      = WWDG_EWI_ENABLE;
     
     Status = HAL_WWDG_Init(&hwwdg);
-    assert_error( Status == HAL_OK, WWDG_INIT_ERROR );
+    assert_error( Status == HAL_OK, WWDG_INIT_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     __HAL_WWDG_ENABLE_IT(&hwwdg, WWDG_IT_EWI);
     tick_Dog = HAL_GetTick();
 
@@ -161,7 +161,7 @@ void peth_the_dog(void)
     {
         tick_Dog = HAL_GetTick(); 
         Status = HAL_WWDG_Refresh(&hwwdg); 
-        assert_error( Status == HAL_OK, WWDG_REFRESH_ERROR );    
+        assert_error( Status == HAL_OK, WWDG_REFRESH_ERROR );     /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     }
 }
 

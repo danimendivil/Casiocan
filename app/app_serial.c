@@ -125,6 +125,7 @@ void Serial_Init( void )
 {
     
     FDCAN_FilterTypeDef CANFilter;
+    CAN_td_message.tm.tm_year_msb = 20;
 
     CANHandler.Instance                 = FDCAN1;
     CANHandler.Init.Mode                = FDCAN_MODE_NORMAL;
@@ -142,7 +143,7 @@ void Serial_Init( void )
     CANHandler.Init.NominalTimeSeg2     = 4;
     
     Status = HAL_FDCAN_Init( &CANHandler );
-    assert_error( Status == HAL_OK, FDCAN_CONFIG_ERROR );
+    assert_error( Status == HAL_OK, FDCAN_CONFIG_ERROR );   /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     /* Configure reception filter to Rx FIFO 0, this filter will only show messages of ID 0x111 */
     CANFilter.IdType = FDCAN_STANDARD_ID;
     CANFilter.FilterIndex = 0;
@@ -151,19 +152,19 @@ void Serial_Init( void )
     CANFilter.FilterID1 = 0x111;
 
     Status = HAL_FDCAN_ConfigFilter( &CANHandler, &CANFilter );
-    assert_error( Status == HAL_OK, FDCAN_CONFIG_FILTER_ERROR );
+    assert_error( Status == HAL_OK, FDCAN_CONFIG_FILTER_ERROR );    /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     
     /*Messages without the indicaded filter will be rejected*/
     Status = HAL_FDCAN_ConfigGlobalFilter(&CANHandler, FDCAN_REJECT, FDCAN_REJECT, FDCAN_FILTER_REMOTE, FDCAN_FILTER_REMOTE);
-    assert_error( Status == HAL_OK, FDCAN_CONFIG_GLOBAL_FILTER_ERROR );
+    assert_error( Status == HAL_OK, FDCAN_CONFIG_GLOBAL_FILTER_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
 
     /* Change FDCAN instance from initialization mode to normal mode */
     Status = HAL_FDCAN_Start( &CANHandler);
-    assert_error( Status == HAL_OK, FDCAN_START_ERROR );
+    assert_error( Status == HAL_OK, FDCAN_START_ERROR );    /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     
     /*we activated the reception interruption in fifo0 when a message arrives*/
     Status = HAL_FDCAN_ActivateNotification( &CANHandler, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0 );
-    assert_error( Status == HAL_OK, FDCAN_ACTIVATE_NOTIFICATION_ERROR );
+    assert_error( Status == HAL_OK, FDCAN_ACTIVATE_NOTIFICATION_ERROR );    /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
 }
 
 /**
@@ -196,7 +197,7 @@ static void CanTp_SingleFrameTx( uint8_t *data, uint8_t *size )
             CAN_msg[i] = *(data+i-1u);      /* cppcheck-suppress misra-c2012-18.4 ; operators to pointers needed */
         }
         Status = HAL_FDCAN_AddMessageToTxFifoQ( &CANHandler, &CANTxHeader, CAN_msg );
-        assert_error( Status == HAL_OK, FDCAN_ADDMESSAGE_ERROR );
+        assert_error( Status == HAL_OK, FDCAN_ADDMESSAGE_ERROR );   /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     }
 }
 
@@ -220,7 +221,7 @@ static uint8_t CanTp_SingleFrameRx( uint8_t *data, uint8_t *size )
     FDCAN_RxHeaderTypeDef CANRxHeader;
 
     Status = HAL_FDCAN_GetRxMessage( &CANHandler, FDCAN_RX_FIFO0, &CANRxHeader, CAN_msg ); 
-    assert_error( Status == HAL_OK, FDCAN_GETMESSAGE_ERROR );
+    assert_error( Status == HAL_OK, FDCAN_GETMESSAGE_ERROR );   /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     if ( ((CAN_msg[0] >> 4u) == 0u) && (CAN_msg[0] <= 8u) )
     {
         *size = CAN_msg[0];

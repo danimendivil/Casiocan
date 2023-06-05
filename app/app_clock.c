@@ -72,7 +72,7 @@ void Clock_Init( void )
     hrtc.Init.OutPut          = RTC_OUTPUT_DISABLE;
     /* initilize the RTC with 24 hour format and no output signal enble */
     Status = HAL_RTC_Init( &hrtc );
-    assert_error( Status == HAL_OK, RTC_INIT_ERROR );
+    assert_error( Status == HAL_OK, RTC_INIT_ERROR );   /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
 
     sTime.Hours      = 0x02;
     sTime.Minutes    = 0x20;
@@ -82,7 +82,7 @@ void Clock_Init( void )
     sTime.StoreOperation = RTC_STOREOPERATION_RESET;
     
     Status = HAL_RTC_SetTime( &hrtc, &sTime, RTC_FORMAT_BCD );
-    assert_error( Status == HAL_OK, RTC_SETTIME_ERROR );
+    assert_error( Status == HAL_OK, RTC_SETTIME_ERROR );    /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     
     sDate.WeekDay = RTC_WEEKDAY_MONDAY;
     sDate.Month   = RTC_MONTH_APRIL;
@@ -90,7 +90,7 @@ void Clock_Init( void )
     sDate.Year    = 0x22;
     
     Status = HAL_RTC_SetDate( &hrtc, &sDate, RTC_FORMAT_BCD );
-    assert_error( Status == HAL_OK, RTC_SETDATE_ERROR );
+    assert_error( Status == HAL_OK, RTC_SETDATE_ERROR );    /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     
     sAlarm.AlarmTime.Hours = 0x00;      
     sAlarm.AlarmTime.Minutes = 0x00;    
@@ -99,7 +99,7 @@ void Clock_Init( void )
     sAlarm.Alarm = RTC_ALARM_A;         
 
     Status = HAL_RTC_DeactivateAlarm(&hrtc, RTC_ALARM_A);
-    assert_error( Status == HAL_OK, RTC_SDESACTIVATE_ALARM_ERROR );
+    assert_error( Status == HAL_OK, RTC_SDESACTIVATE_ALARM_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     
     tick_1000ms=HAL_GetTick();
 }
@@ -162,10 +162,10 @@ void Clock_Task( void )
         {
             /* Get the RTC current Time */
             Status = HAL_RTC_GetTime( &hrtc, &sTime, RTC_FORMAT_BIN );
-            assert_error( Status == HAL_OK, RTC_GET_TIME_ERROR );
+            assert_error( Status == HAL_OK, RTC_GET_TIME_ERROR );       /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
             /* Get the RTC current Date */
             Status = HAL_RTC_GetDate( &hrtc, &sDate, RTC_FORMAT_BIN );
-            assert_error( Status == HAL_OK, RTC_GET_DATE_ERROR );
+            assert_error( Status == HAL_OK, RTC_GET_DATE_ERROR );       /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
             ClockMsg.tm.tm_year_msb = CAN_td_message.tm.tm_year_msb;
             ClockMsg.tm.tm_mon = sDate.Month;
             ClockMsg.tm.tm_mday = sDate.Date;
@@ -191,7 +191,7 @@ void Clock_Task( void )
             sTime.StoreOperation = RTC_STOREOPERATION_RESET;
             
             Status = HAL_RTC_SetTime( &hrtc, &sTime, RTC_FORMAT_BCD );
-            assert_error( Status == HAL_OK, RTC_SETTIME_ERROR );
+            assert_error( Status == HAL_OK, RTC_SETTIME_ERROR );    /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
             Clockstate=CLOCK_ST_DISPLAY_MSG;
             CAN_td_message.msg  = NOT_MESSAGE;
             break;
@@ -205,7 +205,7 @@ void Clock_Task( void )
             sDate.Year      = CAN_td_message.tm.tm_year_lsb;
 
             Status = HAL_RTC_SetDate( &hrtc, &sDate, RTC_FORMAT_BCD );
-            assert_error( Status == HAL_OK, RTC_SETDATE_ERROR );
+            assert_error( Status == HAL_OK, RTC_SETDATE_ERROR );        /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
 
             Clockstate          = CLOCK_ST_DISPLAY_MSG;
             CAN_td_message.msg  = NOT_MESSAGE;
@@ -220,9 +220,9 @@ void Clock_Task( void )
             sAlarm.AlarmTime.SubSeconds = 0x00; 
             sAlarm.Alarm = RTC_ALARM_A;         
             Status = HAL_RTC_DeactivateAlarm(&hrtc, RTC_ALARM_A);
-            assert_error( Status == HAL_OK, RTC_SDESACTIVATE_ALARM_ERROR );
+            assert_error( Status == HAL_OK, RTC_SDESACTIVATE_ALARM_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
             Status = HAL_RTC_SetAlarm_IT(&hrtc, &sAlarm, RTC_FORMAT_BCD);
-            assert_error( Status == HAL_OK, RTC_SET_ALARM_ERROR );
+            assert_error( Status == HAL_OK, RTC_SET_ALARM_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
             CAN_td_message.msg = NOT_MESSAGE;
             break;
         }
