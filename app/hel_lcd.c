@@ -41,7 +41,7 @@ uint8_t HEL_LCD_Init( LCD_HandleTypeDef *hlcd )
 {
     HEL_LCD_MspInit(hlcd);
     HAL_GPIO_WritePin( hlcd->CsPort, hlcd->CsPin, SET );
-    uint8_t SPI_state;
+    
     /*LCD initialization rutine*/
     HAL_GPIO_WritePin( GPIOD, hlcd->CsPin, SET );       
     HAL_GPIO_WritePin( GPIOD, hlcd->RstPin, RESET );    
@@ -49,21 +49,32 @@ uint8_t HEL_LCD_Init( LCD_HandleTypeDef *hlcd )
     HAL_GPIO_WritePin( GPIOD, hlcd->RstPin, SET );
     HAL_Delay(1);
         /*SPI STATE WILL LATER BE USED ON FUNCTIONAL SAFETY*/
-    SPI_state =  HEL_LCD_Command(hlcd, WAKEUP ); 
+    Status =  HEL_LCD_Command(hlcd, WAKEUP ); 
+    assert_error( Status == HAL_OK, SPI_COMMAND_ERROR );    /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
 
-    SPI_state =  HEL_LCD_Command(hlcd, WAKEUP ); 
-    SPI_state =  HEL_LCD_Command(hlcd, WAKEUP ); 
-    SPI_state =  HEL_LCD_Command(hlcd, FUNCTION_SET ); 
-    SPI_state =  HEL_LCD_Command(hlcd, INTERNAL_OSC_FREQ ); 
-    SPI_state =  HEL_LCD_Command(hlcd, POWER_CONTROL ); 
-    SPI_state =  HEL_LCD_Command(hlcd, FOLLOWER_CONTROL ); 
+    Status =  HEL_LCD_Command(hlcd, WAKEUP ); 
+    assert_error( Status == HAL_OK, SPI_COMMAND_ERROR );    /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    Status =  HEL_LCD_Command(hlcd, WAKEUP ); 
+    assert_error( Status == HAL_OK, SPI_COMMAND_ERROR );    /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    Status =  HEL_LCD_Command(hlcd, FUNCTION_SET ); 
+    assert_error( Status == HAL_OK, SPI_COMMAND_ERROR );    /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    Status =  HEL_LCD_Command(hlcd, INTERNAL_OSC_FREQ ); 
+    assert_error( Status == HAL_OK, SPI_COMMAND_ERROR );    /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    Status =  HEL_LCD_Command(hlcd, POWER_CONTROL ); 
+    assert_error( Status == HAL_OK, SPI_COMMAND_ERROR );    /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    Status =  HEL_LCD_Command(hlcd, FOLLOWER_CONTROL ); 
+    assert_error( Status == HAL_OK, SPI_COMMAND_ERROR );    /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
      
-    SPI_state =  HEL_LCD_Command(hlcd, CONTRAST_COMMAND ); 
-    SPI_state =  HEL_LCD_Command(hlcd, DISPLAT_ON ); 
-    SPI_state =  HEL_LCD_Command(hlcd, ENTRY_MODE ); 
-    SPI_state =  HEL_LCD_Command(hlcd, CLEAR_SCREEN ); 
+    Status =  HEL_LCD_Command(hlcd, CONTRAST_COMMAND ); 
+    assert_error( Status == HAL_OK, SPI_COMMAND_ERROR );    /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    Status =  HEL_LCD_Command(hlcd, DISPLAT_ON ); 
+    assert_error( Status == HAL_OK, SPI_COMMAND_ERROR );    /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    Status =  HEL_LCD_Command(hlcd, ENTRY_MODE ); 
+    assert_error( Status == HAL_OK, SPI_COMMAND_ERROR );    /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    Status =  HEL_LCD_Command(hlcd, CLEAR_SCREEN ); 
+    
     HAL_Delay(1);
-    return SPI_state;
+    return Status;
 }
 
 /**

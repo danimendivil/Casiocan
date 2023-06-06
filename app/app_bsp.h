@@ -20,6 +20,57 @@
   /**
   @} */
 
+  /*macro to detect erros, wehere if expr is evaluated to false is an error*/
+  #define assert_error(expr, error)         ((expr) ? (void)0U : safe_state((uint8_t *)__FILE__, __LINE__, (error)))
+
+  /*external link to fucntion that will act as the safe state*/
+  extern void safe_state(uint8_t *file, uint32_t line, uint8_t error);
+
+  /**
+ * @brief  Variable for functional safety
+ */
+  extern HAL_StatusTypeDef Status;
+
+  /**
+  * @brief Enum for Errors.
+  *
+  * This enumeration represents the various types of errors that can be trigger
+  * during execution
+  */
+  typedef enum _App_ErrorsCode
+  { /* cppcheck-suppress misra-c2012-2.4 ; enum is used on functional safety */
+    FDCAN_CONFIG_ERROR = 1u,
+    FDCAN_CONFIG_FILTER_ERROR,
+    FDCAN_CALLBACK_ERROR,
+    FDCAN_CONFIG_GLOBAL_FILTER_ERROR,
+    FDCAN_START_ERROR,
+    FDCAN_ACTIVATE_NOTIFICATION_ERROR,
+    FDCAN_ADDMESSAGE_ERROR,
+    FDCAN_GETMESSAGE_ERROR,
+    RTC_INIT_ERROR,
+    RTC_SETTIME_ERROR,
+    RTC_SETDATE_ERROR,
+    RTC_SET_ALARM_ERROR,
+    RTC_SDESACTIVATE_ALARM_ERROR,
+    RTC_GET_TIME_ERROR,
+    RTC_GET_DATE_ERROR,
+    SPI_COMMAND_ERROR,
+    SPI_INIT_ERROR,
+    SPI_SET_CURSOR_ERROR,
+    SPI_STRING_ERROR,
+    SPI_CALLBACK_ERROR,
+    WWDG_INIT_ERROR,
+    WWDG_REFRESH_ERROR,
+    WWDG_EARLY_WAKEUP_ERROR,
+    PWREX_CONTROL_VOLTAGE_ERROR,
+    RCC_OSC_CONF_ERROR,
+    RCC_CLOCK_CONF_ERROR,
+    RCCEX_PRIPH_CLK_CONF_ERROR,
+    HARDFAULT_ERROR,
+    ECC_ONE_ERROR,
+    ECC_TWO_ERROR      
+  } App_ErrorsCode;   /* cppcheck-suppress misra-c2012-2.3 ; enum is used on functional safety */
+
   /**
   * @brief   Structure for message that are recived by CAN to store time and date in stdlib tm format 
   */
