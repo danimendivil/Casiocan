@@ -15,15 +15,15 @@
     /** 
     * @defgroup <Que state> this values represent if the circular buffer is functioning correct
     @{ */
-    #define QUEUE_OK  0
-    #define QUEUE_NOT_OK 1
+    #define QUEUE_OK  0XFFu
+    #define QUEUE_NOT_OK 1u
     /**
     @} */
 
     /** 
     * @defgroup <Queue all interruptions> this values is used for disabling all interruption 
     @{ */
-    #define ALL_INTS    0XFF
+    #define ALL_INTS    0XFFu
     /**
     @} */
 

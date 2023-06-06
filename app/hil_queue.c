@@ -10,12 +10,13 @@
 * 
 * @retval  none 
 */
+/* cppcheck-suppress misra-c2012-8.7 ; function will later be used on other files*/
 void HIL_QUEUE_Init( QUEUE_HandleTypeDef *hqueue )
 {
-    hqueue->Head    = 0;
-    hqueue->Tail    = 0;
-    hqueue->Empty   = 1;
-    hqueue->Full    = 0;
+    hqueue->Head    = 0u;
+    hqueue->Tail    = 0u;
+    hqueue->Empty   = 1u;
+    hqueue->Full    = 0u;
 }
 
 /**
@@ -38,26 +39,27 @@ void HIL_QUEUE_Init( QUEUE_HandleTypeDef *hqueue )
 * 
 * @retval  Queue_Status indicates if the circular buffer wrote something 
 */
-
+/* cppcheck-suppress misra-c2012-8.7 ; function will later be used on other files*/
 uint8_t HIL_QUEUE_Write( QUEUE_HandleTypeDef *hqueue, void *data )
 {
     uint8_t Queue_Status = QUEUE_NOT_OK;
 
-    if(hqueue->Full==0)
+    if(hqueue->Full == 0u)
     {
-        memcpy(((hqueue->Buffer) +  ((hqueue->Head)*(hqueue->size)) ), data,hqueue->size);
-        hqueue->Head = ( ( ( hqueue->Head ) + 1 ) ) % (hqueue->Elements);
+        /* cppcheck-suppress misra-c2012-18.4 ; operator to pointers are needed*/
+        (void)memcpy(((hqueue->Buffer) +  ((hqueue->Head)*(hqueue->size)) ), data,hqueue->size);    
+        hqueue->Head = ( ( ( hqueue->Head ) + 1u ) ) % (hqueue->Elements);
         Queue_Status = QUEUE_OK;
     }
 
     if((hqueue->Head) == (hqueue->Tail))
     {
-        hqueue->Full=1;  
+        hqueue->Full = 1u;  
     }
 
-    if(hqueue->Empty == 1)
+    if(hqueue->Empty == 1u)
     {
-        hqueue->Empty= 0;
+        hqueue->Empty = 0u;
     }
 
     return Queue_Status;
@@ -85,28 +87,28 @@ uint8_t HIL_QUEUE_Write( QUEUE_HandleTypeDef *hqueue, void *data )
 * @param   <*hqueue>[in] Pointer to a QUEUE_HandleTypeDef structure
 * @retval  Queue_Status indicates if the circular buffer wrote something 
 */
-
+/* cppcheck-suppress misra-c2012-8.7 ; function will later be used on other files*/
 uint8_t HIL_QUEUE_Read( QUEUE_HandleTypeDef *hqueue, void *data )
 {
     uint8_t Queue_Status = QUEUE_NOT_OK;
-    uint8_t x=0;
-    if(hqueue->Empty != 1)
+    uint8_t x = 0u;
+    if(hqueue->Empty != 1u)
     {
-      memcpy(data,((hqueue->Buffer) + ((hqueue->Tail)*(hqueue->size))),hqueue->size);
-      memcpy(((hqueue->Buffer) + ((hqueue->Tail)*(hqueue->size))), &x,hqueue->size);
+       (void)memcpy(data,((hqueue->Buffer) + ((hqueue->Tail)*(hqueue->size))),hqueue->size);    /* cppcheck-suppress misra-c2012-18.4 ; operator to pointers are needed*/
+       (void)memcpy(((hqueue->Buffer) + ((hqueue->Tail)*(hqueue->size))), &x,hqueue->size);     /* cppcheck-suppress misra-c2012-18.4 ; operator to pointers are needed*/
       
-      hqueue->Tail = ((hqueue->Tail) + 1) % (hqueue->Elements);
+      hqueue->Tail = ((hqueue->Tail) + 1u) % (hqueue->Elements);
       Queue_Status = QUEUE_OK;
     }
 
     if(hqueue->Tail==hqueue->Head)
     {
-        hqueue->Empty = 1;
+        hqueue->Empty = 1u;
     }
 
-    if(hqueue->Full == 1)
+    if(hqueue->Full == 1u)
     {
-        hqueue->Full = 0;
+        hqueue->Full = 0u;
     }
     return Queue_Status;
 }
@@ -119,6 +121,7 @@ uint8_t HIL_QUEUE_Read( QUEUE_HandleTypeDef *hqueue, void *data )
 * @param   <*hqueue>[in] Pointer to a QUEUE_HandleTypeDef structure
 * @retval  hqueue->Empty 
 */
+/* cppcheck-suppress misra-c2012-8.7 ; function will later be used on other files*/
 uint8_t HIL_QUEUE_IsEmpty( QUEUE_HandleTypeDef *hqueue )
 {
     return hqueue->Empty;
@@ -135,13 +138,13 @@ uint8_t HIL_QUEUE_IsEmpty( QUEUE_HandleTypeDef *hqueue )
 * 
 * @retval  none
 */
-
+/* cppcheck-suppress misra-c2012-8.7 ; function will later be used on other files*/
 void HIL_QUEUE_Flush( QUEUE_HandleTypeDef *hqueue )
 {
-    int x=0;
-    for(int i = 0; i < hqueue->Elements ;i++ )
+    uint8_t x = 0u;
+    for(uint8_t i = 0u; i < hqueue->Elements ;i++ )
     {
-      memcpy(((hqueue->Buffer) + (i*hqueue->size)),&x,hqueue->size);
+       (void)memcpy(((hqueue->Buffer) + (i*hqueue->size)),&x,hqueue->size); /* cppcheck-suppress misra-c2012-18.4 ; operator to pointers are needed*/
     }
     HIL_QUEUE_Init(hqueue);
 }
