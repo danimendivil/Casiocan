@@ -1,4 +1,11 @@
 #include "hil_queue.h"
+/**
+* @file    <hil_queue.c>
+* @brief   **circular buffer functions**
+*
+*   This is a reusable driver for a circular buffer, this files contains all the functions
+*   implementation declared on the hil_queue.h file       
+*/
 
 /** 
   * @defgroup QUEUE queue structure values 
@@ -19,7 +26,6 @@
 *  And full to 0 wich indicates that the circular buffer is not full
 * @param   <*hqueue>[in] Pointer to a QUEUE_HandleTypeDef structure
 * 
-* @retval  none 
 */
 /* cppcheck-suppress misra-c2012-8.7 ; function will later be used on other files*/
 void HIL_QUEUE_Init( QUEUE_HandleTypeDef *hqueue )
@@ -147,7 +153,6 @@ uint8_t HIL_QUEUE_IsEmpty( QUEUE_HandleTypeDef *hqueue )
 *
 * @param   <*hqueue>[in] Pointer to a QUEUE_HandleTypeDef structure
 * 
-* @retval  none
 */
 /* cppcheck-suppress misra-c2012-8.7 ; function will later be used on other files*/
 void HIL_QUEUE_Flush( QUEUE_HandleTypeDef *hqueue )
@@ -282,7 +287,6 @@ uint8_t HIL_QUEUE_IsEmptyISR( QUEUE_HandleTypeDef *hqueue, uint8_t isr )
 * @param   hqueue[in]   Pointer to a QUEUE_HandleTypeDef structure
 * @param   isr[in]      Value of an interruption to be disable
 * 
-* @retval  is_empty indicates if the circular buffer wrote something 
 * @note     to disable all interruption use value 0xFF
 */
 void HIL_QUEUE_FlushISR( QUEUE_HandleTypeDef *hqueue, uint8_t isr )
