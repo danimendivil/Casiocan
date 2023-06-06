@@ -138,7 +138,7 @@ uint8_t HIL_QUEUE_IsEmpty( QUEUE_HandleTypeDef *hqueue )
 
 void HIL_QUEUE_Flush( QUEUE_HandleTypeDef *hqueue )
 {
-   int x=0;
+    int x=0;
     for(int i = 0; i < hqueue->Elements ;i++ )
     {
       memcpy(((hqueue->Buffer) + (i*hqueue->size)),&x,hqueue->size);
@@ -226,7 +226,7 @@ uint8_t HIL_QUEUE_ReadISR( QUEUE_HandleTypeDef *hqueue, void *data, uint8_t isr 
 * @brief   **This function disable an interruption checks ir queue is empty**
 *
 *  The function disable an interruption, the uses the HIL_QUEUE_IsEmpty function 
-*  to see if the queue is empty an then it enables the interruption.
+*  to see if the queue is empty and then it enables the interruption.
 *
 * @param   hqueue[in]   Pointer to a QUEUE_HandleTypeDef structure
 * @param   isr[in]      Value of an interruption to be disable
@@ -257,4 +257,39 @@ uint8_t HIL_QUEUE_IsEmptyISR( QUEUE_HandleTypeDef *hqueue, uint8_t isr )
     }
 
     return is_empty;
+}
+
+/**
+* @brief   **This function disable an interruption and flushes the queue**
+*
+*  The function disable an interruption, the uses the HIL_QUEUE_Flush function 
+*  to erased all data on queue and then it enables the interruption.
+*
+* @param   hqueue[in]   Pointer to a QUEUE_HandleTypeDef structure
+* @param   isr[in]      Value of an interruption to be disable
+* 
+* @retval  is_empty indicates if the circular buffer wrote something 
+* @note     to disable all interruption use value 0xFF
+*/
+void HIL_QUEUE_FlushISR( QUEUE_HandleTypeDef *hqueue, uint8_t isr )
+{
+    if( isr == ALL_INTS )
+    { 
+        __disable_irq();
+    }
+    else
+    {
+        HAL_NVIC_DisableIRQ(isr);
+    }
+
+    HIL_QUEUE_Flush(hqueue);
+
+    if( isr == ALL_INTS )
+    { 
+        __enable_irq();
+    }
+    else
+    {
+        HAL_NVIC_EnableIRQ(isr);
+    }
 }
