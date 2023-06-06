@@ -31,17 +31,15 @@
      @{ */
     typedef struct
     {
-        void        *Buffer;  /*!<puntero al espacio de memoria usado como buffer por la cola*/
-        uint32_t    Elements; /*!<numero de elementos a almacenar (tama;o de la cola)*/
-        uint8_t     size;     /*!<tamaño del tipo de elementos a almacenar*/
-        uint32_t    Head;     /*!<puntero que indica el siguiente espacio a escribir*/
-        uint32_t    Tail;     /*!<puntero que indica el siguiente espacio a leer*/
-        uint8_t     Empty;    /*!<bandera que indica si no hay elementos a leer*/
-        uint8_t     Full;     /*!<bandera que indica si no se puede seguir escribiendo mas elementos*/
+        void        *Buffer;  /*!<Pointer to the memory space used as a buffer by the queue*/
+        uint32_t    Elements; /*!<Number of elements to store (size of the queue)*/
+        uint8_t     size;     /*!<Size of the elements to store*/
+        uint32_t    Head;     /*!<Pointer indicating the next space to write*/
+        uint32_t    Tail;     /*!<Pointer indicating the next space to read*/
+        uint8_t     Empty;    /*!<Flag indicating if there are no elements to read*/
+        uint8_t     Full;     /*!<Flag indicating if no more elements can be written*/
         
     } QUEUE_HandleTypeDef;
-    /**
-    @} */
 
     void HIL_QUEUE_Init( QUEUE_HandleTypeDef *hqueue );
     uint8_t HIL_QUEUE_Write( QUEUE_HandleTypeDef *hqueue, void *data );
