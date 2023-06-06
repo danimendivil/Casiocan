@@ -1,5 +1,3 @@
-#include "hil_queue.h"
-#include <string.h>
 /**
 * @file    <hil_queue.c>
 * @brief   **circular buffer functions**
@@ -7,6 +5,9 @@
 *   This is a reusable driver for a circular buffer, this files contains all the functions
 *   implementation declared on the hil_queue.h file       
 */
+
+#include "hil_queue.h"
+#include <string.h>
 
 /** 
   * @defgroup QUEUE queue structure values 
