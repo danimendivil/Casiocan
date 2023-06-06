@@ -110,3 +110,16 @@ uint8_t HIL_QUEUE_Read( QUEUE_HandleTypeDef *hqueue, void *data )
     }
     return Queue_Status;
 }
+
+/**
+* @brief   **This function tell us if the queue is empty**
+*
+*  This function returns the value of the empty variable on the QUEUE_HandleTypeDef structure
+*
+* @param   <*hqueue>[in] Pointer to a QUEUE_HandleTypeDef structure
+* @retval  hqueue->Empty 
+*/
+uint8_t HIL_QUEUE_IsEmpty( QUEUE_HandleTypeDef *hqueue )
+{
+    return hqueue->Empty;
+}
