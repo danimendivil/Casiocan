@@ -176,7 +176,7 @@ void HIL_QUEUE_Flush( QUEUE_HandleTypeDef *hqueue )
 * @param   isr[in]      Value of an interruption to be disable
 *
 * @retval  Queue_Status indicates if the circular buffer wrote something 
-* @note     to disable all interruption use value 0xFF
+* @note     To disable all interruption use value 0xFF
 */
 uint8_t HIL_QUEUE_WriteISR( QUEUE_HandleTypeDef *hqueue, void *data, uint8_t isr )
 {
@@ -214,7 +214,7 @@ uint8_t HIL_QUEUE_WriteISR( QUEUE_HandleTypeDef *hqueue, void *data, uint8_t isr
 * @param   isr[in]      Value of an interruption to be disable
 * 
 * @retval  Queue_Status indicates if the circular buffer wrote something 
-* @note     to disable all interruption use value 0xFF
+* @note     To disable all interruption use value 0xFF
 */
 uint8_t HIL_QUEUE_ReadISR( QUEUE_HandleTypeDef *hqueue, void *data, uint8_t isr )
 {
@@ -251,7 +251,7 @@ uint8_t HIL_QUEUE_ReadISR( QUEUE_HandleTypeDef *hqueue, void *data, uint8_t isr 
 * @param   isr[in]      Value of an interruption to be disable
 * 
 * @retval  is_empty indicates if the circular buffer wrote something 
-* @note     to disable all interruption use value 0xFF
+* @note     To disable all interruption use value 0xFF
 */
 uint8_t HIL_QUEUE_IsEmptyISR( QUEUE_HandleTypeDef *hqueue, uint8_t isr )
 {
@@ -287,7 +287,7 @@ uint8_t HIL_QUEUE_IsEmptyISR( QUEUE_HandleTypeDef *hqueue, uint8_t isr )
 * @param   hqueue[in]   Pointer to a QUEUE_HandleTypeDef structure
 * @param   isr[in]      Value of an interruption to be disable
 * 
-* @note     to disable all interruption use value 0xFF
+* @note     To disable all interruption use value 0xFF
 */
 void HIL_QUEUE_FlushISR( QUEUE_HandleTypeDef *hqueue, uint8_t isr )
 {
