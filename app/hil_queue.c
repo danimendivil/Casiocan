@@ -123,3 +123,25 @@ uint8_t HIL_QUEUE_IsEmpty( QUEUE_HandleTypeDef *hqueue )
 {
     return hqueue->Empty;
 }
+
+/**
+* @brief   **This function erase all the values of the circular buffer**
+*
+*  We use a for loop wich will run Elements value times,
+*  and each loop we will asign the value of 0 to the circular buffer queue
+*  after that we call the HIL_QUEUE_Init function to reset the queue.
+*
+* @param   <*hqueue>[in] Pointer to a QUEUE_HandleTypeDef structure
+* 
+* @retval  none
+*/
+
+void HIL_QUEUE_Flush( QUEUE_HandleTypeDef *hqueue )
+{
+   int x=0;
+    for(int i = 0; i < hqueue->Elements ;i++ )
+    {
+      memcpy(((hqueue->Buffer) + (i*hqueue->size)),&x,hqueue->size);
+    }
+    HIL_QUEUE_Init(hqueue);
+}
