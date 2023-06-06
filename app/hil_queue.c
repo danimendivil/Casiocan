@@ -1,4 +1,5 @@
 #include "hil_queue.h"
+#include <string.h>
 /**
 * @file    <hil_queue.c>
 * @brief   **circular buffer functions**
