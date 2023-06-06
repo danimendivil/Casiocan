@@ -62,3 +62,51 @@ uint8_t HIL_QUEUE_Write( QUEUE_HandleTypeDef *hqueue, void *data )
 
     return Queue_Status;
 }
+
+/**
+* @brief   **This function reads a value on the circular buffer queue**
+*
+*  First we need to check if the circular buffer isn`t empty; 
+*  This function reads a value on the circular buffer using the memcpy function 
+*  this value is store in the data parameter ,the second parameter 
+*  is the address were the data is going to be read and then we add the Tail value 
+*  times the size of the array to get the correct position, and the last parameter is the size of the data to  be store.
+*  after reading something we use the memcpy function but this time we put the second parameter on the first
+*  and on the second parameter we put the address of x wich has a value of 0, the third parameter
+*  remains the same, we made this to erased the value that was read.
+*  after readinb something we add 1 to the Tail value so the next time we use the Read function 
+*  the position will be the next one, we also use the % operator with the Elements beacuse this will 
+*  reset the position of the Tail once it reaches the last one.
+*  Then we give the Queue_Status to QUEUE_OK wich indicates if a value was read.
+*  If the tail reaches the head this means that the circular buffer is empty.
+*  And if the circular buffer was full we need to change this value to 0 since is no longer full.
+*   
+* @param   <*data>[in] Pointer of a value to be store
+* @param   <*hqueue>[in] Pointer to a QUEUE_HandleTypeDef structure
+* @retval  Queue_Status indicates if the circular buffer wrote something 
+*/
+
+uint8_t HIL_QUEUE_Read( QUEUE_HandleTypeDef *hqueue, void *data )
+{
+    uint8_t Queue_Status = QUEUE_NOT_OK;
+    uint8_t x=0;
+    if(hqueue->Empty != 1)
+    {
+      memcpy(data,((hqueue->Buffer) + ((hqueue->Tail)*(hqueue->size))),hqueue->size);
+      memcpy(((hqueue->Buffer) + ((hqueue->Tail)*(hqueue->size))), &x,hqueue->size);
+      
+      hqueue->Tail = ((hqueue->Tail) + 1) % (hqueue->Elements);
+      Queue_Status = QUEUE_OK;
+    }
+
+    if(hqueue->Tail==hqueue->Head)
+    {
+        hqueue->Empty = 1;
+    }
+
+    if(hqueue->Full == 1)
+    {
+        hqueue->Full = 0;
+    }
+    return Queue_Status;
+}
