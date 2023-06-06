@@ -152,13 +152,52 @@ void HIL_QUEUE_Flush( QUEUE_HandleTypeDef *hqueue )
 *  The function disable an interruption, the uses the HIL_QUEUE_Write function 
 *  and after writing on the queue it enables the interruption.
 *
-* @param   <*hqueue>[in] Pointer to a QUEUE_HandleTypeDef structure
-* @param   <*data>[in] Pointer of a value to be store
-* 
+* @param   hqueue[in]   Pointer to a QUEUE_HandleTypeDef structure
+* @param   data[in]     Pointer of a value to be store
+* @param   isr[in]      Value of an interruption to be disable
+*
 * @retval  Queue_Status indicates if the circular buffer wrote something 
 * @note     to disable all interruption use value 0xFF
 */
 uint8_t HIL_QUEUE_WriteISR( QUEUE_HandleTypeDef *hqueue, void *data, uint8_t isr )
+{
+    if( isr == ALL_INTS )
+    { 
+        __disable_irq();
+    }
+    else
+    {
+        HAL_NVIC_DisableIRQ(isr);
+    }
+
+    uint8_t Queue_Status = HIL_QUEUE_Write(hqueue, data);
+
+    if( isr == ALL_INTS )
+    { 
+        __enable_irq();
+    }
+    else
+    {
+        HAL_NVIC_EnableIRQ(isr);
+    }
+
+    return Queue_Status;
+}
+
+/**
+* @brief   **This function disable an interruption and then reads a value from the circular buffer queue**
+*
+*  The function disable an interruption, the uses the HIL_QUEUE_Read function 
+*  and after writing on the queue it enables the interruption.
+*
+* @param   hqueue[in]   Pointer to a QUEUE_HandleTypeDef structure
+* @param   data[in]     Pointer of a value to be store
+* @param   isr[in]      Value of an interruption to be disable
+* 
+* @retval  Queue_Status indicates if the circular buffer wrote something 
+* @note     to disable all interruption use value 0xFF
+*/
+uint8_t HIL_QUEUE_ReadISR( QUEUE_HandleTypeDef *hqueue, void *data, uint8_t isr )
 {
     if( isr == ALL_INTS )
     { 
