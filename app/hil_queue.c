@@ -76,7 +76,8 @@ uint8_t HIL_QUEUE_Write( QUEUE_HandleTypeDef *hqueue, void *data )
     {
         /* cppcheck-suppress misra-c2012-18.4 ; operator to pointers are needed*/
         (void)memcpy(((hqueue->Buffer) +  ((hqueue->Head)*(hqueue->size)) ), data,hqueue->size);    
-        ++hqueue->Head %= hqueue->Elements;
+        ++(hqueue->Head);
+        hqueue->Head %= hqueue->Elements;
         Queue_Status = QUEUE_OK;
     }
 
@@ -124,12 +125,11 @@ uint8_t HIL_QUEUE_Read( QUEUE_HandleTypeDef *hqueue, void *data )
     assert_error( data != NULL, QUEUE_PAR_ERROR );              /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
 
     uint8_t Queue_Status = QUEUE_NOT_OK;
-    uint8_t x = 0u;
     if(hqueue->Empty != EMPTY)
     {
        (void)memcpy(data,((hqueue->Buffer) + ((hqueue->Tail)*(hqueue->size))),hqueue->size);    /* cppcheck-suppress misra-c2012-18.4 ; operator to pointers are needed*/
-      
-      ++hqueue->Tail %= hqueue->Elements;
+        ++(hqueue->Tail);
+        hqueue->Tail %= hqueue->Elements;
       Queue_Status = QUEUE_OK;
     }
 
@@ -198,7 +198,7 @@ void HIL_QUEUE_Flush( QUEUE_HandleTypeDef *hqueue )
 */
 uint8_t HIL_QUEUE_WriteISR( QUEUE_HandleTypeDef *hqueue, void *data, uint8_t isr )
 {
-    if( isr == ALL_INTS )
+    if( isr == QUEUE_ALL_INTS )
     { 
         __disable_irq();
     }
@@ -209,7 +209,7 @@ uint8_t HIL_QUEUE_WriteISR( QUEUE_HandleTypeDef *hqueue, void *data, uint8_t isr
 
     uint8_t Queue_Status = HIL_QUEUE_Write(hqueue, data);
 
-    if( isr == ALL_INTS )
+    if( isr == QUEUE_ALL_INTS )
     { 
         __enable_irq();
     }
@@ -236,7 +236,7 @@ uint8_t HIL_QUEUE_WriteISR( QUEUE_HandleTypeDef *hqueue, void *data, uint8_t isr
 */
 uint8_t HIL_QUEUE_ReadISR( QUEUE_HandleTypeDef *hqueue, void *data, uint8_t isr )
 {
-    if( isr == ALL_INTS )
+    if( isr == QUEUE_ALL_INTS )
     { 
         __disable_irq();
     }
@@ -247,7 +247,7 @@ uint8_t HIL_QUEUE_ReadISR( QUEUE_HandleTypeDef *hqueue, void *data, uint8_t isr 
 
     uint8_t Queue_Status = HIL_QUEUE_Read(hqueue, data);
 
-    if( isr == ALL_INTS )
+    if( isr == QUEUE_ALL_INTS )
     { 
         __enable_irq();
     }
@@ -273,7 +273,7 @@ uint8_t HIL_QUEUE_ReadISR( QUEUE_HandleTypeDef *hqueue, void *data, uint8_t isr 
 */
 uint8_t HIL_QUEUE_IsEmptyISR( QUEUE_HandleTypeDef *hqueue, uint8_t isr )
 {
-    if( isr == ALL_INTS )
+    if( isr == QUEUE_ALL_INTS )
     { 
         __disable_irq();
     }
@@ -284,7 +284,7 @@ uint8_t HIL_QUEUE_IsEmptyISR( QUEUE_HandleTypeDef *hqueue, uint8_t isr )
 
     uint8_t is_empty = HIL_QUEUE_IsEmpty(hqueue);
 
-    if( isr == ALL_INTS )
+    if( isr == QUEUE_ALL_INTS )
     { 
         __enable_irq();
     }
@@ -309,7 +309,7 @@ uint8_t HIL_QUEUE_IsEmptyISR( QUEUE_HandleTypeDef *hqueue, uint8_t isr )
 */
 void HIL_QUEUE_FlushISR( QUEUE_HandleTypeDef *hqueue, uint8_t isr )
 {
-    if( isr == ALL_INTS )
+    if( isr == QUEUE_ALL_INTS )
     { 
         __disable_irq();
     }
@@ -320,7 +320,7 @@ void HIL_QUEUE_FlushISR( QUEUE_HandleTypeDef *hqueue, uint8_t isr )
 
     HIL_QUEUE_Flush(hqueue);
 
-    if( isr == ALL_INTS )
+    if( isr == QUEUE_ALL_INTS )
     { 
         __enable_irq();
     }
