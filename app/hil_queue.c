@@ -32,6 +32,10 @@
 /* cppcheck-suppress misra-c2012-8.7 ; function will later be used on other files*/
 void HIL_QUEUE_Init( QUEUE_HandleTypeDef *hqueue )
 {
+    assert_error( (hqueue->Buffer != NULL), QUEUE_PAR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    assert_error( (hqueue->Elements != 0u), QUEUE_PAR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    assert_error( (hqueue->size != 0u), QUEUE_PAR_ERROR );/* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+
     hqueue->Head    = FIRS_POS;
     hqueue->Tail    = FIRS_POS;
     hqueue->Empty   = EMPTY;
@@ -61,13 +65,18 @@ void HIL_QUEUE_Init( QUEUE_HandleTypeDef *hqueue )
 /* cppcheck-suppress misra-c2012-8.7 ; function will later be used on other files*/
 uint8_t HIL_QUEUE_Write( QUEUE_HandleTypeDef *hqueue, void *data )
 {
+    assert_error( (hqueue->Buffer != NULL), QUEUE_PAR_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    assert_error( (hqueue->Elements != 0u), QUEUE_PAR_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    assert_error( (hqueue->size != 0u), QUEUE_PAR_ERROR );      /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    assert_error( data != NULL, QUEUE_PAR_ERROR );              /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+
     uint8_t Queue_Status = QUEUE_NOT_OK;
 
     if(hqueue->Full == NOT_FULL)
     {
         /* cppcheck-suppress misra-c2012-18.4 ; operator to pointers are needed*/
         (void)memcpy(((hqueue->Buffer) +  ((hqueue->Head)*(hqueue->size)) ), data,hqueue->size);    
-        hqueue->Head = ( ( ( hqueue->Head ) + 1u ) ) % (hqueue->Elements);
+        ++hqueue->Head %= hqueue->Elements;
         Queue_Status = QUEUE_OK;
     }
 
@@ -109,14 +118,18 @@ uint8_t HIL_QUEUE_Write( QUEUE_HandleTypeDef *hqueue, void *data )
 /* cppcheck-suppress misra-c2012-8.7 ; function will later be used on other files*/
 uint8_t HIL_QUEUE_Read( QUEUE_HandleTypeDef *hqueue, void *data )
 {
+    assert_error( (hqueue->Buffer != NULL), QUEUE_PAR_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    assert_error( (hqueue->Elements != 0u), QUEUE_PAR_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    assert_error( (hqueue->size != 0u), QUEUE_PAR_ERROR );      /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */    
+    assert_error( data != NULL, QUEUE_PAR_ERROR );              /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+
     uint8_t Queue_Status = QUEUE_NOT_OK;
     uint8_t x = 0u;
     if(hqueue->Empty != EMPTY)
     {
        (void)memcpy(data,((hqueue->Buffer) + ((hqueue->Tail)*(hqueue->size))),hqueue->size);    /* cppcheck-suppress misra-c2012-18.4 ; operator to pointers are needed*/
-       (void)memcpy(((hqueue->Buffer) + ((hqueue->Tail)*(hqueue->size))), &x,hqueue->size);     /* cppcheck-suppress misra-c2012-18.4 ; operator to pointers are needed*/
       
-      hqueue->Tail = ((hqueue->Tail) + 1u) % (hqueue->Elements);
+      ++hqueue->Tail %= hqueue->Elements;
       Queue_Status = QUEUE_OK;
     }
 
@@ -143,6 +156,10 @@ uint8_t HIL_QUEUE_Read( QUEUE_HandleTypeDef *hqueue, void *data )
 /* cppcheck-suppress misra-c2012-8.7 ; function will later be used on other files*/
 uint8_t HIL_QUEUE_IsEmpty( QUEUE_HandleTypeDef *hqueue )
 {
+    assert_error( (hqueue->Buffer != NULL), QUEUE_PAR_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    assert_error( (hqueue->Elements != 0u), QUEUE_PAR_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    assert_error( (hqueue->size != 0u), QUEUE_PAR_ERROR );      /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */   
+    
     return hqueue->Empty;
 }
 
@@ -159,11 +176,10 @@ uint8_t HIL_QUEUE_IsEmpty( QUEUE_HandleTypeDef *hqueue )
 /* cppcheck-suppress misra-c2012-8.7 ; function will later be used on other files*/
 void HIL_QUEUE_Flush( QUEUE_HandleTypeDef *hqueue )
 {
-    uint8_t x = 0u;
-    for(uint8_t i = 0u; i < hqueue->Elements ;i++ )
-    {
-       (void)memcpy(((hqueue->Buffer) + (i*hqueue->size)),&x,hqueue->size); /* cppcheck-suppress misra-c2012-18.4 ; operator to pointers are needed*/
-    }
+    assert_error( (hqueue->Buffer != NULL), QUEUE_PAR_ERROR );      /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    assert_error( (hqueue->Elements != 0u), QUEUE_PAR_ERROR );      /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    assert_error( (hqueue->size != 0u), QUEUE_PAR_ERROR );          /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    
     HIL_QUEUE_Init(hqueue);
 }
 

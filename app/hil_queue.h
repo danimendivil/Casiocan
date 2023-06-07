@@ -22,7 +22,8 @@
     /** 
      * @defgroup Queue all interruptions this values is used for disabling all interruption 
      @{ */
-    #define ALL_INTS    0XFFu       /*!<value to disable all interruptions*/
+     /* cppcheck-suppress misra-c2012-2.5 ; define will later be used */
+    #define QUEUE_ALL_INTS    0XFFu       /*!<value to disable all interruptions*/  
     /**
     @} */
 
