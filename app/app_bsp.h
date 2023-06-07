@@ -68,7 +68,8 @@
     RCCEX_PRIPH_CLK_CONF_ERROR,
     HARDFAULT_ERROR,
     ECC_ONE_ERROR,
-    ECC_TWO_ERROR      
+    ECC_TWO_ERROR,
+    QUEUE_PAR_ERROR
   } App_ErrorsCode;   /* cppcheck-suppress misra-c2012-2.3 ; enum is used on functional safety */
 
   /**
