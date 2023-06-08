@@ -83,20 +83,6 @@ FDCAN_HandleTypeDef CANHandler;
 APP_MsgTypeDef CAN_td_message;  //time and date message
 
 /**
-* @brief  Variable for cases of the state mahcine.
-*/
-
-/**
-* @brief  Variable for the data of the state machine.
-*/
-static uint8_t Data_msg[CAN_DATA_LENGHT];/* cppcheck-suppress misra-c2012-8.9 ; Function does not work if defined in serial task */
-
-/**
-* @brief  Variable for the size of the message recived by CAN.
-*/
-static uint8_t CAN_size;
-
-/**
 * @brief  Circular buffer variable for CAN msg recived to serial task.
 */
 static QUEUE_HandleTypeDef Serial_queue;
@@ -434,6 +420,8 @@ uint8_t valid_alarm(uint8_t hour,uint8_t minutes)
 void Serial_Task( void )
 {
     static uint8_t cases = STATE_IDLE;
+    static uint8_t Data_msg[CAN_DATA_LENGHT];
+    static uint8_t CAN_size;
     
     switch(cases)
     {
