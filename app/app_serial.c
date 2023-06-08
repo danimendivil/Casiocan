@@ -1,4 +1,5 @@
 #include "app_serial.h"
+#include "hil_queue.h"
 /** 
   * @defgroup CAN_conf values to use CAN.
   @{ */
@@ -62,7 +63,8 @@ typedef enum
 typedef enum
 /* cppcheck-suppress misra-c2012-2.4 ; enum is used on state machine */
 {
-    STATE_TIME = 1U,
+    STATE_IDLE = 0U,
+    STATE_TIME,
     STATE_DATE,
     STATE_ALARM,
     STATE_GETMSG,
@@ -74,12 +76,6 @@ typedef enum
  * @brief  Variable for CAN configuration
  */
 FDCAN_HandleTypeDef CANHandler; 
-
-
-/**
- * @brief  Flag for CAN msg recive interruption
- */
-static uint8_t flag; 
 
 /**
 * @brief  Variable for state machien messages.
@@ -99,6 +95,11 @@ static uint8_t Data_msg[CAN_DATA_LENGHT];/* cppcheck-suppress misra-c2012-8.9 ; 
 * @brief  Variable for the size of the message recived by CAN.
 */
 static uint8_t CAN_size;
+
+/**
+* @brief  Circular buffer variable for CAN msg recived to serial task.
+*/
+static QUEUE_HandleTypeDef Serial_queue;
 
 static uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL);
 static uint8_t dayofweek(uint32_t yearM, uint32_t yearL, uint32_t month, uint32_t day);
@@ -165,6 +166,12 @@ void Serial_Init( void )
     /*we activated the reception interruption in fifo0 when a message arrives*/
     Status = HAL_FDCAN_ActivateNotification( &CANHandler, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0 );
     assert_error( Status == HAL_OK, FDCAN_ACTIVATE_NOTIFICATION_ERROR );    /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+
+    static uint64_t queue_store[8];
+    Serial_queue.Buffer = queue_store;
+    Serial_queue.Elements = 8;
+    Serial_queue.size = sizeof(uint64_t);
+    HIL_QUEUE_Init(&Serial_queue);
 }
 
 /**
@@ -215,20 +222,12 @@ static void CanTp_SingleFrameTx( uint8_t *data, uint8_t *size )
 * @retval  Return is 0 if data is unvalid and 1 if it is valid
 */
 static uint8_t CanTp_SingleFrameRx( uint8_t *data, uint8_t *size )
-{
-    uint8_t CAN_msg[CAN_DATA_LENGHT]; 
+{ 
     uint8_t msg_recived = FALSE;
-    FDCAN_RxHeaderTypeDef CANRxHeader;
-
-    Status = HAL_FDCAN_GetRxMessage( &CANHandler, FDCAN_RX_FIFO0, &CANRxHeader, CAN_msg ); 
-    assert_error( Status == HAL_OK, FDCAN_GETMESSAGE_ERROR );   /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-    if ( ((CAN_msg[0] >> 4u) == 0u) && (CAN_msg[0] <= 8u) )
+    
+    if ( ((*data >> 4u) == 0u) && (*data <= 8u) )
     {
-        *size = CAN_msg[0];
-        for(uint8_t i = 0u; i < CAN_msg[0]; i++)
-        {
-            *(data+i) = CAN_msg[i+1u];      /* cppcheck-suppress misra-c2012-18.4 ; operators to pointers needed */
-        }
+        *size = *data;
         msg_recived = TRUE;
     }
    
@@ -249,14 +248,16 @@ static uint8_t CanTp_SingleFrameRx( uint8_t *data, uint8_t *size )
 /* cppcheck-suppress misra-c2012-2.7 ; this is a library function */
 void HAL_FDCAN_RxFifo0Callback( FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs ) /* cppcheck-suppress misra-c2012-8.4 ; this is a library function */
 {
+    FDCAN_RxHeaderTypeDef CANRxHeader;
+    
     /*A llegado un mensaje via CAN, interrogamos si fue un solo mensaje*/
     if( ( RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE ) != 0 )
     {
+        uint8_t Canmsg[CAN_DATA_LENGHT];
+        Status = HAL_FDCAN_GetRxMessage( &CANHandler, FDCAN_RX_FIFO0, &CANRxHeader, Canmsg ); 
+        assert_error( Status == HAL_OK, FDCAN_GETMESSAGE_ERROR );   /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+        HIL_QUEUE_Write( &Serial_queue, Canmsg );
         
-        if(CanTp_SingleFrameRx( Data_msg,&CAN_size) == TRUE)
-        {
-            flag = TRUE;  
-        }
     }
 }
 
@@ -432,41 +433,53 @@ uint8_t valid_alarm(uint8_t hour,uint8_t minutes)
 */
 void Serial_Task( void )
 {
-    static uint8_t cases = STATE_GETMSG;
+    static uint8_t cases = STATE_IDLE;
     
     switch(cases)
     {
+        case STATE_IDLE:
+            if(HIL_QUEUE_IsEmpty(&Serial_queue) == NOT_EMPTY)
+            {
+                HIL_QUEUE_Read(&Serial_queue,Data_msg);
+                if((CanTp_SingleFrameRx( Data_msg, &CAN_size )) == TRUE)
+                {
+                    cases = STATE_GETMSG;
+                }
+            }
+            else
+            {
+                cases = STATE_IDLE;
+            }
+            break;
         case STATE_GETMSG:
 
-            if (flag == TRUE)
+            if((Data_msg[1] == (uint8_t)SERIAL_MSG_TIME) && (CAN_size == TIME_DATA_SIZE) )
             {
-                flag = FALSE;
-                if((Data_msg[0] == (uint8_t)SERIAL_MSG_TIME) && (CAN_size == TIME_DATA_SIZE) )
-                {
-                    cases = (uint8_t)STATE_TIME;
-                }
-                else if( (Data_msg[0] == (uint8_t)SERIAL_MSG_DATE) && (CAN_size == DATE_DATA_SIZE))
-                {
-                    cases = (uint8_t)STATE_DATE;
-                }
-                else if((Data_msg[0] == (uint8_t)SERIAL_MSG_ALARM) && (CAN_size == ALARM_DATA_SIZE))
-                {
-                    cases = (uint8_t)STATE_ALARM;
-                }  
-                else{}
-            } 
-            else{}
+                cases = STATE_TIME;
+            }
+            else if( (Data_msg[1] == (uint8_t)SERIAL_MSG_DATE) && (CAN_size == DATE_DATA_SIZE))
+            {
+                cases = STATE_DATE;
+            }
+            else if((Data_msg[1] == (uint8_t)SERIAL_MSG_ALARM) && (CAN_size == ALARM_DATA_SIZE))
+            {
+                cases = STATE_ALARM;
+            }  
+            else
+            {
+                cases = STATE_IDLE;
+            }
 
             break;
 
        
         case STATE_TIME:
             
-            if( valid_time(Data_msg[1],Data_msg[2],Data_msg[3]) == TRUE)
+            if( valid_time(Data_msg[2],Data_msg[3],Data_msg[4]) == TRUE)
             {
-                CAN_td_message.tm.tm_hour=Data_msg[1];
-                CAN_td_message.tm.tm_min=Data_msg[2];
-                CAN_td_message.tm.tm_sec=Data_msg[3];
+                CAN_td_message.tm.tm_hour=Data_msg[2];
+                CAN_td_message.tm.tm_min=Data_msg[3];
+                CAN_td_message.tm.tm_sec=Data_msg[4];
                 CAN_td_message.msg=SERIAL_MSG_TIME;
                 cases = STATE_OK;
             }
@@ -478,12 +491,12 @@ void Serial_Task( void )
 
         case STATE_DATE:
         
-            if(valid_date(Data_msg[1],Data_msg[2], Data_msg[3],Data_msg[4]) == TRUE)
+            if(valid_date(Data_msg[2],Data_msg[3], Data_msg[4],Data_msg[5]) == TRUE)
             {
-                CAN_td_message.tm.tm_mday = Data_msg[1];
-                CAN_td_message.tm.tm_mon = Data_msg[2];
-                CAN_td_message.tm.tm_year_msb = bcdToDecimal(Data_msg[3]);
-                CAN_td_message.tm.tm_year_lsb = Data_msg[4];
+                CAN_td_message.tm.tm_mday = Data_msg[2];
+                CAN_td_message.tm.tm_mon = Data_msg[3];
+                CAN_td_message.tm.tm_year_msb = bcdToDecimal(Data_msg[4]);
+                CAN_td_message.tm.tm_year_lsb = Data_msg[5];
                 CAN_td_message.tm.tm_wday = dayofweek(CAN_td_message.tm.tm_year_msb,CAN_td_message.tm.tm_year_lsb, CAN_td_message.tm.tm_mon, CAN_td_message.tm.tm_mday);
                 CAN_td_message.msg = SERIAL_MSG_DATE;
                 cases = STATE_OK;
@@ -496,10 +509,10 @@ void Serial_Task( void )
 
         case STATE_ALARM:
 
-            if(valid_alarm( Data_msg[1],Data_msg[2]) == TRUE)
+            if(valid_alarm( Data_msg[2],Data_msg[3]) == TRUE)
             {
-                CAN_td_message.tm.tm_hour=Data_msg[1];
-                CAN_td_message.tm.tm_min=Data_msg[2];
+                CAN_td_message.tm.tm_hour=Data_msg[2];
+                CAN_td_message.tm.tm_min=Data_msg[3];
                 CAN_td_message.msg = SERIAL_MSG_ALARM;
                 cases = STATE_OK;
             }
@@ -514,7 +527,7 @@ void Serial_Task( void )
             Data_msg[0]=FAILED_CANID;
             CAN_size=1;
             CanTp_SingleFrameTx( &Data_msg[0],&CAN_size);
-            cases = STATE_GETMSG;
+            cases = STATE_IDLE;
             break;
 
         case STATE_OK:
@@ -522,12 +535,12 @@ void Serial_Task( void )
             Data_msg[0]=OK_CANID;
             CAN_size=1;
             CanTp_SingleFrameTx( &Data_msg[0],&CAN_size);
-            cases = STATE_GETMSG;
+            cases = STATE_IDLE;
             break;
  
         default:
 
-            cases = STATE_GETMSG;
+            cases = STATE_IDLE;
             break;
     }
 }

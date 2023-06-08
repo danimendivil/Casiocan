@@ -12,6 +12,17 @@
     #include "app_bsp.h"
     
     /** 
+     * @defgroup QUEUE queue structure values 
+    @{ */
+    #define FIRS_POS    0u      /*!<first position of the queue*/
+    #define EMPTY       1u      /*!<queue is empty*/
+    #define NOT_EMPTY   0u      /*!<queue is not empty*/
+    #define NOT_FULL    0u      /*!<queue is not full*/
+    #define IS_FULL     1u      /*!<queue is full*/
+    /**
+    @} */
+    
+    /** 
      * @defgroup Que state this values represent if the circular buffer is functioning correct
      { */
     #define QUEUE_OK  1u        /*!<queue function has been done*/
