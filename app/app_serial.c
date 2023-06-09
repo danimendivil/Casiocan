@@ -8,6 +8,13 @@
   @} */
 
 /** 
+  * @defgroup ms time for task periodicity.
+  @{ */
+#define TASK_PERIODICITY  10    /*!< Data size of can */
+/**
+  @} */
+
+/** 
   * @defgroup CAN byte values for confirmation .
   @{ */
 #define OK_CANID        0x55    /*!<correct information*/    
@@ -249,7 +256,7 @@ void HAL_FDCAN_RxFifo0Callback( FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs
         uint8_t Canmsg[CAN_DATA_LENGHT];
         Status = HAL_FDCAN_GetRxMessage( &CANHandler, FDCAN_RX_FIFO0, &CANRxHeader, Canmsg ); 
         assert_error( Status == HAL_OK, FDCAN_GETMESSAGE_ERROR );   /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-        HIL_QUEUE_Write( &Serial_queue, Canmsg );
+        (void)HIL_QUEUE_Write( &Serial_queue, Canmsg );
         
     }
 }
@@ -409,17 +416,6 @@ uint8_t valid_alarm(uint8_t hour,uint8_t minutes)
     return Time_is_valid;
 }
 
-/**
-* @brief   **This function validates and stores messages recived through CAN**
-*
-       
-*/
-
-static void Serial_State(void)
-{
-    
-    
-}
 
 /**
 * @brief   **This function executes the state machine**
@@ -445,11 +441,11 @@ void Serial_Task( void )
     static uint8_t Data_msg[CAN_DATA_LENGHT];
     static uint8_t CAN_size;
     static uint8_t cases = STATE_IDLE;
-    
+
     switch(cases)
     {
         case STATE_IDLE:
-            if( ( HAL_GetTick( ) - serialtick ) >= 10u )
+            if( ( HAL_GetTick( ) - serialtick ) >= TASK_PERIODICITY )
             {
                 serialtick = HAL_GetTick(); /*volvemos a obtener la cuenta actual*/
                 cases = STATE_RECEPTION;
@@ -459,7 +455,7 @@ void Serial_Task( void )
         case STATE_RECEPTION:
             if(HIL_QUEUE_IsEmpty(&Serial_queue) == NOT_EMPTY)
             {
-                HIL_QUEUE_Read(&Serial_queue,Data_msg);
+                (void)HIL_QUEUE_Read(&Serial_queue,Data_msg);
                 if((CanTp_SingleFrameRx( Data_msg, &CAN_size )) == TRUE)
                 {
                     cases = STATE_GETMSG;
