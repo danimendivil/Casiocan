@@ -19,7 +19,7 @@
 * @defgroup Data size of states .
 @{ */
 #define TIME_DATA_SIZE  4U      /*!<Data size needed for time state*/
-#define DATE_DATA_SIZE  6U      /*!<Data size needed for date state*/
+#define DATE_DATA_SIZE  5U      /*!<Data size needed for date state*/
 #define ALARM_DATA_SIZE 3U      /*!<Data size needed for alarm state*/
 /**
   @} */
@@ -64,12 +64,13 @@ typedef enum
 /* cppcheck-suppress misra-c2012-2.4 ; enum is used on state machine */
 {
     STATE_IDLE = 0U,
+    STATE_RECEPTION,
     STATE_TIME,
     STATE_DATE,
     STATE_ALARM,
     STATE_GETMSG,
     STATE_FAILED,
-    STATE_OK
+    STATE_OK,
 }States;
 
 /**
@@ -81,6 +82,11 @@ FDCAN_HandleTypeDef CANHandler;
 * @brief  Variable for state machien messages.
 */
 APP_MsgTypeDef CAN_td_message;  //time and date message
+
+/**
+* @brief  Variable for serial task tick.
+*/
+static uint8_t serialtick;
 
 /**
 * @brief  Circular buffer variable for CAN msg recived to serial task.
@@ -110,7 +116,8 @@ static uint8_t bcdToDecimal(uint8_t bcdValue);
 */
 void Serial_Init( void )
 {
-    
+    serialtick = HAL_GetTick();
+
     FDCAN_FilterTypeDef CANFilter;
     CAN_td_message.tm.tm_year_msb = 20;
 
@@ -405,7 +412,23 @@ uint8_t valid_alarm(uint8_t hour,uint8_t minutes)
 /**
 * @brief   **This function validates and stores messages recived through CAN**
 *
-* The first state of the state machine is the GETMSG were we use the funtion Can_Tp_SingleFrameRx to see 
+       
+*/
+
+static void Serial_State(void)
+{
+    
+    
+}
+
+/**
+* @brief   **This function executes the state machine**
+*
+* This functions executes the state machine of the serial task
+* every 10ms, we do this because a circular buffer has been implemented on the serial
+* task, this means that we do need to execute every time the task since now the 
+* information is being stored.     
+* The first state of the state machine once a msg is validated is the GETMSG were we use the funtion Can_Tp_SingleFrameRx to see 
 * if a message has been recived, if a message has been recived it compares the values to APP_Messages defines
 * to see what is going to be the next state, if the next state is SERIAL_MSG_TIME it validates the values and 
 * if the values are correct they are store on the CAN_td_message variable, and the state is change to the OK state where it sends
@@ -415,17 +438,25 @@ uint8_t valid_alarm(uint8_t hour,uint8_t minutes)
 * it also calls the dayofweek function to get the day of the week if they are valid then they are store on the CAN_td_message variable 
 * an the state will be change to OK otherwise state will be FAILED
 * if the next state is SERIAL_MSG_ALARM it validates the data and if they are correct are store on the CAN_td_message variable and 
-* state is changed to ok, otherwise state will be FAILED        
+* state is changed to ok, otherwise state will be FAILED 
 */
 void Serial_Task( void )
 {
-    static uint8_t cases = STATE_IDLE;
     static uint8_t Data_msg[CAN_DATA_LENGHT];
     static uint8_t CAN_size;
+    static uint8_t cases = STATE_IDLE;
     
     switch(cases)
     {
         case STATE_IDLE:
+            if( ( HAL_GetTick( ) - serialtick ) >= 10u )
+            {
+                serialtick = HAL_GetTick(); /*volvemos a obtener la cuenta actual*/
+                cases = STATE_RECEPTION;
+            }   
+            break;
+
+        case STATE_RECEPTION:
             if(HIL_QUEUE_IsEmpty(&Serial_queue) == NOT_EMPTY)
             {
                 HIL_QUEUE_Read(&Serial_queue,Data_msg);
@@ -439,6 +470,7 @@ void Serial_Task( void )
                 cases = STATE_IDLE;
             }
             break;
+
         case STATE_GETMSG:
 
             if((Data_msg[1] == (uint8_t)SERIAL_MSG_TIME) && (CAN_size == TIME_DATA_SIZE) )
@@ -455,11 +487,9 @@ void Serial_Task( void )
             }  
             else
             {
-                cases = STATE_IDLE;
+                cases = STATE_FAILED;
             }
-
             break;
-
        
         case STATE_TIME:
             
@@ -532,3 +562,4 @@ void Serial_Task( void )
             break;
     }
 }
+
