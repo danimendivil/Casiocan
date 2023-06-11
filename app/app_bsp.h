@@ -98,12 +98,6 @@
     APP_TmTypeDef tm;     /*!< time and date in stdlib tm format */
   }APP_MsgTypeDef;
 
-
-  /**
-  * @brief  Variable for clockMsg to diplay.
-  */
-  extern APP_MsgTypeDef ClockMsg;
-
   /**
   * @brief  Variable for CAN configuration
   */

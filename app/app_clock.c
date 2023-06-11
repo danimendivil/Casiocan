@@ -29,10 +29,6 @@ typedef enum
   @} */
 
 /**
- * @brief  Variable for clock message to lcd
- */
-APP_MsgTypeDef ClockMsg;
-/**
  * @brief  Variable for rtc configuration
  */
 static RTC_HandleTypeDef hrtc = {0};
@@ -71,7 +67,7 @@ static uint8_t Clockstate = CLOCK_ST_IDLE;
 */
 QUEUE_HandleTypeDef CLOCK_queue;
 
-void Clock_StMachine(void);
+static void Clock_StMachine(void);
 
 /**
  * @brief   **This function intiates the RTC and the tick_1000ms variable**
@@ -171,15 +167,15 @@ void Clock_Task( void )
    
 }
 
-void Clock_StMachine()
+void Clock_StMachine(void)
 {
+    static APP_MsgTypeDef ClockMsg;
     static APP_MsgTypeDef CAN_to_clock_message;
      switch(Clockstate)
     {
         case CLOCK_ST_IDLE:
-        {
             break;
-        }
+
         case CLOCK_ST_RECEPTION:
             if( (HAL_GetTick() - tick_1000ms) >= 1000)
             {
@@ -189,7 +185,7 @@ void Clock_StMachine()
             else if(HIL_QUEUE_IsEmpty(&SERIAL_queue) == NOT_EMPTY)
             {
                 (void)HIL_QUEUE_Read(&SERIAL_queue,&CAN_to_clock_message);
-                if(CAN_to_clock_message.msg != NOT_MESSAGE)
+                if(CAN_to_clock_message.msg != (uint8_t)NOT_MESSAGE)
                 {
                     Clockstate = CLOCK_ST_GET_MSG;
                 }
@@ -198,6 +194,7 @@ void Clock_StMachine()
             {
                 Clockstate  = CLOCK_ST_IDLE;
             }
+            break;
         case CLOCK_ST_GET_MSG:
         {
 
@@ -240,7 +237,7 @@ void Clock_StMachine()
             ClockMsg.tm.tm_sec = sTime.Seconds;
 
             ClockMsg.msg = DISPLAY_MESSAGE;
-            HIL_QUEUE_Write( &CLOCK_queue, &ClockMsg );
+            (void)HIL_QUEUE_Write( &CLOCK_queue, &ClockMsg );
             if(HIL_QUEUE_IsEmpty(&SERIAL_queue) == NOT_EMPTY)
             {
                 Clockstate = CLOCK_ST_RECEPTION;

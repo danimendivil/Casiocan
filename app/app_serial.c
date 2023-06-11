@@ -89,7 +89,7 @@ FDCAN_HandleTypeDef CANHandler;
 /**
 * @brief  Variable for state machien messages.
 */
-APP_MsgTypeDef CAN_td_message;  //time and date message
+static APP_MsgTypeDef CAN_td_message;  //time and date message
 
 /**
 * @brief  Variable for serial task tick.
@@ -117,7 +117,7 @@ static uint8_t dayofweek(uint32_t yearM, uint32_t yearL, uint32_t month, uint32_
 static uint8_t valid_time(uint8_t hour,uint8_t minutes,uint8_t seconds);
 static uint8_t valid_alarm(uint8_t hour,uint8_t minutes);
 static uint8_t bcdToDecimal(uint8_t bcdValue); 
-void Serial_StMachine( void );
+static void Serial_StMachine(void);
 /**
 * @brief   **Init function fot serial task(CAN init)**
 *
@@ -477,7 +477,7 @@ void Serial_Task( void )
     }
 }
 
-void Serial_StMachine()
+static void Serial_StMachine(void)
 {
     static uint8_t Data_msg[CAN_DATA_LENGHT];
     static uint8_t CAN_size;
