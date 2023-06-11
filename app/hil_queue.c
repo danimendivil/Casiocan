@@ -1,5 +1,5 @@
 /**
-* @file    <hil_queue.c>
+* @file    hil_queue.c
 * @brief   **circular buffer functions**
 *
 *   This is a reusable driver for a circular buffer, this files contains all the functions
@@ -15,7 +15,7 @@
 *  This function put values of Head,Tail to 0 wich indicates their positions
 *  Empty to 1 wich indicates that the circular buffer is empty and has no values in it
 *  And full to 0 wich indicates that the circular buffer is not full
-* @param   <*hqueue>[in] Pointer to a QUEUE_HandleTypeDef structure
+* @param   hqueue[in] Pointer to a QUEUE_HandleTypeDef structure
 * 
 */
 /* cppcheck-suppress misra-c2012-8.7 ; function will later be used on other files*/
@@ -46,8 +46,8 @@ void HIL_QUEUE_Init( QUEUE_HandleTypeDef *hqueue )
 *  if after adding one to the head has the same value as the Tail this indicates that the queue is full
 *  and if the que was empty before writing a value we need to change it because it is no longer empty
 *
-* @param   <*hqueue>[in] Pointer to a QUEUE_HandleTypeDef structure
-* @param   <*data>[in] Pointer of a value to be store
+* @param   hqueue[in] Pointer to a QUEUE_HandleTypeDef structure
+* @param   data[in] Pointer of a value to be store
 * 
 * @retval  Queue_Status indicates if the circular buffer wrote something 
 */
@@ -101,8 +101,8 @@ uint8_t HIL_QUEUE_Write( QUEUE_HandleTypeDef *hqueue, void *data )
 *  If the tail reaches the head this means that the circular buffer is empty.
 *  And if the circular buffer was full we need to change this value to 0 since is no longer full.
 *   
-* @param   <*data>[in] Pointer of a value to be store
-* @param   <*hqueue>[in] Pointer to a QUEUE_HandleTypeDef structure
+* @param   data[in] Pointer of a value to be store
+* @param   hqueue[in] Pointer to a QUEUE_HandleTypeDef structure
 * @retval  Queue_Status indicates if the circular buffer wrote something 
 */
 /* cppcheck-suppress misra-c2012-8.7 ; function will later be used on other files*/
@@ -140,8 +140,8 @@ uint8_t HIL_QUEUE_Read( QUEUE_HandleTypeDef *hqueue, void *data )
 *
 *  This function returns the value of the empty variable on the QUEUE_HandleTypeDef structure
 *
-* @param   <*hqueue>[in] Pointer to a QUEUE_HandleTypeDef structure
-* @retval  hqueue->Empty 
+* @param   *hqueue[in] Pointer to a QUEUE_HandleTypeDef structure
+* @retval  hqueue->Empty
 */
 /* cppcheck-suppress misra-c2012-8.7 ; function will later be used on other files*/
 uint8_t HIL_QUEUE_IsEmpty( QUEUE_HandleTypeDef *hqueue )
@@ -160,7 +160,7 @@ uint8_t HIL_QUEUE_IsEmpty( QUEUE_HandleTypeDef *hqueue )
 *  and each loop we will asign the value of 0 to the circular buffer queue
 *  after that we call the HIL_QUEUE_Init function to reset the queue.
 *
-* @param   <*hqueue>[in] Pointer to a QUEUE_HandleTypeDef structure
+* @param   *hqueue[in] Pointer to a QUEUE_HandleTypeDef structure
 * 
 */
 /* cppcheck-suppress misra-c2012-8.7 ; function will later be used on other files*/
@@ -179,8 +179,8 @@ void HIL_QUEUE_Flush( QUEUE_HandleTypeDef *hqueue )
 *  The function disable an interruption, the uses the HIL_QUEUE_Write function 
 *  and after writing on the queue it enables the interruption.
 *
-* @param   hqueue[in]   Pointer to a QUEUE_HandleTypeDef structure
-* @param   data[in]     Pointer of a value to be store
+* @param   *hqueue[in]   Pointer to a QUEUE_HandleTypeDef structure
+* @param   *data[in]     Pointer of a value to be store
 * @param   isr[in]      Value of an interruption to be disable
 *
 * @retval  Queue_Status indicates if the circular buffer wrote something 

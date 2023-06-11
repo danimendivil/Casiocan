@@ -2,6 +2,13 @@
 #include "hel_lcd.h"
 #include "hil_queue.h"
 
+/** 
+  * @defgroup ms time for display task periodicity.
+  @{ */
+#define DISPLAY_TASK_PERIODICITY  100    /*!< time for clock task execution*/
+/**
+  @} */
+
 /**
  * @brief Display State machine states.
  *
@@ -51,8 +58,7 @@ static void Display_StMachine(void);
  *  The Function sets the pins for the SPI and LCD  needed and initialize by 
  *  calling the HEL_LCD_MspInit and configuring  and initializing the SPI
  *  then calls the function HEL_LCD_Init wich is a routine for the LCD
- * 
- * @retval  None 
+ *  
  */
 void Display_Init( void )
 {
@@ -88,6 +94,30 @@ void Display_Init( void )
     displaytick = HAL_GetTick();  
 }
 
+    
+/**
+* @brief   **This function executes the display state machine**
+*
+* This functions executes the state machine of the display task
+* every 100ms, we do this because a circular buffer has been implemented on the serial and clock
+* task, this means that we do need to execute every time the task since now the 
+* information is being stored.     
+*
+*/void Display_Task( void )
+{
+    if( ( HAL_GetTick( ) - displaytick ) >= DISPLAY_TASK_PERIODICITY )
+    {
+        displaytick = HAL_GetTick(); 
+        /*poll the state machine until the queue is empty and it return to IDLE*/
+        LCD_State = DISPLAY_STATE_RECEPTION;
+        while( LCD_State != (uint8_t)DISPLAY_STATE_IDLE )
+        {
+            /*run the state machine to process the messages*/
+            Display_StMachine();
+        }
+    }
+}
+
 /**
  * @brief   **Display a message recived by clock_display on the LCD **
  *
@@ -108,24 +138,7 @@ void Display_Init( void )
  *  lastly we change the state to STATE_IDLE
  * 
  * @retval  None 
- */    
-
-void Display_Task( void )
-{
-    if( ( HAL_GetTick( ) - displaytick ) >= 100 )
-    {
-        displaytick = HAL_GetTick(); 
-        /*poll the state machine until the queue is empty and it return to IDLE*/
-        LCD_State = DISPLAY_STATE_RECEPTION;
-        while( LCD_State != (uint8_t)DISPLAY_STATE_IDLE )
-        {
-            /*run the state machine to process the messages*/
-            Display_StMachine();
-        }
-    }
-    
-    
-}
+ */
 void Display_StMachine(void)
 {
     static char fila_2[] = "00:00:00";  /* cppcheck-suppress misra-c2012-7.4 ; string need to be modify*/

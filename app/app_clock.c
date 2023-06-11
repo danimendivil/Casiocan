@@ -21,7 +21,7 @@ typedef enum
 } CLOCK_STATES;
 
 /** 
-  * @defgroup ms time for clock task periodicity.
+  * @defgroup ms time for clock task periodicity and data for circular buffer.
   @{ */
 #define CLOCK_TASK_PERIODICITY  50    /*!< time for clock task execution*/
 #define CLOCK_DATA_PER50MS      50    /*!< Max number of clock transmitions per 50 ms*/
@@ -83,8 +83,7 @@ static void Clock_StMachine(void);
  *  the serial task has a max of 10 transmitions per 10 ms, making the conversion 
  *  the max amount of messages that clock task will be reciving is 10 transmitions times 5
  *  to make up the 50 ms so the buffer size is going to be 50.
- * 
- * @retval  None 
+ *  
  */
  
 void Clock_Init( void )      
@@ -139,17 +138,13 @@ void Clock_Init( void )
 }
 
 /**
-* @brief   **This function runs a machine state to change parameters and display the time every second**
+* @brief   **This function executes the clock state machine**
 *
-*  The firs state of the machine is the IDLE state where it cheks if a msg is recive or if
-*    a second has already pass, if a second has pass the state changes to DIPLAY_MSG where 
-*    the time is display in the terminal with semi-hosting and then go back to IDLE state.
-*    if a msg is recive Clockstate changes to GET_MSG where it compares the value to see what msg
-*    arrives, if the msg is equal to CHANGE_TIME clockstate is change to CHANGE_TIME where it changes the
-*    value of the time on the RTC and them changes clockstate to DISPLAY_MSG, The same is done on CHANGE_DATE and
-*    CHANGE_ALARM but with date and alarm parameters
-*   
-* @retval  none 
+* This functions executes the state machine of the clock task
+* every 50ms, we do this because a circular buffer has been implemented on the serial and clock
+* task, this means that we do need to execute every time the task since now the 
+* information is being stored.     
+*
 */
 void Clock_Task( void )
 {
@@ -167,6 +162,18 @@ void Clock_Task( void )
    
 }
 
+/**
+* @brief   **This function runs a machine state to change parameters and display the time every second**
+*
+*  The firs state of the machine is the IDLE state where it cheks if a msg is recive or if
+*  a second has already pass, if a second has pass the state changes to DIPLAY_MSG where 
+*  the time is display in the terminal with semi-hosting and then go back to IDLE state.
+*  if a msg is recive Clockstate changes to GET_MSG where it compares the value to see what msg
+*  arrives, if the msg is equal to CHANGE_TIME clockstate is change to CHANGE_TIME where it changes the
+*  value of the time on the RTC and them changes clockstate to DISPLAY_MSG, The same is done on CHANGE_DATE and
+*  CHANGE_ALARM but with date and alarm parameters.
+*   
+*/
 void Clock_StMachine(void)
 {
     static APP_MsgTypeDef ClockMsg;
