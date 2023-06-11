@@ -98,10 +98,6 @@
     APP_TmTypeDef tm;     /*!< time and date in stdlib tm format */
   }APP_MsgTypeDef;
 
-  /**
-  * @brief  Variable for state machien messages.
-  */
-  extern APP_MsgTypeDef CAN_td_message;
 
   /**
   * @brief  Variable for clockMsg to diplay.

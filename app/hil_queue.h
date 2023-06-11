@@ -69,4 +69,9 @@
     */
     extern QUEUE_HandleTypeDef SERIAL_queue;
 
+    /**
+    * @brief  Circular buffer variable for clock msg recived to display task.
+    */
+    extern QUEUE_HandleTypeDef CLOCK_queue;
+
 #endif

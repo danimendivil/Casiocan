@@ -24,6 +24,7 @@ typedef enum
   * @defgroup ms time for clock task periodicity.
   @{ */
 #define CLOCK_TASK_PERIODICITY  50    /*!< time for clock task execution*/
+#define CLOCK_DATA_PER50MS      50    /*!< Max number of clock transmitions per 50 ms*/
 /**
   @} */
 
@@ -64,6 +65,12 @@ static RTC_AlarmTypeDef sAlarm;
  */
 static uint8_t Clockstate = CLOCK_ST_IDLE; 
 
+
+/**
+* @brief  Circular buffer variable for CAN msg recived to serial task.
+*/
+QUEUE_HandleTypeDef CLOCK_queue;
+
 void Clock_StMachine(void);
 
 /**
@@ -74,7 +81,12 @@ void Clock_StMachine(void);
  *  The asynchronous and synchronous prescalers divide the input clock to get a frequency of 1hz. 
  *  Then we call the function to initiate the RTC with this parameters. 
  *  Then we set the parameters to set the time to 2:00:00 and date to Monday, April 17, 2023
- *  And we initialize the tick_1000ms for the concurrent process
+ *  And we initialize the tick_1000ms for the concurrent process.
+ *  For the size of the buffer we will take the max amount of msgs that the serial
+ *  task can send in 50ms.
+ *  the serial task has a max of 10 transmitions per 10 ms, making the conversion 
+ *  the max amount of messages that clock task will be reciving is 10 transmitions times 5
+ *  to make up the 50 ms so the buffer size is going to be 50.
  * 
  * @retval  None 
  */
@@ -122,6 +134,12 @@ void Clock_Init( void )
     assert_error( Status == HAL_OK, RTC_SDESACTIVATE_ALARM_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     
     tick_1000ms=HAL_GetTick();
+
+    static APP_MsgTypeDef clock_queue_store[CLOCK_DATA_PER50MS];
+    CLOCK_queue.Buffer = clock_queue_store;
+    CLOCK_queue.Elements = CLOCK_DATA_PER50MS;
+    CLOCK_queue.size = sizeof(APP_MsgTypeDef);
+    HIL_QUEUE_Init(&CLOCK_queue);
 }
 
 /**
@@ -155,11 +173,11 @@ void Clock_Task( void )
 
 void Clock_StMachine()
 {
+    static APP_MsgTypeDef CAN_to_clock_message;
      switch(Clockstate)
     {
         case CLOCK_ST_IDLE:
         {
-            
             break;
         }
         case CLOCK_ST_RECEPTION:
@@ -170,8 +188,8 @@ void Clock_StMachine()
             }
             else if(HIL_QUEUE_IsEmpty(&SERIAL_queue) == NOT_EMPTY)
             {
-                (void)HIL_QUEUE_Read(&SERIAL_queue,&CAN_td_message);
-                if(CAN_td_message.msg != NOT_MESSAGE)
+                (void)HIL_QUEUE_Read(&SERIAL_queue,&CAN_to_clock_message);
+                if(CAN_to_clock_message.msg != NOT_MESSAGE)
                 {
                     Clockstate = CLOCK_ST_GET_MSG;
                 }
@@ -183,21 +201,21 @@ void Clock_StMachine()
         case CLOCK_ST_GET_MSG:
         {
 
-            if(CAN_td_message.msg==(uint8_t)CLOCK_ST_CHANGE_TIME)
+            if(CAN_to_clock_message.msg==(uint8_t)CLOCK_ST_CHANGE_TIME)
             {
                 Clockstate = CLOCK_ST_CHANGE_TIME;
             }
-            else if (CAN_td_message.msg==(uint8_t)CLOCK_ST_CHANGE_DATE)
+            else if (CAN_to_clock_message.msg==(uint8_t)CLOCK_ST_CHANGE_DATE)
             {
                 Clockstate = CLOCK_ST_CHANGE_DATE;
             }
-            else if (CAN_td_message.msg==(uint8_t)CLOCK_ST_CHANGE_ALARM)
+            else if (CAN_to_clock_message.msg==(uint8_t)CLOCK_ST_CHANGE_ALARM)
             {
                 Clockstate = CLOCK_ST_CHANGE_ALARM;
             }
             else
             {
-             CAN_td_message.msg = NOT_MESSAGE;
+             CAN_to_clock_message.msg = NOT_MESSAGE;
             }
             break;
 
@@ -211,7 +229,7 @@ void Clock_StMachine()
             /* Get the RTC current Date */
             Status = HAL_RTC_GetDate( &hrtc, &sDate, RTC_FORMAT_BIN );
             assert_error( Status == HAL_OK, RTC_GET_DATE_ERROR );       /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-            ClockMsg.tm.tm_year_msb = CAN_td_message.tm.tm_year_msb;
+            ClockMsg.tm.tm_year_msb = CAN_to_clock_message.tm.tm_year_msb;
             ClockMsg.tm.tm_mon = sDate.Month;
             ClockMsg.tm.tm_mday = sDate.Date;
             ClockMsg.tm.tm_year_lsb = sDate.Year;
@@ -222,6 +240,7 @@ void Clock_StMachine()
             ClockMsg.tm.tm_sec = sTime.Seconds;
 
             ClockMsg.msg = DISPLAY_MESSAGE;
+            HIL_QUEUE_Write( &CLOCK_queue, &ClockMsg );
             if(HIL_QUEUE_IsEmpty(&SERIAL_queue) == NOT_EMPTY)
             {
                 Clockstate = CLOCK_ST_RECEPTION;
@@ -235,9 +254,9 @@ void Clock_StMachine()
 
         case CLOCK_ST_CHANGE_TIME:
         {
-            sTime.Hours          = CAN_td_message.tm.tm_hour;
-            sTime.Minutes        = CAN_td_message.tm.tm_min;
-            sTime.Seconds        = CAN_td_message.tm.tm_sec;
+            sTime.Hours          = CAN_to_clock_message.tm.tm_hour;
+            sTime.Minutes        = CAN_to_clock_message.tm.tm_min;
+            sTime.Seconds        = CAN_to_clock_message.tm.tm_sec;
             sTime.SubSeconds     = 0x00;
             sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
             sTime.StoreOperation = RTC_STOREOPERATION_RESET;
@@ -245,44 +264,44 @@ void Clock_StMachine()
             Status = HAL_RTC_SetTime( &hrtc, &sTime, RTC_FORMAT_BCD );
             assert_error( Status == HAL_OK, RTC_SETTIME_ERROR );    /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
             Clockstate=CLOCK_ST_DISPLAY_MSG;
-            CAN_td_message.msg  = NOT_MESSAGE;
+            CAN_to_clock_message.msg  = NOT_MESSAGE;
             break;
         }
         
         case CLOCK_ST_CHANGE_DATE:
         {
-            sDate.WeekDay   = CAN_td_message.tm.tm_wday;
-            sDate.Month     = CAN_td_message.tm.tm_mon;
-            sDate.Date      = CAN_td_message.tm.tm_mday;
-            sDate.Year      = CAN_td_message.tm.tm_year_lsb;
+            sDate.WeekDay   = CAN_to_clock_message.tm.tm_wday;
+            sDate.Month     = CAN_to_clock_message.tm.tm_mon;
+            sDate.Date      = CAN_to_clock_message.tm.tm_mday;
+            sDate.Year      = CAN_to_clock_message.tm.tm_year_lsb;
 
             Status = HAL_RTC_SetDate( &hrtc, &sDate, RTC_FORMAT_BCD );
             assert_error( Status == HAL_OK, RTC_SETDATE_ERROR );        /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
 
             Clockstate          = CLOCK_ST_DISPLAY_MSG;
-            CAN_td_message.msg  = NOT_MESSAGE;
+            CAN_to_clock_message.msg  = NOT_MESSAGE;
             break;
         }
         
         case CLOCK_ST_CHANGE_ALARM:
         {
-            sAlarm.AlarmTime.Hours      = CAN_td_message.tm.tm_hour;      
-            sAlarm.AlarmTime.Minutes    = CAN_td_message.tm.tm_min;    
-            sAlarm.AlarmTime.Seconds    = CAN_td_message.tm.tm_sec;    
+            sAlarm.AlarmTime.Hours      = CAN_to_clock_message.tm.tm_hour;      
+            sAlarm.AlarmTime.Minutes    = CAN_to_clock_message.tm.tm_min;    
+            sAlarm.AlarmTime.Seconds    = CAN_to_clock_message.tm.tm_sec;    
             sAlarm.AlarmTime.SubSeconds = 0x00; 
             sAlarm.Alarm = RTC_ALARM_A;         
             Status = HAL_RTC_DeactivateAlarm(&hrtc, RTC_ALARM_A);
             assert_error( Status == HAL_OK, RTC_SDESACTIVATE_ALARM_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
             Status = HAL_RTC_SetAlarm_IT(&hrtc, &sAlarm, RTC_FORMAT_BCD);
             assert_error( Status == HAL_OK, RTC_SET_ALARM_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-            CAN_td_message.msg = NOT_MESSAGE;
+            CAN_to_clock_message.msg = NOT_MESSAGE;
             Clockstate  = CLOCK_ST_DISPLAY_MSG;
             break;
         }
         default:
         {
             Clockstate = CLOCK_ST_IDLE;
-            CAN_td_message.msg = NOT_MESSAGE;
+            CAN_to_clock_message.msg = NOT_MESSAGE;
             break;
         }
     }
