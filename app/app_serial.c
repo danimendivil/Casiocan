@@ -11,7 +11,7 @@
 /** 
   * @defgroup ms time for task periodicity.
   @{ */
-#define TASK_PERIODICITY  10    /*!< Data size of can */
+#define SERIAL_TASK_PERIODICITY  10    /*!< time for serial task execution */
 /**
   @} */
 
@@ -94,7 +94,7 @@ APP_MsgTypeDef CAN_td_message;  //time and date message
 /**
 * @brief  Variable for serial task tick.
 */
-static uint8_t serialtick;
+static uint32_t serialtick;
 
 /**
 * @brief  Circular buffer variable for CAN msg recived to serial task.
@@ -464,7 +464,7 @@ uint8_t valid_alarm(uint8_t hour,uint8_t minutes)
 */
 void Serial_Task( void )
 {
-    if( ( HAL_GetTick( ) - serialtick ) >= TASK_PERIODICITY )
+    if( ( HAL_GetTick( ) - serialtick ) >= SERIAL_TASK_PERIODICITY )
     {
         serialtick = HAL_GetTick( ); 
         /*poll the state machine until the queue is empty and it return to IDLE*/
@@ -495,7 +495,6 @@ void Serial_StMachine()
                     cases = STATE_GETMSG;
                 }
             }
-           
             else
             {
                 cases = STATE_IDLE;

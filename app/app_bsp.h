@@ -3,7 +3,7 @@
 
   #include "stm32g0xx.h"
   #include <stdint.h>
-
+  
   /** 
   * @defgroup BOOL Boolean values.
   @{ */
@@ -112,6 +112,7 @@
   * @brief  Variable for CAN configuration
   */
   extern FDCAN_HandleTypeDef CANHandler; /* cppcheck-suppress misra-c2012-8.4 ; this function can`t be modify */
+
      
 #endif
 

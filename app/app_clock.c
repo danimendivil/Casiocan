@@ -1,5 +1,5 @@
 #include "app_clock.h"
-#include <stdio.h>      /* cppcheck-suppress misra-c2012-21.6 ; the stdio.h is necesary */
+#include "hil_queue.h"
 
 /**
  * @brief CLock State machine states.
@@ -15,9 +15,17 @@ typedef enum
     CLOCK_ST_CHANGE_ALARM,
     CLOCK_ST_DISPLAY_MSG,
     CLOCK_ST_IDLE,
+    CLOCK_ST_RECEPTION,
     CLOCK_ST_GET_MSG,
     CLOCK_ST_MESSAGE
 } CLOCK_STATES;
+
+/** 
+  * @defgroup ms time for clock task periodicity.
+  @{ */
+#define CLOCK_TASK_PERIODICITY  50    /*!< time for clock task execution*/
+/**
+  @} */
 
 /**
  * @brief  Variable for clock message to lcd
@@ -39,14 +47,24 @@ static RTC_TimeTypeDef sTime;
 /**
  * @brief  Variable for concurrent process of displaying the date every second
  */
-static int tick_1000ms;
+static uint32_t tick_1000ms;
+
+/**
+* @brief  Variable for clock task tick.
+*/
+static uint32_t clocktick;
 
 /**
  * @brief  Variable for Alarm configuration
  */
 static RTC_AlarmTypeDef sAlarm;
 
+/**
+ * @brief  Variable for clock state machine
+ */
+static uint8_t Clockstate = CLOCK_ST_IDLE; 
 
+void Clock_StMachine(void);
 
 /**
  * @brief   **This function intiates the RTC and the tick_1000ms variable**
@@ -64,6 +82,8 @@ static RTC_AlarmTypeDef sAlarm;
 void Clock_Init( void )      
 {
     HAL_Init(); 
+
+    clocktick = HAL_GetTick();
     /*declare as global variable or static*/
     hrtc.Instance             = RTC;
     hrtc.Init.HourFormat      = RTC_HOURFORMAT_24;
@@ -119,22 +139,47 @@ void Clock_Init( void )
 */
 void Clock_Task( void )
 {
-    static int Clockstate = CLOCK_ST_IDLE; 
-    switch(Clockstate)
+    if( ( HAL_GetTick( ) - clocktick ) >= CLOCK_TASK_PERIODICITY )
+    {
+        clocktick = HAL_GetTick( ); 
+        /*poll the state machine until the queue is empty and it return to IDLE*/
+        Clockstate = CLOCK_ST_RECEPTION;
+        while( Clockstate != (uint8_t)CLOCK_ST_IDLE )
+        {
+            /*run the state machine to process the messages*/
+            Clock_StMachine();
+        }
+    }
+   
+}
+
+void Clock_StMachine()
+{
+     switch(Clockstate)
     {
         case CLOCK_ST_IDLE:
         {
-            if( CAN_td_message.msg != (uint8_t)NOT_MESSAGE)
-            {
-                Clockstate = CLOCK_ST_GET_MSG;
-            }
+            
+            break;
+        }
+        case CLOCK_ST_RECEPTION:
             if( (HAL_GetTick() - tick_1000ms) >= 1000)
             {
                 tick_1000ms = HAL_GetTick();
                 Clockstate  = CLOCK_ST_DISPLAY_MSG;
             }
-            break;
-        }
+            else if(HIL_QUEUE_IsEmpty(&SERIAL_queue) == NOT_EMPTY)
+            {
+                (void)HIL_QUEUE_Read(&SERIAL_queue,&CAN_td_message);
+                if(CAN_td_message.msg != NOT_MESSAGE)
+                {
+                    Clockstate = CLOCK_ST_GET_MSG;
+                }
+            }
+            else
+            {
+                Clockstate  = CLOCK_ST_IDLE;
+            }
         case CLOCK_ST_GET_MSG:
         {
 
@@ -177,7 +222,14 @@ void Clock_Task( void )
             ClockMsg.tm.tm_sec = sTime.Seconds;
 
             ClockMsg.msg = DISPLAY_MESSAGE;
-            Clockstate=CLOCK_ST_IDLE;
+            if(HIL_QUEUE_IsEmpty(&SERIAL_queue) == NOT_EMPTY)
+            {
+                Clockstate = CLOCK_ST_RECEPTION;
+            }
+            else
+            {
+                Clockstate = CLOCK_ST_IDLE;  
+            }
             break;
         }
 
@@ -224,12 +276,15 @@ void Clock_Task( void )
             Status = HAL_RTC_SetAlarm_IT(&hrtc, &sAlarm, RTC_FORMAT_BCD);
             assert_error( Status == HAL_OK, RTC_SET_ALARM_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
             CAN_td_message.msg = NOT_MESSAGE;
+            Clockstate  = CLOCK_ST_DISPLAY_MSG;
             break;
         }
         default:
         {
+            Clockstate = CLOCK_ST_IDLE;
             CAN_td_message.msg = NOT_MESSAGE;
             break;
         }
     }
+
 }

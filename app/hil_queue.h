@@ -64,4 +64,9 @@
     uint8_t HIL_QUEUE_IsEmptyISR( QUEUE_HandleTypeDef *hqueue, uint8_t isr );
     void HIL_QUEUE_FlushISR( QUEUE_HandleTypeDef *hqueue, uint8_t isr );
 
+    /**
+    * @brief  Circular buffer variable for CAN msg recived to serial task.
+    */
+    extern QUEUE_HandleTypeDef SERIAL_queue;
+
 #endif
