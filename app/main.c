@@ -201,6 +201,10 @@ void safe_state( uint8_t *file, uint32_t line, uint8_t error )
 
   __HAL_RCC_GPIOC_CLK_ENABLE(); 
 
+  HAL_SuspendTick();
+
+
+
   GPIO_InitStruct.Pin = ALL_PINS; 
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;     
   GPIO_InitStruct.Pull = GPIO_NOPULL;             
