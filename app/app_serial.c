@@ -1,8 +1,17 @@
 #include "app_serial.h"
+#include "hil_queue.h"
 /** 
   * @defgroup CAN_conf values to use CAN.
   @{ */
 #define CAN_DATA_LENGHT    8    /*!< Data size of can */
+#define CAN_DATA_PER10MS   10    /*!< Number of can transmitions per 10 ms*/
+/**
+  @} */
+
+/** 
+  * @defgroup ms time for task periodicity.
+  @{ */
+#define SERIAL_TASK_PERIODICITY  10    /*!< time for serial task execution */
 /**
   @} */
 
@@ -18,7 +27,7 @@
 * @defgroup Data size of states .
 @{ */
 #define TIME_DATA_SIZE  4U      /*!<Data size needed for time state*/
-#define DATE_DATA_SIZE  6U      /*!<Data size needed for date state*/
+#define DATE_DATA_SIZE  5U      /*!<Data size needed for date state*/
 #define ALARM_DATA_SIZE 3U      /*!<Data size needed for alarm state*/
 /**
   @} */
@@ -62,12 +71,14 @@ typedef enum
 typedef enum
 /* cppcheck-suppress misra-c2012-2.4 ; enum is used on state machine */
 {
-    STATE_TIME = 1U,
+    STATE_IDLE = 0U,
+    STATE_RECEPTION,
+    STATE_TIME,
     STATE_DATE,
     STATE_ALARM,
     STATE_GETMSG,
     STATE_FAILED,
-    STATE_OK
+    STATE_OK,
 }States;
 
 /**
@@ -75,36 +86,38 @@ typedef enum
  */
 FDCAN_HandleTypeDef CANHandler; 
 
-
-/**
- * @brief  Flag for CAN msg recive interruption
- */
-static uint8_t flag; 
-
 /**
 * @brief  Variable for state machien messages.
 */
-APP_MsgTypeDef CAN_td_message;  //time and date message
+static APP_MsgTypeDef CAN_td_message;  //time and date message
 
 /**
-* @brief  Variable for cases of the state mahcine.
+* @brief  Variable for serial task tick.
 */
+static uint32_t serialtick;
 
 /**
-* @brief  Variable for the data of the state machine.
+* @brief  Circular buffer variable for CAN msg recived to serial task.
 */
-static uint8_t Data_msg[CAN_DATA_LENGHT];/* cppcheck-suppress misra-c2012-8.9 ; Function does not work if defined in serial task */
+static QUEUE_HandleTypeDef CAN_queue;
 
 /**
-* @brief  Variable for the size of the message recived by CAN.
+* @brief  Circular buffer variable for CAN msg recived to serial task.
 */
-static uint8_t CAN_size;
+QUEUE_HandleTypeDef SERIAL_queue;
+
+/**
+* @brief  variable for serial state machine.
+*/
+static uint8_t cases = STATE_IDLE;
+
 
 static uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL);
 static uint8_t dayofweek(uint32_t yearM, uint32_t yearL, uint32_t month, uint32_t day);
 static uint8_t valid_time(uint8_t hour,uint8_t minutes,uint8_t seconds);
 static uint8_t valid_alarm(uint8_t hour,uint8_t minutes);
 static uint8_t bcdToDecimal(uint8_t bcdValue); 
+static void Serial_StMachine(void);
 /**
 * @brief   **Init function fot serial task(CAN init)**
 *
@@ -120,10 +133,18 @@ static uint8_t bcdToDecimal(uint8_t bcdValue);
 *   Sp = ( ( 11 + 1 ) / 16 ) * 100 = 75%
 *   The filter is configurate so that it only accept messages with ID 0x111
 *   The transmition is configurate with ID 0x122
+*   since the CAN transmition speed is 100kbps the buffer array will be of 10 position considering 
+*   the following calculations:
+*   Number of can messages per second = speed of can transmition / can lenght
+*   Number of can messages per second = 100Kbps / 108 bits = 925 transmitions per second
+*   the serial task will be executed every 10ms so now we need the transmitions per 10ms
+*   tansmition per 10ms = (10ms * 925transmitions) / 1000ms = 9.25 transmitions.
+*   we round upwards so the array will be of 10 positions.
 */
 void Serial_Init( void )
 {
-    
+    serialtick = HAL_GetTick();
+
     FDCAN_FilterTypeDef CANFilter;
     CAN_td_message.tm.tm_year_msb = 20;
 
@@ -165,6 +186,20 @@ void Serial_Init( void )
     /*we activated the reception interruption in fifo0 when a message arrives*/
     Status = HAL_FDCAN_ActivateNotification( &CANHandler, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0 );
     assert_error( Status == HAL_OK, FDCAN_ACTIVATE_NOTIFICATION_ERROR );    /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+
+    /*CAN Buffer configuration*/
+    static uint64_t can_queue_store[CAN_DATA_PER10MS];
+    CAN_queue.Buffer = can_queue_store;
+    CAN_queue.Elements = CAN_DATA_PER10MS;
+    CAN_queue.size = sizeof(uint64_t);
+    HIL_QUEUE_Init(&CAN_queue);
+
+    /*Serial to clock Buffer configuration*/
+    static APP_MsgTypeDef serial_queue_store[CAN_DATA_PER10MS];
+    SERIAL_queue.Buffer = serial_queue_store;
+    SERIAL_queue.Elements = CAN_DATA_PER10MS;
+    SERIAL_queue.size = sizeof(APP_MsgTypeDef);
+    HIL_QUEUE_Init(&SERIAL_queue);
 }
 
 /**
@@ -215,20 +250,12 @@ static void CanTp_SingleFrameTx( uint8_t *data, uint8_t *size )
 * @retval  Return is 0 if data is unvalid and 1 if it is valid
 */
 static uint8_t CanTp_SingleFrameRx( uint8_t *data, uint8_t *size )
-{
-    uint8_t CAN_msg[CAN_DATA_LENGHT]; 
+{ 
     uint8_t msg_recived = FALSE;
-    FDCAN_RxHeaderTypeDef CANRxHeader;
-
-    Status = HAL_FDCAN_GetRxMessage( &CANHandler, FDCAN_RX_FIFO0, &CANRxHeader, CAN_msg ); 
-    assert_error( Status == HAL_OK, FDCAN_GETMESSAGE_ERROR );   /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-    if ( ((CAN_msg[0] >> 4u) == 0u) && (CAN_msg[0] <= 8u) )
+    
+    if ( ((*data >> 4u) == 0u) && (*data <= 8u) )
     {
-        *size = CAN_msg[0];
-        for(uint8_t i = 0u; i < CAN_msg[0]; i++)
-        {
-            *(data+i) = CAN_msg[i+1u];      /* cppcheck-suppress misra-c2012-18.4 ; operators to pointers needed */
-        }
+        *size = *data;
         msg_recived = TRUE;
     }
    
@@ -249,14 +276,16 @@ static uint8_t CanTp_SingleFrameRx( uint8_t *data, uint8_t *size )
 /* cppcheck-suppress misra-c2012-2.7 ; this is a library function */
 void HAL_FDCAN_RxFifo0Callback( FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs ) /* cppcheck-suppress misra-c2012-8.4 ; this is a library function */
 {
+    FDCAN_RxHeaderTypeDef CANRxHeader;
+    
     /*A llegado un mensaje via CAN, interrogamos si fue un solo mensaje*/
     if( ( RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE ) != 0 )
     {
+        uint8_t Canmsg[CAN_DATA_LENGHT];
+        Status = HAL_FDCAN_GetRxMessage( &CANHandler, FDCAN_RX_FIFO0, &CANRxHeader, Canmsg ); 
+        assert_error( Status == HAL_OK, FDCAN_GETMESSAGE_ERROR );   /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+        (void)HIL_QUEUE_Write( &CAN_queue, Canmsg );
         
-        if(CanTp_SingleFrameRx( Data_msg,&CAN_size) == TRUE)
-        {
-            flag = TRUE;  
-        }
     }
 }
 
@@ -415,59 +444,99 @@ uint8_t valid_alarm(uint8_t hour,uint8_t minutes)
     return Time_is_valid;
 }
 
+
 /**
-* @brief   **This function validates and stores messages recived through CAN**
+* @brief   **This function executes the serial state machine**
 *
-* The first state of the state machine is the GETMSG were we use the funtion Can_Tp_SingleFrameRx to see 
+* This functions executes the state machine of the serial task
+* every 10ms, we do this because a circular buffer has been implemented on the serial
+* task, this means that we do need to execute every time the task since now the 
+* information is being stored.     
+*
+*/
+void Serial_Task( void )
+{
+    if( ( HAL_GetTick( ) - serialtick ) >= SERIAL_TASK_PERIODICITY )
+    {
+        serialtick = HAL_GetTick( ); 
+        /*poll the state machine until the queue is empty and it return to IDLE*/
+        cases = STATE_RECEPTION;
+        while( cases != (uint8_t)STATE_IDLE )
+        {
+            /*run the state machine to process the messages*/
+            Serial_StMachine();
+        }
+    }
+}
+
+/**
+* @brief   **Serial state machine function**
+*     
+* The first state of the state machine once a msg is validated is the GETMSG were we use the funtion Can_Tp_SingleFrameRx to see 
 * if a message has been recived, if a message has been recived it compares the values to APP_Messages defines
 * to see what is going to be the next state, if the next state is SERIAL_MSG_TIME it validates the values and 
 * if the values are correct they are store on the CAN_td_message variable, and the state is change to the OK state where it sends
 * a confirmation message if the values are wrong then the next state is FAILED where it sends an error message and the 
-* state is changed to GETMSG.
+* state is changed to GETMSG.(void)HIL_QUEUE_Write( &CAN_queue, Canmsg );
 * if the next state is SERIAL_MSG_DATE it validates the values with the valid_date() function and if the date is valid
 * it also calls the dayofweek function to get the day of the week if they are valid then they are store on the CAN_td_message variable 
 * an the state will be change to OK otherwise state will be FAILED
 * if the next state is SERIAL_MSG_ALARM it validates the data and if they are correct are store on the CAN_td_message variable and 
-* state is changed to ok, otherwise state will be FAILED        
+* state is changed to ok, otherwise state will be FAILED 
 */
-void Serial_Task( void )
+static void Serial_StMachine(void)
 {
-    static uint8_t cases = STATE_GETMSG;
-    
+    static uint8_t Data_msg[CAN_DATA_LENGHT];
+    static uint8_t CAN_size;
     switch(cases)
     {
-        case STATE_GETMSG:
-
-            if (flag == TRUE)
-            {
-                flag = FALSE;
-                if((Data_msg[0] == (uint8_t)SERIAL_MSG_TIME) && (CAN_size == TIME_DATA_SIZE) )
-                {
-                    cases = (uint8_t)STATE_TIME;
-                }
-                else if( (Data_msg[0] == (uint8_t)SERIAL_MSG_DATE) && (CAN_size == DATE_DATA_SIZE))
-                {
-                    cases = (uint8_t)STATE_DATE;
-                }
-                else if((Data_msg[0] == (uint8_t)SERIAL_MSG_ALARM) && (CAN_size == ALARM_DATA_SIZE))
-                {
-                    cases = (uint8_t)STATE_ALARM;
-                }  
-                else{}
-            } 
-            else{}
-
+        case STATE_IDLE:  
             break;
 
+        case STATE_RECEPTION:
+            if(HIL_QUEUE_IsEmpty(&CAN_queue) == NOT_EMPTY)
+            {
+                (void)HIL_QUEUE_Read(&CAN_queue,Data_msg);
+                if((CanTp_SingleFrameRx( Data_msg, &CAN_size )) == TRUE)
+                {
+                    cases = STATE_GETMSG;
+                }
+            }
+            else
+            {
+                cases = STATE_IDLE;
+            }
+            break;
+
+        case STATE_GETMSG:
+
+            if((Data_msg[1] == (uint8_t)SERIAL_MSG_TIME) && (CAN_size == TIME_DATA_SIZE) )
+            {
+                cases = STATE_TIME;
+            }
+            else if( (Data_msg[1] == (uint8_t)SERIAL_MSG_DATE) && (CAN_size == DATE_DATA_SIZE))
+            {
+                cases = STATE_DATE;
+            }
+            else if((Data_msg[1] == (uint8_t)SERIAL_MSG_ALARM) && (CAN_size == ALARM_DATA_SIZE))
+            {
+                cases = STATE_ALARM;
+            }  
+            else
+            {
+                cases = STATE_FAILED;
+            }
+            break;
        
         case STATE_TIME:
             
-            if( valid_time(Data_msg[1],Data_msg[2],Data_msg[3]) == TRUE)
+            if( valid_time(Data_msg[2],Data_msg[3],Data_msg[4]) == TRUE)
             {
-                CAN_td_message.tm.tm_hour=Data_msg[1];
-                CAN_td_message.tm.tm_min=Data_msg[2];
-                CAN_td_message.tm.tm_sec=Data_msg[3];
+                CAN_td_message.tm.tm_hour=Data_msg[2];
+                CAN_td_message.tm.tm_min=Data_msg[3];
+                CAN_td_message.tm.tm_sec=Data_msg[4];
                 CAN_td_message.msg=SERIAL_MSG_TIME;
+                (void)HIL_QUEUE_Write( &SERIAL_queue, &CAN_td_message );
                 cases = STATE_OK;
             }
             else
@@ -478,14 +547,15 @@ void Serial_Task( void )
 
         case STATE_DATE:
         
-            if(valid_date(Data_msg[1],Data_msg[2], Data_msg[3],Data_msg[4]) == TRUE)
+            if(valid_date(Data_msg[2],Data_msg[3], Data_msg[4],Data_msg[5]) == TRUE)
             {
-                CAN_td_message.tm.tm_mday = Data_msg[1];
-                CAN_td_message.tm.tm_mon = Data_msg[2];
-                CAN_td_message.tm.tm_year_msb = bcdToDecimal(Data_msg[3]);
-                CAN_td_message.tm.tm_year_lsb = Data_msg[4];
+                CAN_td_message.tm.tm_mday = Data_msg[2];
+                CAN_td_message.tm.tm_mon = Data_msg[3];
+                CAN_td_message.tm.tm_year_msb = bcdToDecimal(Data_msg[4]);
+                CAN_td_message.tm.tm_year_lsb = Data_msg[5];
                 CAN_td_message.tm.tm_wday = dayofweek(CAN_td_message.tm.tm_year_msb,CAN_td_message.tm.tm_year_lsb, CAN_td_message.tm.tm_mon, CAN_td_message.tm.tm_mday);
                 CAN_td_message.msg = SERIAL_MSG_DATE;
+                (void)HIL_QUEUE_Write( &SERIAL_queue, &CAN_td_message );
                 cases = STATE_OK;
             }
             else
@@ -496,11 +566,12 @@ void Serial_Task( void )
 
         case STATE_ALARM:
 
-            if(valid_alarm( Data_msg[1],Data_msg[2]) == TRUE)
+            if(valid_alarm( Data_msg[2],Data_msg[3]) == TRUE)
             {
-                CAN_td_message.tm.tm_hour=Data_msg[1];
-                CAN_td_message.tm.tm_min=Data_msg[2];
+                CAN_td_message.tm.tm_hour=Data_msg[2];
+                CAN_td_message.tm.tm_min=Data_msg[3];
                 CAN_td_message.msg = SERIAL_MSG_ALARM;
+                (void)HIL_QUEUE_Write( &SERIAL_queue, &CAN_td_message );
                 cases = STATE_OK;
             }
             else
@@ -514,7 +585,14 @@ void Serial_Task( void )
             Data_msg[0]=FAILED_CANID;
             CAN_size=1;
             CanTp_SingleFrameTx( &Data_msg[0],&CAN_size);
-            cases = STATE_GETMSG;
+            if(HIL_QUEUE_IsEmpty(&CAN_queue) == NOT_EMPTY)
+            {
+                cases = STATE_RECEPTION;
+            }
+            else
+            {
+                cases = STATE_IDLE;  
+            }
             break;
 
         case STATE_OK:
@@ -522,12 +600,21 @@ void Serial_Task( void )
             Data_msg[0]=OK_CANID;
             CAN_size=1;
             CanTp_SingleFrameTx( &Data_msg[0],&CAN_size);
-            cases = STATE_GETMSG;
+            if(HIL_QUEUE_IsEmpty(&CAN_queue) == NOT_EMPTY)
+            {
+                cases = STATE_RECEPTION;
+            }
+            else
+            {
+                cases = STATE_IDLE;  
+            }
+                
             break;
  
         default:
 
-            cases = STATE_GETMSG;
+            cases = STATE_IDLE;
             break;
     }
+
 }

@@ -3,7 +3,7 @@
 
   #include "stm32g0xx.h"
   #include <stdint.h>
-
+  
   /** 
   * @defgroup BOOL Boolean values.
   @{ */
@@ -99,19 +99,10 @@
   }APP_MsgTypeDef;
 
   /**
-  * @brief  Variable for state machien messages.
-  */
-  extern APP_MsgTypeDef CAN_td_message;
-
-  /**
-  * @brief  Variable for clockMsg to diplay.
-  */
-  extern APP_MsgTypeDef ClockMsg;
-
-  /**
   * @brief  Variable for CAN configuration
   */
   extern FDCAN_HandleTypeDef CANHandler; /* cppcheck-suppress misra-c2012-8.4 ; this function can`t be modify */
+
      
 #endif
 
