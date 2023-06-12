@@ -187,12 +187,14 @@ void Serial_Init( void )
     Status = HAL_FDCAN_ActivateNotification( &CANHandler, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0 );
     assert_error( Status == HAL_OK, FDCAN_ACTIVATE_NOTIFICATION_ERROR );    /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
 
+    /*CAN Buffer configuration*/
     static uint64_t can_queue_store[CAN_DATA_PER10MS];
     CAN_queue.Buffer = can_queue_store;
     CAN_queue.Elements = CAN_DATA_PER10MS;
     CAN_queue.size = sizeof(uint64_t);
     HIL_QUEUE_Init(&CAN_queue);
 
+    /*Serial to clock Buffer configuration*/
     static APP_MsgTypeDef serial_queue_store[CAN_DATA_PER10MS];
     SERIAL_queue.Buffer = serial_queue_store;
     SERIAL_queue.Elements = CAN_DATA_PER10MS;

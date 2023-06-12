@@ -43,11 +43,6 @@ static uint8_t LCD_State  = DISPLAY_STATE_IDLE;
 */
 static uint32_t displaytick;
 
-/**
- * @brief  Variable for SPI configuration
- */
-static SPI_HandleTypeDef SpiHandle;     /* cppcheck-suppress misra-c2012-8.9 ; the function stops working if defined in there*/
-
 static void month(char *mon,char pos);
 static void week(char *week,char pos);
 static void Display_StMachine(void);
@@ -58,10 +53,11 @@ static void Display_StMachine(void);
  *  The Function sets the pins for the SPI and LCD  needed and initialize by 
  *  calling the HEL_LCD_MspInit and configuring  and initializing the SPI
  *  then calls the function HEL_LCD_Init wich is a routine for the LCD
- *  
  */
 void Display_Init( void )
 {
+    static SPI_HandleTypeDef SpiHandle;
+    
     LCDHandle.SpiHandler  =   &SpiHandle;
     /*Reset pin configuration*/
     LCDHandle.RstPort     =   GPIOD;

@@ -130,6 +130,7 @@ void Clock_Init( void )
     
     tick_1000ms=HAL_GetTick();
 
+    /*Clock to display buffer*/
     static APP_MsgTypeDef clock_queue_store[CLOCK_DATA_PER50MS];
     CLOCK_queue.Buffer = clock_queue_store;
     CLOCK_queue.Elements = CLOCK_DATA_PER50MS;
