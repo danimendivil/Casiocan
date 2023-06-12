@@ -22,8 +22,8 @@
 void HIL_QUEUE_Init( QUEUE_HandleTypeDef *hqueue )
 {
     assert_error( (hqueue->Buffer != NULL), QUEUE_PAR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-    assert_error( (hqueue->Elements != 0u), QUEUE_PAR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-    assert_error( (hqueue->size != 0u), QUEUE_PAR_ERROR );/* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    assert_error( (hqueue->Elements != FALSE), QUEUE_PAR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    assert_error( (hqueue->size != FALSE), QUEUE_PAR_ERROR );/* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
 
     hqueue->Head    = FIRS_POS;
     hqueue->Tail    = FIRS_POS;
@@ -55,8 +55,8 @@ void HIL_QUEUE_Init( QUEUE_HandleTypeDef *hqueue )
 uint8_t HIL_QUEUE_Write( QUEUE_HandleTypeDef *hqueue, void *data )
 {
     assert_error( (hqueue->Buffer != NULL), QUEUE_PAR_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-    assert_error( (hqueue->Elements != 0u), QUEUE_PAR_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-    assert_error( (hqueue->size != 0u), QUEUE_PAR_ERROR );      /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    assert_error( (hqueue->Elements != FALSE), QUEUE_PAR_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    assert_error( (hqueue->size != FALSE), QUEUE_PAR_ERROR );      /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     assert_error( data != NULL, QUEUE_PAR_ERROR );              /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
 
     uint8_t Queue_Status = QUEUE_NOT_OK;
@@ -109,8 +109,8 @@ uint8_t HIL_QUEUE_Write( QUEUE_HandleTypeDef *hqueue, void *data )
 uint8_t HIL_QUEUE_Read( QUEUE_HandleTypeDef *hqueue, void *data )
 {
     assert_error( (hqueue->Buffer != NULL), QUEUE_PAR_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-    assert_error( (hqueue->Elements != 0u), QUEUE_PAR_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-    assert_error( (hqueue->size != 0u), QUEUE_PAR_ERROR );      /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */    
+    assert_error( (hqueue->Elements != FALSE), QUEUE_PAR_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    assert_error( (hqueue->size != FALSE), QUEUE_PAR_ERROR );      /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */    
     assert_error( data != NULL, QUEUE_PAR_ERROR );              /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
 
     uint8_t Queue_Status = QUEUE_NOT_OK;
@@ -147,8 +147,8 @@ uint8_t HIL_QUEUE_Read( QUEUE_HandleTypeDef *hqueue, void *data )
 uint8_t HIL_QUEUE_IsEmpty( QUEUE_HandleTypeDef *hqueue )
 {
     assert_error( (hqueue->Buffer != NULL), QUEUE_PAR_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-    assert_error( (hqueue->Elements != 0u), QUEUE_PAR_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-    assert_error( (hqueue->size != 0u), QUEUE_PAR_ERROR );      /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */   
+    assert_error( (hqueue->Elements != FALSE), QUEUE_PAR_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    assert_error( (hqueue->size != FALSE), QUEUE_PAR_ERROR );      /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */   
     
     return hqueue->Empty;
 }
@@ -167,8 +167,8 @@ uint8_t HIL_QUEUE_IsEmpty( QUEUE_HandleTypeDef *hqueue )
 void HIL_QUEUE_Flush( QUEUE_HandleTypeDef *hqueue )
 {
     assert_error( (hqueue->Buffer != NULL), QUEUE_PAR_ERROR );      /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-    assert_error( (hqueue->Elements != 0u), QUEUE_PAR_ERROR );      /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-    assert_error( (hqueue->size != 0u), QUEUE_PAR_ERROR );          /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    assert_error( (hqueue->Elements != FALSE), QUEUE_PAR_ERROR );      /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    assert_error( (hqueue->size != FALSE), QUEUE_PAR_ERROR );          /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     
     HIL_QUEUE_Init(hqueue);
 }
