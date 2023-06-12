@@ -57,7 +57,7 @@ static void Display_StMachine(void);
 void Display_Init( void )
 {
     static SPI_HandleTypeDef SpiHandle;
-    
+
     LCDHandle.SpiHandler  =   &SpiHandle;
     /*Reset pin configuration*/
     LCDHandle.RstPort     =   GPIOD;
@@ -246,6 +246,7 @@ void month(char *mon,char pos)
         *(mon+i)=*(mes+i+position);         /* cppcheck-suppress misra-c2012-18.4 ; operators to pointer is needed*/
    }
 }
+
 
 /**
  * @brief   **This function gets a 2 letter abreviation of the week **
