@@ -59,3 +59,27 @@ uint8_t HIL_SCHEDULER_RegisterTask( Scheduler_HandleTypeDef *hscheduler, void (*
     return Task_ID;
 }
 
+/**
+* @brief   **This function stops a task of the scheduler**
+*
+* this function sets the flag of hscheduler to 1 to stop the task from running
+* 
+* @param   hscheduler[in] Pointer to a Scheduler_HandleTypeDef structure 
+* @retval  Task_status will be TRUE if task was stopped otherwise it is FALSE . 
+*/
+uint8_t HIL_SCHEDULER_StopTask( Scheduler_HandleTypeDef *hscheduler, uint32_t task )
+{
+    uint8_t Task_status;
+
+    if(((hscheduler->taskPtr)+(task-1))->stopflag == FALSE)
+    {
+        ((hscheduler->taskPtr)+(task-1))->stopflag = TRUE;
+        Task_status = TRUE;
+    }
+    else 
+    {
+        Task_status = FALSE;
+    }
+
+    return Task_status;
+}
