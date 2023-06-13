@@ -138,7 +138,7 @@ uint8_t HIL_SCHEDULER_PeriodTask( Scheduler_HandleTypeDef *hscheduler, uint32_t 
 
     if((period > hscheduler->tick) && ( (period % (hscheduler->tick)) == FALSE ))
     {
-        ((hscheduler->taskPtr)+(task-1))->period = period;
+        ((hscheduler->taskPtr)+(task-1u))->period = period;
         Task_status = TRUE;
     }
     else 
@@ -147,4 +147,39 @@ uint8_t HIL_SCHEDULER_PeriodTask( Scheduler_HandleTypeDef *hscheduler, uint32_t 
     }
 
     return Task_status;
+}
+
+/**
+* @brief   **This stars the scheduler**
+*
+*   This is the function in charge of running the task init functions one single time and actual
+*   run each registered task according to their periodicity in an infinite loop, 
+*   the function will never return at least something wrong happens, but this will be considered a malfunction.
+*   the function will be checking each tick if the period of a task has passed to be executed
+* 
+* @param   hscheduler[in] Pointer to a Scheduler_HandleTypeDef structure 
+*/
+void HIL_SCHEDULER_Start( Scheduler_HandleTypeDef *hscheduler )
+{
+    for (uint32_t i = 0; i < hscheduler->tasks; i++)
+    {
+        ((hscheduler->taskPtr)+i)->initFunc();
+    }
+
+    for (;;)
+    {
+        if( HAL_GetTick() - (hscheduler->elapsed_time ) >= hscheduler->tick )
+        {
+            hscheduler->elapsed_time = HAL_GetTick();/*volvemos a obtener la cuenta actual*/
+            for (uint32_t i = 0; i < hscheduler->tasks;i++)
+            {
+                if( (HAL_GetTick() - ((hscheduler->taskPtr)+i)->elapsed ) >= ((hscheduler->taskPtr)+i)->period)
+                {
+                    ((hscheduler->taskPtr)+i)->elapsed = HAL_GetTick();
+                    ((hscheduler->taskPtr)+i)->taskFunc();
+                }
+
+            }
+        }
+    }
 }
