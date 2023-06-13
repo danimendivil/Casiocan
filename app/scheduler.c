@@ -42,14 +42,14 @@ uint8_t HIL_SCHEDULER_RegisterTask( Scheduler_HandleTypeDef *hscheduler, void (*
     assert_error( (hscheduler->tasks != FALSE), SCHEDULER_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     assert_error( (hscheduler->tick != FALSE), SCHEDULER_ERROR );   /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     uint8_t Task_ID;
-    if(Period > hscheduler->tick && (Period % (hscheduler->tick)) == FALSE )
+    if((Period > hscheduler->tick) && ((Period % (hscheduler->tick)) == FALSE) )
     {
-        ((hscheduler->taskPtr)+hscheduler->tasksCount)->period = Period;
-        ((hscheduler->taskPtr)+hscheduler->tasksCount)->initFunc = InitPtr;
-        ((hscheduler->taskPtr)+hscheduler->tasksCount)->taskFunc = TaskPtr;
-        ((hscheduler->taskPtr)+hscheduler->tasksCount)->elapsed = FALSE;
+        ((hscheduler->taskPtr) + hscheduler->tasksCount)->period = Period;
+        ((hscheduler->taskPtr) + hscheduler->tasksCount)->initFunc = InitPtr;
+        ((hscheduler->taskPtr) + hscheduler->tasksCount)->taskFunc = TaskPtr;
+        ((hscheduler->taskPtr) + hscheduler->tasksCount)->elapsed = FALSE;
         hscheduler->tasksCount++;
-        Task_ID = hscheduler->tasksCount+1;
+        Task_ID = hscheduler->tasksCount + 1u;
     }
     else
     {
@@ -75,9 +75,9 @@ uint8_t HIL_SCHEDULER_StopTask( Scheduler_HandleTypeDef *hscheduler, uint32_t ta
 
     uint8_t Task_status;
 
-    if(((hscheduler->taskPtr)+(task-1))->stopflag == FALSE)
+    if(((hscheduler->taskPtr)+(task-1u))->stopflag == FALSE)
     {
-        ((hscheduler->taskPtr)+(task-1))->stopflag = TRUE;
+        ((hscheduler->taskPtr)+(task-1u))->stopflag = TRUE;
         Task_status = TRUE;
     }
     else 
@@ -104,10 +104,10 @@ uint8_t HIL_SCHEDULER_StartTask( Scheduler_HandleTypeDef *hscheduler, uint32_t t
 
     uint32_t Task_status;
 
-    if(((hscheduler->taskPtr)+(task-1))->stopflag == TRUE){
+    if(((hscheduler->taskPtr)+(task-1u))->stopflag == TRUE){
 
     
-        ((hscheduler->taskPtr)+(task-1))->stopflag = FALSE;
+        ((hscheduler->taskPtr)+(task-1u))->stopflag = FALSE;
         Task_status = TRUE;
     }
     else {
