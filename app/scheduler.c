@@ -47,10 +47,10 @@ uint8_t HIL_SCHEDULER_RegisterTask( Scheduler_HandleTypeDef *hscheduler, void (*
     uint8_t Task_ID;
     if((Period > hscheduler->tick) && ((Period % (hscheduler->tick)) == FALSE) )
     {
-        ((hscheduler->taskPtr) + hscheduler->tasksCount)->period = Period;
-        ((hscheduler->taskPtr) + hscheduler->tasksCount)->initFunc = InitPtr;
-        ((hscheduler->taskPtr) + hscheduler->tasksCount)->taskFunc = TaskPtr;
-        ((hscheduler->taskPtr) + hscheduler->tasksCount)->elapsed = FALSE;
+        ((hscheduler->taskPtr) + hscheduler->tasksCount)->period = Period;      /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+        ((hscheduler->taskPtr) + hscheduler->tasksCount)->initFunc = InitPtr;   /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+        ((hscheduler->taskPtr) + hscheduler->tasksCount)->taskFunc = TaskPtr;   /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+        ((hscheduler->taskPtr) + hscheduler->tasksCount)->elapsed = FALSE;      /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
         hscheduler->tasksCount++;
         Task_ID = hscheduler->tasksCount + 1u;
     }
@@ -79,9 +79,9 @@ uint8_t HIL_SCHEDULER_StopTask( Scheduler_HandleTypeDef *hscheduler, uint32_t ta
 
     uint8_t Task_status;
 
-    if(((hscheduler->taskPtr)+(task-1u))->stopflag == FALSE)
+    if(((hscheduler->taskPtr)+(task-1u))->stopflag == FALSE)    /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
     {
-        ((hscheduler->taskPtr)+(task-1u))->stopflag = TRUE;
+        ((hscheduler->taskPtr)+(task-1u))->stopflag = TRUE;     /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
         Task_status = TRUE;
     }
     else 
@@ -109,9 +109,9 @@ uint8_t HIL_SCHEDULER_StartTask( Scheduler_HandleTypeDef *hscheduler, uint32_t t
 
     uint8_t Task_status;
 
-    if(((hscheduler->taskPtr)+(task-1u))->stopflag == TRUE)
+    if(((hscheduler->taskPtr)+(task-1u))->stopflag == TRUE)     /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
     {
-        ((hscheduler->taskPtr)+(task-1u))->stopflag = FALSE;
+        ((hscheduler->taskPtr)+(task-1u))->stopflag = FALSE;    /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
         Task_status = TRUE;
     }
     else 
@@ -138,7 +138,7 @@ uint8_t HIL_SCHEDULER_PeriodTask( Scheduler_HandleTypeDef *hscheduler, uint32_t 
 
     if((period > hscheduler->tick) && ( (period % (hscheduler->tick)) == FALSE ))
     {
-        ((hscheduler->taskPtr)+(task-1u))->period = period;
+        ((hscheduler->taskPtr)+(task-1u))->period = period; /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
         Task_status = TRUE;
     }
     else 
@@ -163,7 +163,7 @@ void HIL_SCHEDULER_Start( Scheduler_HandleTypeDef *hscheduler )
 {
     for (uint32_t i = 0; i < hscheduler->tasks; i++)
     {
-        ((hscheduler->taskPtr)+i)->initFunc();
+        ((hscheduler->taskPtr)+i)->initFunc();      /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
     }
 
     for (;;)
@@ -173,12 +173,11 @@ void HIL_SCHEDULER_Start( Scheduler_HandleTypeDef *hscheduler )
             hscheduler->elapsed_time = HAL_GetTick();/*volvemos a obtener la cuenta actual*/
             for (uint32_t i = 0; i < hscheduler->tasks;i++)
             {
-                if( (HAL_GetTick() - ((hscheduler->taskPtr)+i)->elapsed ) >= ((hscheduler->taskPtr)+i)->period)
+                if( (HAL_GetTick() - ((hscheduler->taskPtr)+i)->elapsed ) >= ((hscheduler->taskPtr)+i)->period)     /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
                 {
-                    ((hscheduler->taskPtr)+i)->elapsed = HAL_GetTick();
-                    ((hscheduler->taskPtr)+i)->taskFunc();
+                    ((hscheduler->taskPtr)+i)->elapsed = HAL_GetTick();     /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+                    ((hscheduler->taskPtr)+i)->taskFunc();                  /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
                 }
-
             }
         }
     }
