@@ -33,6 +33,9 @@ void HIL_SCHEDULER_Init( Scheduler_HandleTypeDef *hscheduler )
 *   the Periodicity should not be less than the tick value and always be multiple. 
 *
 * @param   hscheduler[in] Pointer to a Scheduler_HandleTypeDef structure 
+* @param   InitPtr[in] Pointer to the init function 
+* @param   TaskPtr[in] Pointer to the task function 
+* @param   Period[in] period of the task to be executed 
 * @retval  Task_ID Is number from 1 to n task registered if the operation was a success, otherwise, it will return zero. 
 */
 uint8_t HIL_SCHEDULER_RegisterTask( Scheduler_HandleTypeDef *hscheduler, void (*InitPtr)(void), void (*TaskPtr)(void), uint32_t Period )
@@ -65,6 +68,7 @@ uint8_t HIL_SCHEDULER_RegisterTask( Scheduler_HandleTypeDef *hscheduler, void (*
 * this function sets the flag of hscheduler to 1 to stop the task from running
 * 
 * @param   hscheduler[in] Pointer to a Scheduler_HandleTypeDef structure 
+* @param   task[in]   task to be stopped 
 * @retval  Task_status will be TRUE if task was stopped otherwise it is FALSE . 
 */
 uint8_t HIL_SCHEDULER_StopTask( Scheduler_HandleTypeDef *hscheduler, uint32_t task )
@@ -94,6 +98,7 @@ uint8_t HIL_SCHEDULER_StopTask( Scheduler_HandleTypeDef *hscheduler, uint32_t ta
 *   this function sets the flag of hscheduler to 0 to start the task from running
 * 
 * @param   hscheduler[in] Pointer to a Scheduler_HandleTypeDef structure 
+* @param   task[in] task to be start
 * @retval  Task_status will be TRUE if task was start otherwise it is FALSE . 
 */
 uint8_t HIL_SCHEDULER_StartTask( Scheduler_HandleTypeDef *hscheduler, uint32_t task )
@@ -102,7 +107,7 @@ uint8_t HIL_SCHEDULER_StartTask( Scheduler_HandleTypeDef *hscheduler, uint32_t t
     assert_error( (hscheduler->tasks != FALSE), SCHEDULER_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     assert_error( (hscheduler->tick != FALSE), SCHEDULER_ERROR );   /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
 
-    uint32_t Task_status;
+    uint8_t Task_status;
 
     if(((hscheduler->taskPtr)+(task-1u))->stopflag == TRUE)
     {
@@ -113,5 +118,33 @@ uint8_t HIL_SCHEDULER_StartTask( Scheduler_HandleTypeDef *hscheduler, uint32_t t
     {   
         Task_status = FALSE;
     }
+    return Task_status;
+}
+
+/**
+* @brief   **This function changes te period of a task**
+*
+*   the function sets the period of the task if the new periodicity
+*   is a multiple of the tick value.
+* 
+* @param   hscheduler[in] Pointer to a Scheduler_HandleTypeDef structure 
+* @param   task[in] Task to be changed 
+* @param   period[in] New period value 
+* @retval  Task_status will be TRUE if task was start otherwise it is FALSE . 
+*/
+uint8_t HIL_SCHEDULER_PeriodTask( Scheduler_HandleTypeDef *hscheduler, uint32_t task, uint32_t period )
+{
+    uint8_t Task_status;
+
+    if((period > hscheduler->tick) && ( (period % (hscheduler->tick)) == FALSE ))
+    {
+        ((hscheduler->taskPtr)+(task-1))->period = period;
+        Task_status = TRUE;
+    }
+    else 
+    {
+        Task_status = FALSE;
+    }
+
     return Task_status;
 }
