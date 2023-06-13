@@ -104,16 +104,14 @@ uint8_t HIL_SCHEDULER_StartTask( Scheduler_HandleTypeDef *hscheduler, uint32_t t
 
     uint32_t Task_status;
 
-    if(((hscheduler->taskPtr)+(task-1u))->stopflag == TRUE){
-
-    
+    if(((hscheduler->taskPtr)+(task-1u))->stopflag == TRUE)
+    {
         ((hscheduler->taskPtr)+(task-1u))->stopflag = FALSE;
         Task_status = TRUE;
     }
-    else {
-        
+    else 
+    {   
         Task_status = FALSE;
     }
-
     return Task_status;
 }
