@@ -7,6 +7,15 @@
 */
 
 #include "scheduler.h"
+/** 
+* @defgroup TIM conf values.
+@{ */
+#define    MAX_VALUE           0xFFFF   /*!< State for changing the time of the clock*/
+#define    PREESCALER_VALUE    32000   /*!< State for changing the date of the clock*/
+#define    TEN_PERCENT         10u   /*!< State for changing the date of the clock*/
+/**
+@} */
+
 
 /**
 * @brief   **This function initializes the parameters for the scheduler**
@@ -159,6 +168,10 @@ uint8_t HIL_SCHEDULER_PeriodTask( Scheduler_HandleTypeDef *hscheduler, uint32_t 
 *   run each registered task according to their periodicity in an infinite loop, 
 *   the function will never return at least something wrong happens, but this will be considered a malfunction.
 *   the function will be checking each tick if the period of a task has passed to be executed
+*   the task also has a functional safety measure where it checks with the basic timer 6
+*   if the task has not been called in more time than the period plus 10%
+*   Prescaler = (Clock frequency / Desired frequency) 
+*   Prescaler = (32,000,000 / 1,000) = 32000
 * 
 * @param   hscheduler[in] Pointer to a Scheduler_HandleTypeDef structure 
 */
@@ -167,10 +180,20 @@ void HIL_SCHEDULER_Start( Scheduler_HandleTypeDef *hscheduler )
     assert_error( (hscheduler->taskPtr != NULL), SCHEDULER_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     assert_error( (hscheduler->tasks != FALSE), SCHEDULER_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     assert_error( (hscheduler->tick != FALSE), SCHEDULER_ERROR );   /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    
+    static TIM_HandleTypeDef TIM6_Handler = {0};
+    TIM6_Handler.Instance = TIM6;                          /*Timer TIM to configure*/
+    TIM6_Handler.Init.Prescaler = PREESCALER_VALUE;                    /*preescaler Tfrec / Prescaler*/
+    TIM6_Handler.Init.CounterMode = TIM_COUNTERMODE_UP;    /*count from 0 to overflow value*/
+    TIM6_Handler.Init.Period =  MAX_VALUE;                      /*Max value*/
+    /*use the previous parameters to set configuration on TIM6*/
+    HAL_TIM_Base_Init( &TIM6_Handler );
+    HAL_TIM_Base_Start_IT( &TIM6_Handler );
 
     for (uint32_t i = 0u; i < hscheduler->tasks; i++)
     {
         ((hscheduler->taskPtr)+i)->initFunc();      /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+        ((hscheduler->taskPtr)+i)-> tick_count = __HAL_TIM_GET_COUNTER(&TIM6_Handler);  /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
     }
 
     for (;;)
@@ -182,6 +205,9 @@ void HIL_SCHEDULER_Start( Scheduler_HandleTypeDef *hscheduler )
             {
                 if( (HAL_GetTick() - ((hscheduler->taskPtr)+i)->elapsed ) >= ((hscheduler->taskPtr)+i)->period)     /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
                 {
+                    /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+                    assert_error(__HAL_TIM_GET_COUNTER(&TIM6_Handler) - ((hscheduler->taskPtr)+i)-> tick_count <= ((hscheduler->taskPtr)+i)->period + (((hscheduler->taskPtr)+i)->period /TEN_PERCENT), SHCEDULER_START_ERROR ); /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+                    ((hscheduler->taskPtr)+i)-> tick_count = __HAL_TIM_GET_COUNTER(&TIM6_Handler);  /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
                     ((hscheduler->taskPtr)+i)->elapsed = HAL_GetTick();     /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
                     ((hscheduler->taskPtr)+i)->taskFunc();                  /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
                 }
