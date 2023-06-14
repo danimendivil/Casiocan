@@ -170,6 +170,7 @@ uint8_t HIL_SCHEDULER_PeriodTask( Scheduler_HandleTypeDef *hscheduler, uint32_t 
 *   the function will be checking each tick if the period of a task has passed to be executed
 *   the task also has a functional safety measure where it checks with the basic timer 6
 *   if the task has not been called in more time than the period plus 10%
+*   we want the preescaler on the miliseconds frequency so the calculations are:
 *   Prescaler = (Clock frequency / Desired frequency) 
 *   Prescaler = (32,000,000 / 1,000) = 32000
 * 

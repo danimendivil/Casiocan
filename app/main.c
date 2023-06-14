@@ -53,7 +53,15 @@ static void hearth_beat(void);
 static void init_watchdog(void);
 static void peth_the_dog(void);
 
-
+/**
+* @brief   **Main function**
+*
+*   In the main function we`re going execute the task with the scheduler so we create
+*   a Scheduler_HandleTypeDef and an array of Task_TypeDef with 5 lenght since thats
+*   the amount of tasks we are going to execute, also we use a ticks of 5ms since our shortest
+*   period is 10ms, then we add the tasks with the HIL_SCHEDULER_RegisterTask
+*   and start the scheduler
+*/
 int main( void )
 {
   Scheduler_HandleTypeDef sched;
