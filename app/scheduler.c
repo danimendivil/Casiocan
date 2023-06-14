@@ -71,7 +71,6 @@ uint8_t HIL_SCHEDULER_RegisterTask( Scheduler_HandleTypeDef *hscheduler, void (*
         hscheduler->tasksCount++;
         Task_ID = hscheduler->tasksCount + ONE;
     }
-    else{}
 
     return Task_ID;
 }
@@ -98,7 +97,6 @@ uint8_t HIL_SCHEDULER_StopTask( Scheduler_HandleTypeDef *hscheduler, uint32_t ta
         ((hscheduler->taskPtr)+(task-ONE))->stopflag = TRUE;     /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
         Task_status = TRUE;
     }
-    else {}
 
     return Task_status;
 }
@@ -125,7 +123,6 @@ uint8_t HIL_SCHEDULER_StartTask( Scheduler_HandleTypeDef *hscheduler, uint32_t t
         ((hscheduler->taskPtr)+(task-ONE))->stopflag = FALSE;    /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
         Task_status = TRUE;
     }
-    else {}
     return Task_status;
 }
 
@@ -152,7 +149,6 @@ uint8_t HIL_SCHEDULER_PeriodTask( Scheduler_HandleTypeDef *hscheduler, uint32_t 
         ((hscheduler->taskPtr)+(task-ONE))->period = period; /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
         Task_status = TRUE;
     }
-    else {}
 
     return Task_status;
 }
