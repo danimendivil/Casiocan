@@ -38,11 +38,6 @@
 /**
   @} */
 
-static void hearth_init(void);
-static void hearth_beat(void);
-static void init_watchdog(void);
-static void peth_the_dog(void);
-
 /**
 * @brief  Variable for watchdog configuration.
 */
@@ -52,6 +47,12 @@ static WWDG_HandleTypeDef hwwdg;
 * @brief  Variable for functional safety.
 */
 HAL_StatusTypeDef Status;
+
+static void hearth_init(void);
+static void hearth_beat(void);
+static void init_watchdog(void);
+static void peth_the_dog(void);
+
 
 int main( void )
 {

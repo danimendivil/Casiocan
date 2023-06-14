@@ -2,13 +2,6 @@
 #include "hel_lcd.h"
 #include "hil_queue.h"
 
-/** 
-  * @defgroup ms time for display task periodicity.
-  @{ */
-#define DISPLAY_TASK_PERIODICITY  100    /*!< time for clock task execution*/
-/**
-  @} */
-
 /**
  * @brief Display State machine states.
  *

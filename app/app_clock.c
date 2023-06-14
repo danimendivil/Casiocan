@@ -23,7 +23,6 @@ typedef enum
 /** 
   * @defgroup ms time for clock task periodicity and data for circular buffer.
   @{ */
-#define CLOCK_TASK_PERIODICITY  50    /*!< time for clock task execution*/
 #define CLOCK_DATA_PER50MS      50    /*!< Max number of clock transmitions per 50 ms*/
 /**
   @} */

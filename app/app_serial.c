@@ -9,13 +9,6 @@
   @} */
 
 /** 
-  * @defgroup ms time for task periodicity.
-  @{ */
-#define SERIAL_TASK_PERIODICITY  10    /*!< time for serial task execution */
-/**
-  @} */
-
-/** 
   * @defgroup CAN byte values for confirmation .
   @{ */
 #define OK_CANID        0x55    /*!<correct information*/    
