@@ -162,6 +162,22 @@ uint8_t HIL_SCHEDULER_PeriodTask( Scheduler_HandleTypeDef *hscheduler, uint32_t 
 }
 
 /**
+* @brief   **scheduler error function**
+*
+*   this function creates an array initialize with error values,
+*   the positions of the return_error are given by the register of the functions on the main function 
+*   and this function is supoused to be used as a functional safety measure 
+*
+* @param   error[in] task that cause the error   
+* @retval  return_error will be the value of the error on the enum for functional safety . 
+*/
+static uint32_t shceduler_error(uint32_t error)
+{
+    uint32_t return_error[5]= {SHCEDULER_WATCHDOG_ERROR, SHCEDULER_SERIAL_ERROR, SHCEDULER_CLOCK_ERROR, SHCEDULER_DISPLAY_ERROR, SHCEDULER_HEARTH_ERROR};
+    return return_error[error];
+}
+
+/**
 * @brief   **This stars the scheduler**
 *
 *   This is the function in charge of running the task init functions one single time and actual
@@ -207,7 +223,7 @@ void HIL_SCHEDULER_Start( Scheduler_HandleTypeDef *hscheduler )
                 if( (HAL_GetTick() - ((hscheduler->taskPtr)+i)->elapsed ) >= ((hscheduler->taskPtr)+i)->period)     /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
                 {
                     /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-                    assert_error(__HAL_TIM_GET_COUNTER(&TIM6_Handler) - ((hscheduler->taskPtr)+i)-> tick_count <= ((hscheduler->taskPtr)+i)->period + (((hscheduler->taskPtr)+i)->period /TEN_PERCENT), SHCEDULER_START_ERROR ); /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+                    assert_error(__HAL_TIM_GET_COUNTER(&TIM6_Handler) - ((hscheduler->taskPtr)+i)-> tick_count <= ((hscheduler->taskPtr)+i)->period + (((hscheduler->taskPtr)+i)->period /TEN_PERCENT), shceduler_error(i)); /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
                     ((hscheduler->taskPtr)+i)-> tick_count = __HAL_TIM_GET_COUNTER(&TIM6_Handler);  /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
                     ((hscheduler->taskPtr)+i)->elapsed = HAL_GetTick();     /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
                     ((hscheduler->taskPtr)+i)->taskFunc();                  /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
@@ -216,3 +232,4 @@ void HIL_SCHEDULER_Start( Scheduler_HandleTypeDef *hscheduler )
         }
     }
 }
+

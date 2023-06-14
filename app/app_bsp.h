@@ -72,7 +72,11 @@
     QUEUE_PAR_ERROR,
     SCHEDULER_ERROR,
     SCHEDULER_REGISTER_ERROR,
-    SHCEDULER_START_ERROR
+    SHCEDULER_WATCHDOG_ERROR,
+    SHCEDULER_SERIAL_ERROR,
+    SHCEDULER_CLOCK_ERROR,
+    SHCEDULER_DISPLAY_ERROR,
+    SHCEDULER_HEARTH_ERROR
   } App_ErrorsCode;   /* cppcheck-suppress misra-c2012-2.3 ; enum is used on functional safety */
 
   /**
