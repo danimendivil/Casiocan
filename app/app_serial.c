@@ -92,11 +92,6 @@ FDCAN_HandleTypeDef CANHandler;
 static APP_MsgTypeDef CAN_td_message;  //time and date message
 
 /**
-* @brief  Variable for serial task tick.
-*/
-static uint32_t serialtick;
-
-/**
 * @brief  Circular buffer variable for CAN msg recived to serial task.
 */
 static QUEUE_HandleTypeDef CAN_queue;
@@ -143,8 +138,6 @@ static void Serial_StMachine(void);
 */
 void Serial_Init( void )
 {
-    serialtick = HAL_GetTick();
-
     FDCAN_FilterTypeDef CANFilter;
     CAN_td_message.tm.tm_year_msb = 20;
 
@@ -455,17 +448,13 @@ uint8_t valid_alarm(uint8_t hour,uint8_t minutes)
 *
 */
 void Serial_Task( void )
-{
-    if( ( HAL_GetTick( ) - serialtick ) >= SERIAL_TASK_PERIODICITY )
+{     
+    /*poll the state machine until the queue is empty and it return to IDLE*/
+    cases = STATE_RECEPTION;
+    while( cases != (uint8_t)STATE_IDLE )
     {
-        serialtick = HAL_GetTick( ); 
-        /*poll the state machine until the queue is empty and it return to IDLE*/
-        cases = STATE_RECEPTION;
-        while( cases != (uint8_t)STATE_IDLE )
-        {
-            /*run the state machine to process the messages*/
-            Serial_StMachine();
-        }
+        /*run the state machine to process the messages*/
+        Serial_StMachine();
     }
 }
 

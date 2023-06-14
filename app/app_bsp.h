@@ -70,7 +70,8 @@
     ECC_ONE_ERROR,
     ECC_TWO_ERROR,
     QUEUE_PAR_ERROR,
-    SCHEDULER_ERROR
+    SCHEDULER_ERROR,
+    SCHEDULER_REGISTER_ERROR
   } App_ErrorsCode;   /* cppcheck-suppress misra-c2012-2.3 ; enum is used on functional safety */
 
   /**

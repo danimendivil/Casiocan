@@ -134,6 +134,9 @@ uint8_t HIL_SCHEDULER_StartTask( Scheduler_HandleTypeDef *hscheduler, uint32_t t
 */
 uint8_t HIL_SCHEDULER_PeriodTask( Scheduler_HandleTypeDef *hscheduler, uint32_t task, uint32_t period )
 {
+    assert_error( (hscheduler->taskPtr != NULL), SCHEDULER_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    assert_error( (hscheduler->tasks != FALSE), SCHEDULER_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    assert_error( (hscheduler->tick != FALSE), SCHEDULER_ERROR );   /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     uint8_t Task_status;
 
     if((period > hscheduler->tick) && ( (period % (hscheduler->tick)) == FALSE ))
@@ -161,7 +164,11 @@ uint8_t HIL_SCHEDULER_PeriodTask( Scheduler_HandleTypeDef *hscheduler, uint32_t 
 */
 void HIL_SCHEDULER_Start( Scheduler_HandleTypeDef *hscheduler )
 {
-    for (uint32_t i = 0; i < hscheduler->tasks; i++)
+    assert_error( (hscheduler->taskPtr != NULL), SCHEDULER_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    assert_error( (hscheduler->tasks != FALSE), SCHEDULER_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    assert_error( (hscheduler->tick != FALSE), SCHEDULER_ERROR );   /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+
+    for (uint32_t i = 0u; i < hscheduler->tasks; i++)
     {
         ((hscheduler->taskPtr)+i)->initFunc();      /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
     }
@@ -170,8 +177,8 @@ void HIL_SCHEDULER_Start( Scheduler_HandleTypeDef *hscheduler )
     {
         if( HAL_GetTick() - (hscheduler->elapsed_time ) >= hscheduler->tick )
         {
-            hscheduler->elapsed_time = HAL_GetTick();/*volvemos a obtener la cuenta actual*/
-            for (uint32_t i = 0; i < hscheduler->tasks;i++)
+            hscheduler->elapsed_time = HAL_GetTick();
+            for (uint32_t i = 0u; i < hscheduler->tasks;i++)
             {
                 if( (HAL_GetTick() - ((hscheduler->taskPtr)+i)->elapsed ) >= ((hscheduler->taskPtr)+i)->period)     /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
                 {

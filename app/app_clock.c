@@ -47,11 +47,6 @@ static RTC_TimeTypeDef sTime;
 static uint32_t tick_1000ms;
 
 /**
-* @brief  Variable for clock task tick.
-*/
-static uint32_t clocktick;
-
-/**
  * @brief  Variable for Alarm configuration
  */
 static RTC_AlarmTypeDef sAlarm;
@@ -88,9 +83,6 @@ static void Clock_StMachine(void);
  
 void Clock_Init( void )      
 {
-    HAL_Init(); 
-
-    clocktick = HAL_GetTick();
     /*declare as global variable or static*/
     hrtc.Instance             = RTC;
     hrtc.Init.HourFormat      = RTC_HOURFORMAT_24;
@@ -148,19 +140,14 @@ void Clock_Init( void )
 *
 */
 void Clock_Task( void )
-{
-    if( ( HAL_GetTick( ) - clocktick ) >= CLOCK_TASK_PERIODICITY )
+{    
+    /*poll the state machine until the queue is empty and it return to IDLE*/
+    Clockstate = CLOCK_ST_RECEPTION;
+    while( Clockstate != (uint8_t)CLOCK_ST_IDLE )
     {
-        clocktick = HAL_GetTick( ); 
-        /*poll the state machine until the queue is empty and it return to IDLE*/
-        Clockstate = CLOCK_ST_RECEPTION;
-        while( Clockstate != (uint8_t)CLOCK_ST_IDLE )
-        {
-            /*run the state machine to process the messages*/
-            Clock_StMachine();
-        }
+        /*run the state machine to process the messages*/
+        Clock_StMachine();
     }
-   
 }
 
 /**

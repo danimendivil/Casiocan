@@ -38,11 +38,6 @@ static LCD_HandleTypeDef LCDHandle;
  */
 static uint8_t LCD_State  = DISPLAY_STATE_IDLE;
 
-/**
-* @brief  Variable for display task tick.
-*/
-static uint32_t displaytick;
-
 static void month(char *mon,char pos);
 static void week(char *week,char pos);
 static void Display_StMachine(void);
@@ -87,7 +82,7 @@ void Display_Init( void )
     assert_error( Status == HAL_OK, SPI_INIT_ERROR );       /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     Status = HEL_LCD_Init(&LCDHandle );
     assert_error( Status == HAL_OK, SPI_COMMAND_ERROR );        /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-    displaytick = HAL_GetTick();  
+    
 }
 
     
@@ -101,16 +96,12 @@ void Display_Init( void )
 *
 */void Display_Task( void )
 {
-    if( ( HAL_GetTick( ) - displaytick ) >= DISPLAY_TASK_PERIODICITY )
+    /*poll the state machine until the queue is empty and it return to IDLE*/
+    LCD_State = DISPLAY_STATE_RECEPTION;
+    while( LCD_State != (uint8_t)DISPLAY_STATE_IDLE )
     {
-        displaytick = HAL_GetTick(); 
-        /*poll the state machine until the queue is empty and it return to IDLE*/
-        LCD_State = DISPLAY_STATE_RECEPTION;
-        while( LCD_State != (uint8_t)DISPLAY_STATE_IDLE )
-        {
-            /*run the state machine to process the messages*/
-            Display_StMachine();
-        }
+        /*run the state machine to process the messages*/
+        Display_StMachine();
     }
 }
 
