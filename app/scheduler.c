@@ -16,6 +16,14 @@
 /**
 @} */
 
+/** 
+* @defgroup NUM DEFINES.
+@{ */
+#define    CERO           0u   /*!< Define for number 0*/  
+#define    ONE           1u    /*!< Define for number 1*/       
+/**
+@} */
+
 
 /**
 * @brief   **This function initializes the parameters for the scheduler**
@@ -31,7 +39,7 @@ void HIL_SCHEDULER_Init( Scheduler_HandleTypeDef *hscheduler )
     assert_error( (hscheduler->taskPtr != NULL), SCHEDULER_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     assert_error( (hscheduler->tasks != FALSE), SCHEDULER_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     assert_error( (hscheduler->tick != FALSE), SCHEDULER_ERROR );   /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-    hscheduler->tasksCount = 0;
+    hscheduler->tasksCount = CERO;
 }
 
 /**
@@ -53,7 +61,7 @@ uint8_t HIL_SCHEDULER_RegisterTask( Scheduler_HandleTypeDef *hscheduler, void (*
     assert_error( (hscheduler->taskPtr != NULL), SCHEDULER_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     assert_error( (hscheduler->tasks != FALSE), SCHEDULER_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     assert_error( (hscheduler->tick != FALSE), SCHEDULER_ERROR );   /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-    uint8_t Task_ID;
+    uint8_t Task_ID = FALSE;
     if((Period > hscheduler->tick) && ((Period % (hscheduler->tick)) == FALSE) )
     {
         ((hscheduler->taskPtr) + hscheduler->tasksCount)->period = Period;      /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
@@ -61,12 +69,9 @@ uint8_t HIL_SCHEDULER_RegisterTask( Scheduler_HandleTypeDef *hscheduler, void (*
         ((hscheduler->taskPtr) + hscheduler->tasksCount)->taskFunc = TaskPtr;   /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
         ((hscheduler->taskPtr) + hscheduler->tasksCount)->elapsed = FALSE;      /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
         hscheduler->tasksCount++;
-        Task_ID = hscheduler->tasksCount + 1u;
+        Task_ID = hscheduler->tasksCount + ONE;
     }
-    else
-    {
-        Task_ID = 0;
-    }
+    else{}
 
     return Task_ID;
 }
@@ -86,17 +91,14 @@ uint8_t HIL_SCHEDULER_StopTask( Scheduler_HandleTypeDef *hscheduler, uint32_t ta
     assert_error( (hscheduler->tasks != FALSE), SCHEDULER_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     assert_error( (hscheduler->tick != FALSE), SCHEDULER_ERROR );   /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
 
-    uint8_t Task_status;
+    uint8_t Task_status = FALSE;
 
-    if(((hscheduler->taskPtr)+(task-1u))->stopflag == FALSE)    /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+    if(((hscheduler->taskPtr)+(task-ONE))->stopflag == FALSE)    /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
     {
-        ((hscheduler->taskPtr)+(task-1u))->stopflag = TRUE;     /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+        ((hscheduler->taskPtr)+(task-ONE))->stopflag = TRUE;     /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
         Task_status = TRUE;
     }
-    else 
-    {
-        Task_status = FALSE;
-    }
+    else {}
 
     return Task_status;
 }
@@ -116,17 +118,14 @@ uint8_t HIL_SCHEDULER_StartTask( Scheduler_HandleTypeDef *hscheduler, uint32_t t
     assert_error( (hscheduler->tasks != FALSE), SCHEDULER_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     assert_error( (hscheduler->tick != FALSE), SCHEDULER_ERROR );   /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
 
-    uint8_t Task_status;
+    uint8_t Task_status = FALSE;
 
-    if(((hscheduler->taskPtr)+(task-1u))->stopflag == TRUE)     /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+    if(((hscheduler->taskPtr)+(task-ONE))->stopflag == TRUE)     /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
     {
-        ((hscheduler->taskPtr)+(task-1u))->stopflag = FALSE;    /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+        ((hscheduler->taskPtr)+(task-ONE))->stopflag = FALSE;    /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
         Task_status = TRUE;
     }
-    else 
-    {   
-        Task_status = FALSE;
-    }
+    else {}
     return Task_status;
 }
 
@@ -146,17 +145,14 @@ uint8_t HIL_SCHEDULER_PeriodTask( Scheduler_HandleTypeDef *hscheduler, uint32_t 
     assert_error( (hscheduler->taskPtr != NULL), SCHEDULER_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     assert_error( (hscheduler->tasks != FALSE), SCHEDULER_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     assert_error( (hscheduler->tick != FALSE), SCHEDULER_ERROR );   /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-    uint8_t Task_status;
+    uint8_t Task_status = FALSE;
 
     if((period > hscheduler->tick) && ( (period % (hscheduler->tick)) == FALSE ))
     {
-        ((hscheduler->taskPtr)+(task-1u))->period = period; /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+        ((hscheduler->taskPtr)+(task-ONE))->period = period; /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
         Task_status = TRUE;
     }
-    else 
-    {
-        Task_status = FALSE;
-    }
+    else {}
 
     return Task_status;
 }
@@ -207,7 +203,12 @@ void HIL_SCHEDULER_Start( Scheduler_HandleTypeDef *hscheduler )
     HAL_TIM_Base_Init( &TIM6_Handler );
     HAL_TIM_Base_Start_IT( &TIM6_Handler );
 
-    for (uint32_t i = 0u; i < hscheduler->tasks; i++)
+    uint32_t i;
+    uint32_t time;
+    uint32_t time_diff;
+    uint32_t period_plus_10p;
+
+    for (i = 0u; i < hscheduler->tasks; i++)
     {
         ((hscheduler->taskPtr)+i)->initFunc();      /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
         ((hscheduler->taskPtr)+i)-> tick_count = __HAL_TIM_GET_COUNTER(&TIM6_Handler);  /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
@@ -218,15 +219,17 @@ void HIL_SCHEDULER_Start( Scheduler_HandleTypeDef *hscheduler )
         if( HAL_GetTick() - (hscheduler->elapsed_time ) >= hscheduler->tick )
         {
             hscheduler->elapsed_time = HAL_GetTick();
-            for (uint32_t i = 0u; i < hscheduler->tasks;i++)
+            for (i = 0u; i < hscheduler->tasks;i++)
             {
                 if( (HAL_GetTick() - ((hscheduler->taskPtr)+i)->elapsed ) >= ((hscheduler->taskPtr)+i)->period)     /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
                 {
-                    /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-                    assert_error(__HAL_TIM_GET_COUNTER(&TIM6_Handler) - ((hscheduler->taskPtr)+i)-> tick_count <= ((hscheduler->taskPtr)+i)->period + (((hscheduler->taskPtr)+i)->period /TEN_PERCENT), shceduler_error(i)); /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
-                    ((hscheduler->taskPtr)+i)-> tick_count = __HAL_TIM_GET_COUNTER(&TIM6_Handler);  /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
-                    ((hscheduler->taskPtr)+i)->elapsed = HAL_GetTick();     /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
-                    ((hscheduler->taskPtr)+i)->taskFunc();                  /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+                    time = __HAL_TIM_GET_COUNTER(&TIM6_Handler);
+                    time_diff = time - ((hscheduler->taskPtr)+i)-> tick_count;                                              /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+                    period_plus_10p = ((hscheduler->taskPtr)+i)->period + (((hscheduler->taskPtr)+i)->period /TEN_PERCENT); /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+                    assert_error( time_diff <= period_plus_10p, shceduler_error(i));                                        /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+                    ((hscheduler->taskPtr)+i)-> tick_count = __HAL_TIM_GET_COUNTER(&TIM6_Handler);                          /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+                    ((hscheduler->taskPtr)+i)->elapsed = HAL_GetTick();                                                     /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+                    ((hscheduler->taskPtr)+i)->taskFunc();                                                                  /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
                 }
             }
         }
