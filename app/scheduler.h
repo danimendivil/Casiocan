@@ -47,7 +47,8 @@
     uint32_t elapsed_time;  /*!<current elapsed time*/
     Task_TypeDef *taskPtr;  /*!<Pointer to buffer for the TCB tasks*/
     uint32_t timers;        /*!<number of software timer to use*/
-    Timer_TypeDef *timerPtr /*!<Pointer to buffer timer array*/
+    uint32_t timerCount;    /*!<internal timer counter*/
+    Timer_TypeDef *timerPtr; /*!<Pointer to buffer timer array*/
     //Add more elements if required
   }Scheduler_HandleTypeDef;
 

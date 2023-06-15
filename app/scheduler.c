@@ -238,3 +238,32 @@ void HIL_SCHEDULER_Start( Scheduler_HandleTypeDef *hscheduler )
     }
 }
 
+/**
+* @brief   **This function register a timer for the scheduler**
+*
+*   this function sets the hscheduler timer with the address of the callback function,
+*   The timeout value, and puts the startflag on true.
+*
+* @param   hscheduler[in] Pointer to a Scheduler_HandleTypeDef structure 
+* @param   Timeout[in] Timeout value of the software timer 
+* @param   CallbackPtr[in] Pointer to a callback function 
+* @retval  Timer_ID Is number from 1 to n task registered if the operation was a success, otherwise, it will return zero. 
+*/
+uint8_t HIL_SCHEDULER_RegisterTimer( Scheduler_HandleTypeDef *hscheduler, uint32_t Timeout, void (*CallbackPtr)(void) )
+{
+    assert_error( (Timeout == FALSE), SCHEDULER_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    assert_error( (hscheduler->timerPtr != NULL), SCHEDULER_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    assert_error( (hscheduler->timers != FALSE), SCHEDULER_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    assert_error( (hscheduler->tick != FALSE), SCHEDULER_ERROR );   /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    uint8_t Timer_ID = FALSE;
+    if((Timeout > hscheduler->tick) && ((Timeout % (hscheduler->tick)) == FALSE) )
+    {
+        ((hscheduler->timerPtr) + hscheduler->timerCount)->Timeout = Timeout;      /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+        ((hscheduler->timerPtr) + hscheduler->timerCount)->callbackPtr = CallbackPtr;   /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+        ((hscheduler->timerPtr) + hscheduler->timerCount)->StartFlag = TRUE;   /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+        Timer_ID = hscheduler->tasksCount + ONE;
+    }
+
+    return Timer_ID;
+
+}
