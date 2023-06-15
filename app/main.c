@@ -2,19 +2,22 @@
 #include "app_serial.h"
 #include "app_clock.h"
 #include "app_display.h"
-
+#include "scheduler.h"
 //Add more includes if need them
 /** 
-  * @defgroup Hearth tick value.
+  * @defgroup Tasks periodicity value.
   @{ */
-#define HEARTH_TICK_VALUE   300u    /*!<hearth toggle value*/        
+#define HEARTH_TICK_VALUE   300u    /*!<hearth toggle value*/   
+#define SERIAL_TASK_TICK    10u     /*!<Serial task periodicity*/  
+#define CLOCK_TASK_TICK     50u     /*!<Clock task periodicity*/     
+#define DISPLAY_TASK_TICK   100u    /*!<Display task periodicity*/
 /**
   @} */
 
 /** 
   * @defgroup Watchdog values.
   @{ */
-#define WATCHDOG_REFRESH    68u     /*!<value to refresh the watchdog*/ 
+#define WATCHDOG_REFRESH    70u     /*!<value to refresh the watchdog*/ 
 #define WATCHDOG_WINDOW     94      /*!<window watchdog value*/ 
 #define WATCHDOG_COUNTER    127     /*!<counter watchdog value*/
 /**
@@ -27,20 +30,13 @@
 /**
   @} */
 
-static void hearth_init(void);
-static void hearth_beat(void);
-static void init_watchdog(void);
-static void peth_the_dog(void);
-
+/** 
+  * @defgroup Scheduler values configuration.
+  @{ */  
+#define TASK_NUMERS            5    /*!<Number of tasks to be handle by the scheduler*/
+#define SCHEDULER_TICK         5    /*!<Tick value of the scheduler*/
 /**
-* @brief  Variable for concurrent process of watchdog refresh.
-*/
-static uint32_t tick_Dog;
-
-/**
-* @brief  Variable for concurrent process of hearth beat.
-*/
-static uint32_t tick_hearth;
+  @} */
 
 /**
 * @brief  Variable for watchdog configuration.
@@ -52,26 +48,38 @@ static WWDG_HandleTypeDef hwwdg;
 */
 HAL_StatusTypeDef Status;
 
+static void hearth_init(void);
+static void hearth_beat(void);
+static void init_watchdog(void);
+static void peth_the_dog(void);
+
+/**
+* @brief   **Main function**
+*
+*   In the main function we`re going execute the task with the scheduler so we create
+*   a Scheduler_HandleTypeDef and an array of Task_TypeDef with 5 lenght since thats
+*   the amount of tasks we are going to execute, also we use a ticks of 5ms since our shortest
+*   period is 10ms, then we add the tasks with the HIL_SCHEDULER_RegisterTask
+*   and start the scheduler
+*/
 int main( void )
 {
- 
+  Scheduler_HandleTypeDef sched;
+  Task_TypeDef hsche_tasks[TASK_NUMERS];
+  sched.tasks   = TASK_NUMERS;
+  sched.tick    = SCHEDULER_TICK;
+  sched.taskPtr = hsche_tasks;
+
+  HIL_SCHEDULER_Init(&sched);
   HAL_Init();
-  Serial_Init();
-  Display_Init();  
-  Clock_Init();
-  hearth_init();
-  init_watchdog();
-  //Add more initilizations if need them
- 
-  for( ;; )
-  {
-    Serial_Task();
-    Clock_Task();
-    Display_Task();
-    hearth_beat();
-    peth_the_dog();
-    //Add another task if need it
-  }
+
+  (void)HIL_SCHEDULER_RegisterTask( &sched,init_watchdog,peth_the_dog,WATCHDOG_REFRESH);
+  (void)HIL_SCHEDULER_RegisterTask( &sched,Serial_Init,Serial_Task,SERIAL_TASK_TICK);
+  (void)HIL_SCHEDULER_RegisterTask( &sched,Clock_Init,Clock_Task,CLOCK_TASK_TICK);
+  (void)HIL_SCHEDULER_RegisterTask( &sched,Display_Init,Display_Task,DISPLAY_TASK_TICK);
+  (void)HIL_SCHEDULER_RegisterTask( &sched,hearth_init,hearth_beat,HEARTH_TICK_VALUE);
+
+  HIL_SCHEDULER_Start( &sched);
 }
 
 /**
@@ -83,19 +91,17 @@ int main( void )
 */
 void hearth_init(void)
 {
-    GPIO_InitTypeDef GPIO_InitStruct;
+  GPIO_InitTypeDef GPIO_InitStruct;
 
-    HAL_Init();                                     
-    __HAL_RCC_GPIOC_CLK_ENABLE();                   
+  HAL_Init();                                     
+  __HAL_RCC_GPIOC_CLK_ENABLE();                   
   
-    GPIO_InitStruct.Pin = GPIO_PIN_0;           
-    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;     
-    GPIO_InitStruct.Pull = GPIO_NOPULL;             
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;   
+  GPIO_InitStruct.Pin = GPIO_PIN_0;           
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;     
+  GPIO_InitStruct.Pull = GPIO_NOPULL;             
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;   
     
-    HAL_GPIO_Init( GPIOC, &GPIO_InitStruct );
-    
-    tick_hearth = HAL_GetTick();
+  HAL_GPIO_Init( GPIOC, &GPIO_InitStruct );
 }
 
 /**
@@ -104,12 +110,8 @@ void hearth_init(void)
 *   This function toggle the LED on GPIO_PIN_0 every HEARTH_TICK_VALUE wich is 300ms
 */
 void hearth_beat(void)
-{
-    if( (HAL_GetTick() - tick_hearth) >= HEARTH_TICK_VALUE )
-    {    
-        HAL_GPIO_TogglePin( GPIOC, GPIO_PIN_0 );   
-        tick_hearth = HAL_GetTick(); 
-    }  
+{    
+  HAL_GPIO_TogglePin( GPIOC, GPIO_PIN_0 );      
 }
 
 /**
@@ -129,20 +131,19 @@ void hearth_beat(void)
 */
 void init_watchdog(void)
 {
-    __HAL_RCC_WWDG_CLK_ENABLE();
+  __HAL_RCC_WWDG_CLK_ENABLE();
 
-    hwwdg.Instance          = WWDG;
-    hwwdg.Init.Prescaler    = WWDG_PRESCALER_16;
-    hwwdg.Init.Window       = WATCHDOG_WINDOW;
-    hwwdg.Init.Counter      = WATCHDOG_COUNTER;
-    hwwdg.Init.EWIMode      = WWDG_EWI_ENABLE;
+  hwwdg.Instance          = WWDG;
+  hwwdg.Init.Prescaler    = WWDG_PRESCALER_16;
+  hwwdg.Init.Window       = WATCHDOG_WINDOW;
+  hwwdg.Init.Counter      = WATCHDOG_COUNTER;
+  hwwdg.Init.EWIMode      = WWDG_EWI_ENABLE;
     
-    Status = HAL_WWDG_Init(&hwwdg);
-    assert_error( Status == HAL_OK, WWDG_INIT_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-    __HAL_WWDG_ENABLE_IT(&hwwdg, WWDG_IT_EWI);
-    tick_Dog = HAL_GetTick();
+  Status = HAL_WWDG_Init(&hwwdg);
+  assert_error( Status == HAL_OK, WWDG_INIT_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+  __HAL_WWDG_ENABLE_IT(&hwwdg, WWDG_IT_EWI);
 
-    HAL_NVIC_EnableIRQ(FLASH_IRQn);
+  HAL_NVIC_EnableIRQ(FLASH_IRQn);
 }
 
 /**
@@ -155,14 +156,9 @@ void init_watchdog(void)
 *   function.
 */
 void peth_the_dog(void)
-{
-
-    if( (HAL_GetTick() - tick_Dog) >= WATCHDOG_REFRESH)
-    {
-        tick_Dog = HAL_GetTick(); 
-        Status = HAL_WWDG_Refresh(&hwwdg); 
-        assert_error( Status == HAL_OK, WWDG_REFRESH_ERROR );     /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-    }
+{   
+  Status = HAL_WWDG_Refresh(&hwwdg); 
+  assert_error( Status == HAL_OK, WWDG_REFRESH_ERROR );     /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
 }
 
 /**
