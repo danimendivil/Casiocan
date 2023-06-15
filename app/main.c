@@ -125,7 +125,8 @@ void hearth_beat(void)
 *   now we do the calculation with the window value of 94
 *   tWWDG= (1/32000) * 4096 * 2 ^ 4 * (94 + 1) = 194.56ms
 *   now we substract the timeout value of the counter with the timeout value of the window
-*   refresh_min_value = 194.56ms-194.56ms = 67.584ms
+*   refresh_min_value = 194.56ms-194.56ms = 67.584ms.
+*   We round up the value to 70 since the scheduler work on ticks of 5 ms.
 *   thats the minimum value to refresh the watchdog.
 *   @note   this function also enables flash interrupts
 */

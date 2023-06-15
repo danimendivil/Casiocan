@@ -68,6 +68,7 @@ uint8_t HIL_SCHEDULER_RegisterTask( Scheduler_HandleTypeDef *hscheduler, void (*
         ((hscheduler->taskPtr) + hscheduler->tasksCount)->initFunc = InitPtr;   /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
         ((hscheduler->taskPtr) + hscheduler->tasksCount)->taskFunc = TaskPtr;   /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
         ((hscheduler->taskPtr) + hscheduler->tasksCount)->elapsed = FALSE;      /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+        ((hscheduler->taskPtr) + hscheduler->tasksCount)->stopflag = FALSE;     /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
         hscheduler->tasksCount++;
         Task_ID = hscheduler->tasksCount + ONE;
     }
@@ -204,7 +205,7 @@ void HIL_SCHEDULER_Start( Scheduler_HandleTypeDef *hscheduler )
     uint32_t time_diff;
     uint32_t period_plus_10p;
 
-    for (i = 0u; i < hscheduler->tasks; i++)
+    for (i = CERO; i < hscheduler->tasks; i++)
     {
         ((hscheduler->taskPtr)+i)->initFunc();      /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
         ((hscheduler->taskPtr)+i)-> tick_count = __HAL_TIM_GET_COUNTER(&TIM6_Handler);  /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
@@ -215,7 +216,7 @@ void HIL_SCHEDULER_Start( Scheduler_HandleTypeDef *hscheduler )
         if( HAL_GetTick() - (hscheduler->elapsed_time ) >= hscheduler->tick )
         {
             hscheduler->elapsed_time = HAL_GetTick();
-            for (i = 0u; i < hscheduler->tasks;i++)
+            for (i = CERO; i < hscheduler->tasks;i++)
             {
                 if( (HAL_GetTick() - ((hscheduler->taskPtr)+i)->elapsed ) >= ((hscheduler->taskPtr)+i)->period)     /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
                 {
@@ -225,7 +226,12 @@ void HIL_SCHEDULER_Start( Scheduler_HandleTypeDef *hscheduler )
                     assert_error( time_diff <= period_plus_10p, shceduler_error(i));                                        /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
                     ((hscheduler->taskPtr)+i)-> tick_count = __HAL_TIM_GET_COUNTER(&TIM6_Handler);                          /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
                     ((hscheduler->taskPtr)+i)->elapsed = HAL_GetTick();                                                     /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
-                    ((hscheduler->taskPtr)+i)->taskFunc();                                                                  /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+                    
+                    if(((hscheduler->taskPtr) + i)->stopflag == FALSE)                                                      /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+                    {
+                        ((hscheduler->taskPtr)+i)->taskFunc();                                                              /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+                    }
+                                                                                      
                 }
             }
         }
