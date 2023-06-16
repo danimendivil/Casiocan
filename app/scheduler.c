@@ -237,16 +237,16 @@ void HIL_SCHEDULER_Start( Scheduler_HandleTypeDef *hscheduler )
             }
             for(i = CERO; i < hscheduler->timers;i++)
             {
-                if(((hscheduler->timerPtr)+i)->Count == CERO )
+                if(((hscheduler->timerPtr)+i)->Count == CERO )                                                               /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
                 {
-                    ((hscheduler->timerPtr)+i)->Count = ((hscheduler->timerPtr)+i)->Timeout;
+                    ((hscheduler->timerPtr)+i)->Count = ((hscheduler->timerPtr)+i)->Timeout;                                 /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
                 }
-                ((hscheduler->timerPtr)+i)->Count = ((hscheduler->timerPtr)+i)->Count - hscheduler->tick;
-                if(((hscheduler->timerPtr)+i)->Count == CERO )
+                ((hscheduler->timerPtr)+i)->Count = ((hscheduler->timerPtr)+i)->Count - hscheduler->tick;                    /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+                if(((hscheduler->timerPtr)+i)->Count == CERO )                                                               /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
                 {
-                    if(((hscheduler->timerPtr)+i)->callbackPtr != NULL)
+                    if(((hscheduler->timerPtr)+i)->callbackPtr != NULL)                                                      /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
                     {
-                        ((hscheduler->timerPtr)+i)->callbackPtr(); 
+                        ((hscheduler->timerPtr)+i)->callbackPtr();                                                           /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
                     }
                 }
             }
@@ -335,8 +335,8 @@ uint8_t HIL_SCHEDULER_ReloadTimer( Scheduler_HandleTypeDef *hscheduler, uint32_t
         if ((Timer < hscheduler->timerCount) && (Timer > CERO))    /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
         {
             ((hscheduler->timerPtr)+(Timer-ONE))->Timeout = Timeout;     /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
-            ((hscheduler->timerPtr)+(Timer-ONE))->StartFlag = TRUE;    
-            ((hscheduler->timerPtr)+(Timer-ONE))->Count = Timeout;  
+            ((hscheduler->timerPtr)+(Timer-ONE))->StartFlag = TRUE;      /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+            ((hscheduler->timerPtr)+(Timer-ONE))->Count = Timeout;       /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
             Timer_Status = TRUE;
         }
     }

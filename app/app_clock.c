@@ -27,6 +27,14 @@ typedef enum
 /**
   @} */
 
+/** 
+  * @defgroup timer-conf defines for software timers usage.
+  @{ */
+#define TIMERS          1u       /*!< Number of timers */
+#define TIMER_1000ms    1000u    /*!< Timer ms period*/
+/**
+  @} */
+
 /**
  * @brief  Variable for rtc configuration
  */
@@ -43,7 +51,7 @@ static RTC_TimeTypeDef sTime;
 /**
  * @brief  Variable for concurrent process of displaying the date every second
  */
-static uint32_t tick_1000ms;
+static uint32_t tick_1000ms;        /* cppcheck-suppress misra-c2012-8.9 ; variable appears in more than one function */
 
 /**
  * @brief  Variable for Alarm configuration
@@ -55,6 +63,10 @@ static RTC_AlarmTypeDef sAlarm;
  */
 static uint8_t Clockstate = CLOCK_ST_IDLE; 
 
+/**
+ * @brief  Variable for timer registered
+ */
+static uint32_t timer_1S;  
 
 /**
 * @brief  Circular buffer variable for CAN msg recived to serial task.
@@ -128,11 +140,11 @@ void Clock_Init( void )
     CLOCK_queue.size = sizeof(APP_MsgTypeDef);
     HIL_QUEUE_Init(&CLOCK_queue);
 
-    Timer_TypeDef hsche_timer[1];
-    sched.timers   = 1;
+    Timer_TypeDef hsche_timer[TIMERS];
+    sched.timers   = TIMERS;
     sched.timerPtr = hsche_timer;
-    HIL_SCHEDULER_RegisterTimer( &sched, 1000, NULL );
-    HIL_SCHEDULER_StartTimer( &sched,1);
+    timer_1S = HIL_SCHEDULER_RegisterTimer( &sched, TIMER_1000ms, NULL );
+    (void)HIL_SCHEDULER_StartTimer( &sched,timer_1S);
 }
 
 /**
@@ -177,7 +189,7 @@ void Clock_StMachine(void)
             break;
 
         case CLOCK_ST_RECEPTION:
-            if( HIL_SCHEDULER_GetTimer( &sched, 1 ) == 0)
+            if( HIL_SCHEDULER_GetTimer( &sched, timer_1S ) == FALSE)
             {
                 Clockstate  = CLOCK_ST_DISPLAY_MSG;
             }
