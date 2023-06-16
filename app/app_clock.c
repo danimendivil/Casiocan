@@ -48,10 +48,6 @@ static RTC_DateTypeDef sDate;
  * @brief  Variable for rtc Time configuration
  */
 static RTC_TimeTypeDef sTime;
-/**
- * @brief  Variable for concurrent process of displaying the date every second
- */
-static uint32_t tick_1000ms;        /* cppcheck-suppress misra-c2012-8.9 ; variable appears in more than one function */
 
 /**
  * @brief  Variable for Alarm configuration
@@ -131,8 +127,6 @@ void Clock_Init( void )
     Status = HAL_RTC_DeactivateAlarm(&hrtc, RTC_ALARM_A);
     assert_error( Status == HAL_OK, RTC_SDESACTIVATE_ALARM_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     
-    tick_1000ms=HAL_GetTick();
-
     /*Clock to display buffer*/
     static APP_MsgTypeDef clock_queue_store[CLOCK_DATA_PER50MS];
     CLOCK_queue.Buffer = clock_queue_store;
