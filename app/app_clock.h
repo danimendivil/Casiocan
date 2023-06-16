@@ -13,8 +13,14 @@
 #define APP_CLOCK_H__
 
 #include "app_bsp.h"
+#include "scheduler.h"
+
 void Clock_Init( void );
 void Clock_Task( void );
 
+/**
+  * @brief  Variable for scheduler.
+  */
+  extern Scheduler_HandleTypeDef sched;  
 
 #endif

@@ -48,6 +48,11 @@ static WWDG_HandleTypeDef hwwdg;
 */
 HAL_StatusTypeDef Status;
 
+/**
+* @brief  Variable for scheduler.
+*/
+Scheduler_HandleTypeDef sched;
+
 static void hearth_init(void);
 static void hearth_beat(void);
 static void init_watchdog(void);
@@ -64,7 +69,7 @@ static void peth_the_dog(void);
 */
 int main( void )
 {
-  Scheduler_HandleTypeDef sched;
+  
   Task_TypeDef hsche_tasks[TASK_NUMERS];
   sched.tasks   = TASK_NUMERS;
   sched.tick    = SCHEDULER_TICK;
@@ -79,7 +84,7 @@ int main( void )
   (void)HIL_SCHEDULER_RegisterTask( &sched,Display_Init,Display_Task,DISPLAY_TASK_TICK);
   (void)HIL_SCHEDULER_RegisterTask( &sched,hearth_init,hearth_beat,HEARTH_TICK_VALUE);
 
-  HIL_SCHEDULER_Start( &sched);
+  HIL_SCHEDULER_Start(&sched);
 }
 
 /**

@@ -127,6 +127,12 @@ void Clock_Init( void )
     CLOCK_queue.Elements = CLOCK_DATA_PER50MS;
     CLOCK_queue.size = sizeof(APP_MsgTypeDef);
     HIL_QUEUE_Init(&CLOCK_queue);
+
+    Timer_TypeDef hsche_timer[1];
+    sched.timers   = 1;
+    sched.timerPtr = hsche_timer;
+    HIL_SCHEDULER_RegisterTimer( &sched, 1000, NULL );
+    HIL_SCHEDULER_StartTimer( &sched,1);
 }
 
 /**
@@ -171,9 +177,8 @@ void Clock_StMachine(void)
             break;
 
         case CLOCK_ST_RECEPTION:
-            if( (HAL_GetTick() - tick_1000ms) >= 1000)
+            if( HIL_SCHEDULER_GetTimer( &sched, 1 ) == 0)
             {
-                tick_1000ms = HAL_GetTick();
                 Clockstate  = CLOCK_ST_DISPLAY_MSG;
             }
             else if(HIL_QUEUE_IsEmpty(&SERIAL_queue) == NOT_EMPTY)
