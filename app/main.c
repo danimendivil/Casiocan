@@ -70,15 +70,15 @@ static void peth_the_dog(void);
 int main( void )
 {
   
-  Task_TypeDef hsche_tasks[TASK_NUMERS];
-  sched.tasks   = TASK_NUMERS;
+  Task_TypeDef hsche_tasks[4];
+  sched.tasks   = 4;
   sched.tick    = SCHEDULER_TICK;
   sched.taskPtr = hsche_tasks;
 
   HIL_SCHEDULER_Init(&sched);
   HAL_Init();
 
-  (void)HIL_SCHEDULER_RegisterTask( &sched,init_watchdog,peth_the_dog,WATCHDOG_REFRESH);
+  //(void)HIL_SCHEDULER_RegisterTask( &sched,init_watchdog,peth_the_dog,WATCHDOG_REFRESH);
   (void)HIL_SCHEDULER_RegisterTask( &sched,Serial_Init,Serial_Task,SERIAL_TASK_TICK);
   (void)HIL_SCHEDULER_RegisterTask( &sched,Clock_Init,Clock_Task,CLOCK_TASK_TICK);
   (void)HIL_SCHEDULER_RegisterTask( &sched,Display_Init,Display_Task,DISPLAY_TASK_TICK);

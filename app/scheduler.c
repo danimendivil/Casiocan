@@ -201,10 +201,10 @@ void HIL_SCHEDULER_Start( Scheduler_HandleTypeDef *hscheduler )
     HAL_TIM_Base_Init( &TIM6_Handler );
     HAL_TIM_Base_Start_IT( &TIM6_Handler );
 
-    uint32_t i;
-    uint32_t time;
-    uint32_t time_diff;
-    uint32_t period_plus_10p;
+    static uint32_t i;
+    static uint32_t time;
+    static uint32_t time_diff;
+    static uint32_t period_plus_10p;
 
     for (i = ZERO; i < hscheduler->tasks; i++)
     {
@@ -235,7 +235,7 @@ void HIL_SCHEDULER_Start( Scheduler_HandleTypeDef *hscheduler )
                                                                                       
                 }
             }
-            for(i = ZERO; i < hscheduler->timers;i++)
+            for (i = ZERO; i < hscheduler->timers;i++)
             {
                 if(((hscheduler->timerPtr)+i)->Count == ZERO )                                                               /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
                 {
