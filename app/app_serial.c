@@ -448,6 +448,10 @@ void Serial_Task( void )
     {
         /*run the state machine to process the messages*/
         Serial_StMachine();
+
+
+
+        
     }
 }
 
