@@ -59,10 +59,6 @@ static RTC_AlarmTypeDef sAlarm;
  */
 static uint8_t Clockstate = CLOCK_ST_IDLE; 
 
-/**
- * @brief  Variable for timer registered
- */
-static uint32_t timer_1S;  
 
 /**
 * @brief  Circular buffer variable for CAN msg recived to serial task.
@@ -134,11 +130,7 @@ void Clock_Init( void )
     CLOCK_queue.size = sizeof(APP_MsgTypeDef);
     HIL_QUEUE_Init(&CLOCK_queue);
 
-    Timer_TypeDef hsche_timer[TIMERS];
-    sched.timers   = TIMERS;
-    sched.timerPtr = hsche_timer;
-    timer_1S = HIL_SCHEDULER_RegisterTimer( &sched, TIMER_1000ms, NULL );
-    (void)HIL_SCHEDULER_StartTimer( &sched,timer_1S);
+    
 }
 
 /**
@@ -183,11 +175,11 @@ void Clock_StMachine(void)
             break;
 
         case CLOCK_ST_RECEPTION:
-            if( HIL_SCHEDULER_GetTimer( &sched, timer_1S ) == FALSE)
+            if( HIL_SCHEDULER_GetTimer( &sched, 1 ) == FALSE)
             {
                 Clockstate  = CLOCK_ST_DISPLAY_MSG;
             }
-            else if(HIL_QUEUE_IsEmpty(&SERIAL_queue) == NOT_EMPTY)
+            if(HIL_QUEUE_IsEmpty(&SERIAL_queue) == NOT_EMPTY)
             {
                 (void)HIL_QUEUE_Read(&SERIAL_queue,&CAN_to_clock_message);
                 if(CAN_to_clock_message.msg != (uint8_t)NOT_MESSAGE)
@@ -217,7 +209,8 @@ void Clock_StMachine(void)
             }
             else
             {
-             CAN_to_clock_message.msg = NOT_MESSAGE;
+                Clockstate  = CLOCK_ST_IDLE;
+                CAN_to_clock_message.msg = NOT_MESSAGE;
             }
             break;
 

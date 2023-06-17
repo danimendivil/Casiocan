@@ -53,6 +53,9 @@ HAL_StatusTypeDef Status;
 */
 Scheduler_HandleTypeDef sched;
 
+
+uint32_t timer_1S;  
+
 static void hearth_init(void);
 static void hearth_beat(void);
 static void init_watchdog(void);
@@ -74,6 +77,13 @@ int main( void )
   sched.tasks   = 4;
   sched.tick    = SCHEDULER_TICK;
   sched.taskPtr = hsche_tasks;
+
+  
+  Timer_TypeDef hsche_timer[1];
+  sched.timers   = 1;
+  sched.timerPtr = hsche_timer;
+  timer_1S = HIL_SCHEDULER_RegisterTimer( &sched, 1000, NULL );
+  (void)HIL_SCHEDULER_StartTimer( &sched,timer_1S);
 
   HIL_SCHEDULER_Init(&sched);
   HAL_Init();
