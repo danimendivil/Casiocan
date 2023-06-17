@@ -258,7 +258,9 @@ void HIL_SCHEDULER_Start( Scheduler_HandleTypeDef *hscheduler )
 * @brief   **This function register a timer for the scheduler**
 *
 *   this function sets the hscheduler timer with the address of the callback function,
-*   The timeout value, and puts the startflag on FALSE.
+*   The timeout value, and puts the startflag on FALSE, once a function is registred 
+*   it will return an ID value wich will be necesary for the usage of following functions
+*   this timer also accepts NULL callbacks functions
 *
 * @param   hscheduler[in] Pointer to a Scheduler_HandleTypeDef structure 
 * @param   Timeout[in] Timeout value of the software timer 
