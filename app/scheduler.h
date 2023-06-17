@@ -11,7 +11,7 @@
   #include "app_bsp.h"
 
   /** 
-  * @defgroup <Task_TypeDef> parameters for tasks
+  * @defgroup Task_TypeDef parameters for tasks
   @{ */
   typedef struct _task
   {
@@ -24,11 +24,20 @@
 
     //Add more elements if required
   }Task_TypeDef;
-  /**
-    @} */
-
+  
   /** 
-  * @defgroup <Scheduler_HandleTypeDef> parameters for the scheduler
+  * @defgroup _Timer_TypeDef parameters for software timers
+  @{ */
+  typedef struct _Timer_TypeDef
+  {
+      uint32_t Timeout;           /*!< timer timeout to decrement and reload when the timer is re-started */
+      uint32_t Count;             /*!< actual timer decrement count */
+      uint32_t StartFlag;         /*!< flag to start timer count */
+      void(*callbackPtr)(void);   /*!< pointer to callback function function */
+  } Timer_TypeDef;
+  
+  /** 
+  * @defgroup Scheduler_HandleTypeDef parameters for the scheduler
   @{ */
   typedef struct _scheduler
   {
@@ -37,6 +46,9 @@
     uint32_t tasksCount;    /*!<internal task counter*/
     uint32_t elapsed_time;  /*!<current elapsed time*/
     Task_TypeDef *taskPtr;  /*!<Pointer to buffer for the TCB tasks*/
+    uint32_t timers;        /*!<number of software timer to use*/
+    uint32_t timerCount;    /*!<internal timer counter*/
+    Timer_TypeDef *timerPtr; /*!<Pointer to buffer timer array*/
     //Add more elements if required
   }Scheduler_HandleTypeDef;
 
@@ -46,5 +58,11 @@
   uint8_t HIL_SCHEDULER_StartTask( Scheduler_HandleTypeDef *hscheduler, uint32_t task );
   uint8_t HIL_SCHEDULER_PeriodTask( Scheduler_HandleTypeDef *hscheduler, uint32_t task, uint32_t period );
   void HIL_SCHEDULER_Start( Scheduler_HandleTypeDef *hscheduler );     
+
+  uint8_t HIL_SCHEDULER_RegisterTimer( Scheduler_HandleTypeDef *hscheduler, uint32_t Timeout, void (*CallbackPtr)(void) );
+  uint32_t HIL_SCHEDULER_GetTimer( Scheduler_HandleTypeDef *hscheduler, uint32_t Timer );
+  uint8_t HIL_SCHEDULER_ReloadTimer( Scheduler_HandleTypeDef *hscheduler, uint32_t Timer, uint32_t Timeout );
+  uint8_t HIL_SCHEDULER_StartTimer( Scheduler_HandleTypeDef *hscheduler, uint32_t Timer );
+  uint8_t HIL_SCHEDULER_StopTimer( Scheduler_HandleTypeDef *hscheduler, uint32_t Timer );
 
 #endif
