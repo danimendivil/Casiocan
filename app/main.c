@@ -60,7 +60,7 @@ static void hearth_init(void);
 static void hearth_beat(void);
 static void init_watchdog(void);
 static void peth_the_dog(void);
-
+static void led(void);
 /**
 * @brief   **Main function**
 *
@@ -82,7 +82,7 @@ int main( void )
   Timer_TypeDef hsche_timer[1];
   sched.timers   = 1;
   sched.timerPtr = hsche_timer;
-  timer_1S = HIL_SCHEDULER_RegisterTimer( &sched, 1000, NULL );
+  timer_1S = HIL_SCHEDULER_RegisterTimer( &sched, 1000, led );
   (void)HIL_SCHEDULER_StartTimer( &sched,timer_1S);
 
   HIL_SCHEDULER_Init(&sched);
@@ -111,7 +111,7 @@ void hearth_init(void)
   HAL_Init();                                     
   __HAL_RCC_GPIOC_CLK_ENABLE();                   
   
-  GPIO_InitStruct.Pin = GPIO_PIN_0;           
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1 ;           
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;     
   GPIO_InitStruct.Pull = GPIO_NOPULL;             
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;   
@@ -238,4 +238,9 @@ void safe_state( uint8_t *file, uint32_t line, uint8_t error )
         you can also set a break point here and using 
         the debugger you can visualize the three parameters file, line and error*/
     }
+}
+
+void led(void)
+{    
+  HAL_GPIO_TogglePin( GPIOC, GPIO_PIN_1 );      
 }

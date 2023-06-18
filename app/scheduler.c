@@ -282,6 +282,7 @@ uint8_t HIL_SCHEDULER_RegisterTimer( Scheduler_HandleTypeDef *hscheduler, uint32
         {
             ((hscheduler->timerPtr) + hscheduler->timerCount)->callbackPtr = CallbackPtr;   /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
         }
+        hscheduler->timerCount++;
         Timer_ID = hscheduler->tasksCount + ONE;
     }
 
