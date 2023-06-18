@@ -65,11 +65,9 @@ typedef enum
 /* cppcheck-suppress misra-c2012-2.4 ; enum is used on state machine */
 {
     STATE_IDLE = 0U,
-    STATE_RECEPTION,
     STATE_TIME,
     STATE_DATE,
     STATE_ALARM,
-    STATE_GETMSG,
     STATE_FAILED,
     STATE_OK,
 }States;
@@ -430,7 +428,8 @@ uint8_t valid_alarm(uint8_t hour,uint8_t minutes)
     return Time_is_valid;
 }
 
-
+static uint8_t Data_msg[CAN_DATA_LENGHT];
+static uint8_t CAN_size;
 /**
 * @brief   **This function executes the serial state machine**
 *
@@ -443,15 +442,20 @@ uint8_t valid_alarm(uint8_t hour,uint8_t minutes)
 void Serial_Task( void )
 {     
     /*poll the state machine until the queue is empty and it return to IDLE*/
-    cases = STATE_RECEPTION;
-    while( cases != (uint8_t)STATE_IDLE )
+    while( HIL_QUEUE_IsEmpty( &CAN_queue ) == FALSE )
     {
-        /*run the state machine to process the messages*/
-        Serial_StMachine();
-
-
-
+        /*Read the first message*/
+        (void)HIL_QUEUE_Read( &CAN_queue, &Data_msg );
+        if((CanTp_SingleFrameRx( Data_msg, &CAN_size )) == TRUE)
+        {
+            cases = Data_msg[1];
+        }
         
+        else
+        {
+            cases = STATE_FAILED;
+        }
+        Serial_StMachine();
     }
 }
 
@@ -472,48 +476,8 @@ void Serial_Task( void )
 */
 static void Serial_StMachine(void)
 {
-    static uint8_t Data_msg[CAN_DATA_LENGHT];
-    static uint8_t CAN_size;
     switch(cases)
     {
-        case STATE_IDLE:  
-            break;
-
-        case STATE_RECEPTION:
-            if(HIL_QUEUE_IsEmpty(&CAN_queue) == NOT_EMPTY)
-            {
-                (void)HIL_QUEUE_Read(&CAN_queue,Data_msg);
-                if((CanTp_SingleFrameRx( Data_msg, &CAN_size )) == TRUE)
-                {
-                    cases = STATE_GETMSG;
-                }
-            }
-            else
-            {
-                cases = STATE_IDLE;
-            }
-            break;
-
-        case STATE_GETMSG:
-
-            if((Data_msg[1] == (uint8_t)SERIAL_MSG_TIME) && (CAN_size == TIME_DATA_SIZE) )
-            {
-                cases = STATE_TIME;
-            }
-            else if( (Data_msg[1] == (uint8_t)SERIAL_MSG_DATE) && (CAN_size == DATE_DATA_SIZE))
-            {
-                cases = STATE_DATE;
-            }
-            else if((Data_msg[1] == (uint8_t)SERIAL_MSG_ALARM) && (CAN_size == ALARM_DATA_SIZE))
-            {
-                cases = STATE_ALARM;
-            }  
-            else
-            {
-                cases = STATE_FAILED;
-            }
-            break;
-       
         case STATE_TIME:
             
             if( valid_time(Data_msg[2],Data_msg[3],Data_msg[4]) == TRUE)
@@ -565,42 +529,30 @@ static void Serial_StMachine(void)
                 cases = STATE_FAILED;
             }
             break;
-        
+
+        default:
+        cases = STATE_FAILED;
+            break;
+    }
+
+    switch(cases){
+
         case STATE_FAILED:
             
             Data_msg[0]=FAILED_CANID;
             CAN_size=1;
             CanTp_SingleFrameTx( &Data_msg[0],&CAN_size);
-            if(HIL_QUEUE_IsEmpty(&CAN_queue) == NOT_EMPTY)
-            {
-                cases = STATE_RECEPTION;
-            }
-            else
-            {
-                cases = STATE_IDLE;  
-            }
             break;
 
         case STATE_OK:
             
             Data_msg[0]=OK_CANID;
             CAN_size=1;
-            CanTp_SingleFrameTx( &Data_msg[0],&CAN_size);
-            if(HIL_QUEUE_IsEmpty(&CAN_queue) == NOT_EMPTY)
-            {
-                cases = STATE_RECEPTION;
-            }
-            else
-            {
-                cases = STATE_IDLE;  
-            }
-                
+            CanTp_SingleFrameTx( &Data_msg[0],&CAN_size);  
             break;
  
         default:
-
-            cases = STATE_IDLE;
             break;
+    
     }
-
 }
