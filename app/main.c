@@ -6,12 +6,13 @@
 
 //Add more includes if need them
 /** 
-  * @defgroup Tasks periodicity value.
+  * @defgroup Tasks and timers periodicity value.
   @{ */
 #define HEARTH_TICK_VALUE   300u    /*!<hearth toggle value*/   
 #define SERIAL_TASK_TICK    10u     /*!<Serial task periodicity*/  
 #define CLOCK_TASK_TICK     50u     /*!<Clock task periodicity*/     
 #define DISPLAY_TASK_TICK   100u    /*!<Display task periodicity*/
+#define ONE_SEC_TIMER       1000u   /*!<Software timer one second value*/
 /**
   @} */
 
@@ -34,8 +35,9 @@
 /** 
   * @defgroup Scheduler values configuration.
   @{ */  
-#define TASK_NUMERS            5    /*!<Number of tasks to be handle by the scheduler*/
-#define SCHEDULER_TICK         5    /*!<Tick value of the scheduler*/
+#define TASK_NUMBERS          5    /*!<Number of tasks to be handle by the scheduler*/
+#define SCHEDULER_TICK        5    /*!<Tick value of the scheduler*/
+#define TIMER_NUMBERS         1    /*!<Tick value of the scheduler*/
 /**
   @} */
 
@@ -70,16 +72,16 @@ static void peth_the_dog(void);
 */
 int main( void )
 {
-  Task_TypeDef hsche_tasks[TASK_NUMERS];
-  sched.tasks   = TASK_NUMERS;
+  Task_TypeDef hsche_tasks[TASK_NUMBERS];
+  sched.tasks   = TASK_NUMBERS;
   sched.tick    = SCHEDULER_TICK;
   sched.taskPtr = hsche_tasks;
   HIL_SCHEDULER_Init(&sched);
 
-  Timer_TypeDef hsche_timer[1];
-  sched.timers   = 1;
+  Timer_TypeDef hsche_timer[TIMER_NUMBERS];
+  sched.timers   = TIMER_NUMBERS;
   sched.timerPtr = hsche_timer;
-  timer_1S = HIL_SCHEDULER_RegisterTimer( &sched, 1000u, Display_msg );
+  timer_1S = HIL_SCHEDULER_RegisterTimer( &sched, ONE_SEC_TIMER, Display_msg );
   (void)HIL_SCHEDULER_StartTimer( &sched,timer_1S);
 
   HAL_Init();
