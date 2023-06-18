@@ -433,11 +433,15 @@ static uint8_t CAN_size;
 /**
 * @brief   **This function executes the serial state machine**
 *
-* This functions executes the state machine of the serial task
-* every 10ms, we do this because a circular buffer has been implemented on the serial
-* task, this means that we do need to execute every time the task since now the 
-* information is being stored.     
-*
+*   This functions executes the state machine of the serial task
+*   every 10ms, we do this because a circular buffer has been implemented on the serial
+*   task, this means that we do need to execute every time the task since now the 
+*   information is being stored.
+*   will be using the HIL_QUEUE_IsEmpty to see if the circular buffer has any message and if it does
+*   then it will call the function CanTp_SingleFrameRx to see if the message readed by the circular buffer
+*   is a single frame format, if it is then it will give cases the data of position 1 of the array
+*   wich tells wath action is needed, if it is not then cases will be STATE_FAILED so that when Serial_StMachine
+*   is called it will enter the STATE_FAILED.
 */
 void Serial_Task( void )
 {     
@@ -462,17 +466,20 @@ void Serial_Task( void )
 /**
 * @brief   **Serial state machine function**
 *     
-* The first state of the state machine once a msg is validated is the GETMSG were we use the funtion Can_Tp_SingleFrameRx to see 
-* if a message has been recived, if a message has been recived it compares the values to APP_Messages defines
-* to see what is going to be the next state, if the next state is SERIAL_MSG_TIME it validates the values and 
-* if the values are correct they are store on the CAN_td_message variable, and the state is change to the OK state where it sends
-* a confirmation message if the values are wrong then the next state is FAILED where it sends an error message and the 
-* state is changed to GETMSG.(void)HIL_QUEUE_Write( &CAN_queue, Canmsg );
-* if the next state is SERIAL_MSG_DATE it validates the values with the valid_date() function and if the date is valid
-* it also calls the dayofweek function to get the day of the week if they are valid then they are store on the CAN_td_message variable 
-* an the state will be change to OK otherwise state will be FAILED
-* if the next state is SERIAL_MSG_ALARM it validates the data and if they are correct are store on the CAN_td_message variable and 
-* state is changed to ok, otherwise state will be FAILED 
+*   the function will only be called after the message readed by the circular buffer
+*   is compatible with the can single frame format, if the value of cases is equal to 
+*   SERIAL_MSG_TIME it validates the values and if the values are correct they are store on the CAN_td_message variable
+*   and the variable is send to a queue with HIL_QUEUE_Write and cases value is change to STATE_OK. if they are not then
+*   cases will be STATE_FAILED.
+*   If cases is SERIAL_MSG_DATE it validates the values with the valid_date() function and if the date is valid
+*   it also calls the dayofweek function to get the day of the week if they are valid then they are store on the CAN_td_message variable 
+*   and the variable is send to a queue with HIL_QUEUE_Write and cases value is change to STATE_OK. if they are not then
+*   cases will be STATE_FAILED.
+*   if the value is SERIAL_MSG_ALARM it validates the data and if they are correct are store on the CAN_td_message variable and 
+*   the variable is send to a queue with HIL_QUEUE_Write and cases value is change to STATE_OK. if they are not then
+*   cases will be STATE_FAILED.
+*   then if cases is STATE_FAILED a message will be send in can with an id that indicates that the message was not compatible
+*   and if cases is STATE_OK a message will be send in can with an id that indicates that the message correct.
 */
 static void Serial_StMachine(void)
 {
@@ -535,8 +542,8 @@ static void Serial_StMachine(void)
             break;
     }
 
-    switch(cases){
-
+    switch(cases)
+    {
         case STATE_FAILED:
             
             Data_msg[0]=FAILED_CANID;

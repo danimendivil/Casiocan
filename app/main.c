@@ -3,6 +3,7 @@
 #include "app_clock.h"
 #include "app_display.h"
 #include "scheduler.h"
+
 //Add more includes if need them
 /** 
   * @defgroup Tasks periodicity value.
@@ -52,15 +53,12 @@ HAL_StatusTypeDef Status;
 * @brief  Variable for scheduler.
 */
 Scheduler_HandleTypeDef sched;
-
-
-uint32_t timer_1S;  
-
+uint32_t timer_1S; 
 static void hearth_init(void);
 static void hearth_beat(void);
 static void init_watchdog(void);
 static void peth_the_dog(void);
-static void led(void);
+
 /**
 * @brief   **Main function**
 *
@@ -72,23 +70,21 @@ static void led(void);
 */
 int main( void )
 {
-  
-  Task_TypeDef hsche_tasks[4];
-  sched.tasks   = 4;
+  Task_TypeDef hsche_tasks[TASK_NUMERS];
+  sched.tasks   = TASK_NUMERS;
   sched.tick    = SCHEDULER_TICK;
   sched.taskPtr = hsche_tasks;
+  HIL_SCHEDULER_Init(&sched);
 
-  
   Timer_TypeDef hsche_timer[1];
   sched.timers   = 1;
   sched.timerPtr = hsche_timer;
-  timer_1S = HIL_SCHEDULER_RegisterTimer( &sched, 1000, led );
+  timer_1S = HIL_SCHEDULER_RegisterTimer( &sched, 1000u, Display_msg );
   (void)HIL_SCHEDULER_StartTimer( &sched,timer_1S);
 
-  HIL_SCHEDULER_Init(&sched);
   HAL_Init();
 
-  //(void)HIL_SCHEDULER_RegisterTask( &sched,init_watchdog,peth_the_dog,WATCHDOG_REFRESH);
+  (void)HIL_SCHEDULER_RegisterTask( &sched,init_watchdog,peth_the_dog,WATCHDOG_REFRESH);
   (void)HIL_SCHEDULER_RegisterTask( &sched,Serial_Init,Serial_Task,SERIAL_TASK_TICK);
   (void)HIL_SCHEDULER_RegisterTask( &sched,Clock_Init,Clock_Task,CLOCK_TASK_TICK);
   (void)HIL_SCHEDULER_RegisterTask( &sched,Display_Init,Display_Task,DISPLAY_TASK_TICK);
@@ -238,9 +234,4 @@ void safe_state( uint8_t *file, uint32_t line, uint8_t error )
         you can also set a break point here and using 
         the debugger you can visualize the three parameters file, line and error*/
     }
-}
-
-void led(void)
-{    
-  HAL_GPIO_TogglePin( GPIOC, GPIO_PIN_1 );      
 }

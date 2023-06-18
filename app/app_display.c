@@ -3,25 +3,6 @@
 #include "hil_queue.h"
 
 /**
- * @brief Display State machine states.
- *
- * This enumeration represents the various types of states of the machine
- */
-typedef enum
-/* cppcheck-suppress misra-c2012-2.4 ; enum is used on state machine */
-{
-    DISPLAY_STATE_IDLE = 0u,
-    DISPLAY_STATE_PRINTH_MONTH,
-    DISPLAY_STATE_PRINTH_DAY,
-    DISPLAY_STATE_PRINTH_YEAR,
-    DISPLAY_STATE_PRINTH_WDAY,
-    DISPLAY_STATE_PRINTH_HOUR,
-    DISPLAY_STATE_PRINTH_MINUTES,
-    DISPLAY_STATE_PRINTH_SECONDS,
-    DISPLAY_STATE_RECEPTION
-} DISPLAY_STATES;
-
-/**
  * @brief  Variable for LCD configuration
  */
 static LCD_HandleTypeDef LCDHandle;
