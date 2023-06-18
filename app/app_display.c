@@ -26,11 +26,6 @@ typedef enum
  */
 static LCD_HandleTypeDef LCDHandle;
 
-/**
- * @brief  Variable clock state machine 
- */
-static uint8_t LCD_State  = DISPLAY_STATE_IDLE;
-
 static void month(char *mon,char pos);
 static void week(char *week,char pos);
 static void Display_StMachine(void);
@@ -78,31 +73,33 @@ void Display_Init( void )
     
 }
 
-    
+static APP_MsgTypeDef clock_display;
 /**
 * @brief   **This function executes the display state machine**
 *
 * This functions executes the state machine of the display task
 * every 100ms, we do this because a circular buffer has been implemented on the serial and clock
 * task, this means that we do need to execute every time the task since now the 
-* information is being stored.     
+* information is being stored, the function waits for the circular buffer to geet data
+* and then reads the msg and checks if its DISPLAY_MESSAGE and calls the function  Display_StMachine.   
 *
 */void Display_Task( void )
 {
-    /*poll the state machine until the queue is empty and it return to IDLE*/
-    LCD_State = DISPLAY_STATE_RECEPTION;
-    while( LCD_State != (uint8_t)DISPLAY_STATE_IDLE )
+    while( HIL_QUEUE_IsEmpty(&CLOCK_queue) == NOT_EMPTY )
     {
-        /*run the state machine to process the messages*/
-        Display_StMachine();
+        /*Read the first message*/
+        (void)HIL_QUEUE_Read(&CLOCK_queue,&clock_display);
+        if( clock_display.msg == DISPLAY_MESSAGE)
+        {
+            Display_StMachine();
+        }
     }
 }
 
 /**
  * @brief   **Display a message recived by clock_display on the LCD **
  *
- *  The function waits for a message on state idle, when a message arrives 
- *  it changes to STATE_PRINTH_MONTH where it calls the function month to get
+ *  the fisrt part is STATE_PRINTH_MONTH where it calls the function month to get
  *  the first 3 letter of fila_1 to be modify with the initials of a month,
  *  then it changes the state to STATE_PRINTH_DAY where it separates the digits
  *  of the day and sums 48 to get the ascii value the next state is STATE_PRINTH_YEAR
@@ -123,89 +120,42 @@ void Display_StMachine(void)
 {
     static char fila_2[] = "00:00:00";  /* cppcheck-suppress misra-c2012-7.4 ; string need to be modify*/
     static char fila_1[] =" XXX,XX XXXX XX ";   /* cppcheck-suppress misra-c2012-7.4 ; string need to be modify*/
-    static APP_MsgTypeDef clock_display;
-    switch(LCD_State)
-    {
-        case DISPLAY_STATE_IDLE:
+     
+    //DISPLAY_STATE_PRINTH_MONTH:
+    month(&fila_1[1],clock_display.tm.tm_mon);
             
-        break;
-        case DISPLAY_STATE_RECEPTION:
-            if(HIL_QUEUE_IsEmpty(&CLOCK_queue) == NOT_EMPTY)
-            {
-                (void)HIL_QUEUE_Read(&CLOCK_queue,&clock_display);
-                if( clock_display.msg == DISPLAY_MESSAGE)
-                {
-                    LCD_State = DISPLAY_STATE_PRINTH_MONTH;
-                    clock_display.msg = NO_DISPLAY_MESSAGE;
-                }
-            }
-            else
-            {
-                LCD_State  = DISPLAY_STATE_IDLE;
-            }
-        break;
-        case DISPLAY_STATE_PRINTH_MONTH:
-            month(&fila_1[1],clock_display.tm.tm_mon);
-            LCD_State = DISPLAY_STATE_PRINTH_DAY;
-        break;
-
-        case DISPLAY_STATE_PRINTH_DAY:
-            fila_1[5] = ((clock_display.tm.tm_mday / 10u) + 48u);
-            fila_1[6] = ((clock_display.tm.tm_mday % 10u) + 48u);
-            LCD_State =  DISPLAY_STATE_PRINTH_YEAR;
-        break;
-
-        case DISPLAY_STATE_PRINTH_YEAR:
-            fila_1[8]   = ( (clock_display.tm.tm_year_msb / 10u) + 48u);
-            fila_1[9]   = ( (clock_display.tm.tm_year_msb % 10u) + 48u);
-            fila_1[10]  = ( (clock_display.tm.tm_year_lsb / 10u) + 48u);
-            fila_1[11]  = ( (clock_display.tm.tm_year_lsb % 10u) + 48u);
-            LCD_State = DISPLAY_STATE_PRINTH_WDAY;
-        break;
-
-        case DISPLAY_STATE_PRINTH_WDAY:
-            Status = HEL_LCD_SetCursor(&LCDHandle,FIRST_ROW,0);
-            assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-            week(&fila_1[13],clock_display.tm.tm_wday);
-            Status = HEL_LCD_String(&LCDHandle, fila_1);
-            assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-            LCD_State = DISPLAY_STATE_PRINTH_HOUR;
-        break;
-        
-        case DISPLAY_STATE_PRINTH_HOUR:
-            Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,3 );
-            assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-            fila_2[0] = ((clock_display.tm.tm_hour / 10u) + 48u);
-            fila_2[1] = ((clock_display.tm.tm_hour % 10u) + 48u);
-            LCD_State = DISPLAY_STATE_PRINTH_MINUTES;
-        break;
-
-        case DISPLAY_STATE_PRINTH_MINUTES:
-            fila_2[3] = ((clock_display.tm.tm_min / 10u) + 48u);
-            fila_2[4] = ((clock_display.tm.tm_min % 10u) + 48u);
-            LCD_State = DISPLAY_STATE_PRINTH_SECONDS;
-        break;
-
-        case DISPLAY_STATE_PRINTH_SECONDS:
-            fila_2[6] = ((clock_display.tm.tm_sec / 10u) + 48u);
-            fila_2[7] = ((clock_display.tm.tm_sec % 10u) + 48u);
-            Status = HEL_LCD_String(&LCDHandle, fila_2);
-            assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-            if(HIL_QUEUE_IsEmpty(&CLOCK_queue) == NOT_EMPTY)
-            {
-                LCD_State = DISPLAY_STATE_RECEPTION;
-            }
-            else
-            {
-                LCD_State = DISPLAY_STATE_IDLE;  
-            }
-        break;
-
-        default:
-            LCD_State = DISPLAY_STATE_IDLE;
-        break;
-    }
-
+    //DISPLAY_STATE_PRINTH_DAY:
+    fila_1[5] = ((clock_display.tm.tm_mday / 10u) + 48u);
+    fila_1[6] = ((clock_display.tm.tm_mday % 10u) + 48u);
+            
+    //DISPLAY_STATE_PRINTH_YEAR:
+    fila_1[8]   = ( (clock_display.tm.tm_year_msb / 10u) + 48u);
+    fila_1[9]   = ( (clock_display.tm.tm_year_msb % 10u) + 48u);
+    fila_1[10]  = ( (clock_display.tm.tm_year_lsb / 10u) + 48u);
+    fila_1[11]  = ( (clock_display.tm.tm_year_lsb % 10u) + 48u);
+            
+    //DISPLAY_STATE_PRINTH_WDAY:
+    Status = HEL_LCD_SetCursor(&LCDHandle,FIRST_ROW,0);
+    assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    week(&fila_1[13],clock_display.tm.tm_wday);
+    Status = HEL_LCD_String(&LCDHandle, fila_1);
+    assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+            
+    //DISPLAY_STATE_PRINTH_HOUR:
+    Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,3 );
+    assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    fila_2[0] = ((clock_display.tm.tm_hour / 10u) + 48u);
+    fila_2[1] = ((clock_display.tm.tm_hour % 10u) + 48u);
+            
+    //DISPLAY_STATE_PRINTH_MINUTES:
+    fila_2[3] = ((clock_display.tm.tm_min / 10u) + 48u);
+    fila_2[4] = ((clock_display.tm.tm_min % 10u) + 48u);
+            
+    //DISPLAY_STATE_PRINTH_SECONDS:
+    fila_2[6] = ((clock_display.tm.tm_sec / 10u) + 48u);
+    fila_2[7] = ((clock_display.tm.tm_sec % 10u) + 48u);
+    Status = HEL_LCD_String(&LCDHandle, fila_2);
+    assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
 }
 
 /**
