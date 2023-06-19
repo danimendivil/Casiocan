@@ -237,7 +237,7 @@ void HIL_SCHEDULER_Start( Scheduler_HandleTypeDef *hscheduler )
             }
             for (i = ZERO; i < hscheduler->timers;i++)
             {
-                if(((hscheduler->timerPtr) + i)->StartFlag == TRUE)
+                if(((hscheduler->timerPtr) + i)->StartFlag == TRUE)                                                              /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
                 {
                     if(((hscheduler->timerPtr)+i)->Count == ZERO )                                                               /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
                     {

@@ -55,7 +55,6 @@ HAL_StatusTypeDef Status;
 * @brief  Variable for scheduler.
 */
 Scheduler_HandleTypeDef sched;
-uint32_t timer_1S; 
 static void hearth_init(void);
 static void hearth_beat(void);
 static void init_watchdog(void);
@@ -72,6 +71,8 @@ static void peth_the_dog(void);
 */
 int main( void )
 {
+  uint32_t timer_1S; 
+  
   Task_TypeDef hsche_tasks[TASK_NUMBERS];
   sched.tasks   = TASK_NUMBERS;
   sched.tick    = SCHEDULER_TICK;

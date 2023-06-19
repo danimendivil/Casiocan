@@ -486,60 +486,67 @@ static void Serial_StMachine(void)
     switch(cases)
     {
         case STATE_TIME:
-            
-            if( valid_time(Data_msg[2],Data_msg[3],Data_msg[4]) == TRUE)
+
+            if(CAN_size == TIME_DATA_SIZE)
             {
-                CAN_td_message.tm.tm_hour=Data_msg[2];
-                CAN_td_message.tm.tm_min=Data_msg[3];
-                CAN_td_message.tm.tm_sec=Data_msg[4];
-                CAN_td_message.msg=SERIAL_MSG_TIME;
-                (void)HIL_QUEUE_Write( &SERIAL_queue, &CAN_td_message );
-                cases = STATE_OK;
+                if( valid_time(Data_msg[2],Data_msg[3],Data_msg[4]) == TRUE)
+                {
+                    CAN_td_message.tm.tm_hour=Data_msg[2];
+                    CAN_td_message.tm.tm_min=Data_msg[3];
+                    CAN_td_message.tm.tm_sec=Data_msg[4];
+                    CAN_td_message.msg=SERIAL_MSG_TIME;
+                    (void)HIL_QUEUE_Write( &SERIAL_queue, &CAN_td_message );
+                    cases = STATE_OK;
+                }
+                else
+                {
+                    cases = STATE_FAILED;
+                }
             }
-            else
-            {
-                cases = STATE_FAILED;
-            }
-             break;
+        break;
 
         case STATE_DATE:
-        
-            if(valid_date(Data_msg[2],Data_msg[3], Data_msg[4],Data_msg[5]) == TRUE)
+            if(CAN_size == DATE_DATA_SIZE)
             {
-                CAN_td_message.tm.tm_mday = Data_msg[2];
-                CAN_td_message.tm.tm_mon = Data_msg[3];
-                CAN_td_message.tm.tm_year_msb = bcdToDecimal(Data_msg[4]);
-                CAN_td_message.tm.tm_year_lsb = Data_msg[5];
-                CAN_td_message.tm.tm_wday = dayofweek(CAN_td_message.tm.tm_year_msb,CAN_td_message.tm.tm_year_lsb, CAN_td_message.tm.tm_mon, CAN_td_message.tm.tm_mday);
-                CAN_td_message.msg = SERIAL_MSG_DATE;
-                (void)HIL_QUEUE_Write( &SERIAL_queue, &CAN_td_message );
-                cases = STATE_OK;
+                if(valid_date(Data_msg[2],Data_msg[3], Data_msg[4],Data_msg[5]) == TRUE)
+                {
+                    CAN_td_message.tm.tm_mday = Data_msg[2];
+                    CAN_td_message.tm.tm_mon = Data_msg[3];
+                    CAN_td_message.tm.tm_year_msb = bcdToDecimal(Data_msg[4]);
+                    CAN_td_message.tm.tm_year_lsb = Data_msg[5];
+                    CAN_td_message.tm.tm_wday = dayofweek(CAN_td_message.tm.tm_year_msb,CAN_td_message.tm.tm_year_lsb, CAN_td_message.tm.tm_mon, CAN_td_message.tm.tm_mday);
+                    CAN_td_message.msg = SERIAL_MSG_DATE;
+                    (void)HIL_QUEUE_Write( &SERIAL_queue, &CAN_td_message );
+                    cases = STATE_OK;
+                }
+                else
+                {
+                    cases = STATE_FAILED;
+                }
             }
-            else
-            {
-                cases = STATE_FAILED;
-            }
-            break;
+        break;
 
         case STATE_ALARM:
-
-            if(valid_alarm( Data_msg[2],Data_msg[3]) == TRUE)
+            if(CAN_size == ALARM_DATA_SIZE)
             {
-                CAN_td_message.tm.tm_hour=Data_msg[2];
-                CAN_td_message.tm.tm_min=Data_msg[3];
-                CAN_td_message.msg = SERIAL_MSG_ALARM;
-                (void)HIL_QUEUE_Write( &SERIAL_queue, &CAN_td_message );
-                cases = STATE_OK;
+                if(valid_alarm( Data_msg[2],Data_msg[3]) == TRUE)
+                {
+                    CAN_td_message.tm.tm_hour=Data_msg[2];
+                    CAN_td_message.tm.tm_min=Data_msg[3];
+                    CAN_td_message.msg = SERIAL_MSG_ALARM;
+                    (void)HIL_QUEUE_Write( &SERIAL_queue, &CAN_td_message );
+                    cases = STATE_OK;
+                }
+                else
+                {
+                    cases = STATE_FAILED;
+                }
             }
-            else
-            {
-                cases = STATE_FAILED;
-            }
-            break;
+        break;
 
         default:
-        cases = STATE_FAILED;
-            break;
+            cases = STATE_FAILED;
+        break;
     }
 
     switch(cases)

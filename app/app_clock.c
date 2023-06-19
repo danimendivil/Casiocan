@@ -22,14 +22,6 @@ typedef enum
 /**
   @} */
 
-/** 
-  * @defgroup timer-conf defines for software timers usage.
-  @{ */
-#define TIMERS          1u       /*!< Number of timers */
-#define TIMER_1000ms    1000u    /*!< Timer ms period*/
-/**
-  @} */
-
 /**
  * @brief  Variable for rtc configuration
  */
