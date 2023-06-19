@@ -132,10 +132,10 @@ void Clock_Init( void )
 */
 void Clock_Task( void )
 {    
-    while( HIL_QUEUE_IsEmpty( &SERIAL_queue ) == NOT_EMPTY )
+    while( HIL_QUEUE_IsEmptyISR( &SERIAL_queue, RTC_TAMP_IRQn ) == NOT_EMPTY )
     {
         /*Read the first message*/
-        (void)HIL_QUEUE_Read( &SERIAL_queue, &CAN_to_clock_message);
+        (void)HIL_QUEUE_ReadISR( &SERIAL_queue, &CAN_to_clock_message, RTC_TAMP_IRQn);
         Clock_StMachine(CAN_to_clock_message.msg);
     }
 }
@@ -241,5 +241,5 @@ void Display_msg(void)
     ClockMsg.tm.tm_sec = sTime.Seconds;
 
     ClockMsg.msg = DISPLAY_MESSAGE;
-    (void)HIL_QUEUE_Write( &CLOCK_queue, &ClockMsg );
+    (void)HIL_QUEUE_WriteISR( &CLOCK_queue, &ClockMsg, RTC_TAMP_IRQn );
 }

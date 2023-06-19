@@ -66,10 +66,10 @@ static APP_MsgTypeDef clock_display;
 *
 */void Display_Task( void )
 {
-    while( HIL_QUEUE_IsEmpty(&CLOCK_queue) == NOT_EMPTY )
+    while( HIL_QUEUE_IsEmptyISR(&CLOCK_queue,SPI1_IRQn) == NOT_EMPTY )
     {
         /*Read the first message*/
-        (void)HIL_QUEUE_Read(&CLOCK_queue,&clock_display);
+        (void)HIL_QUEUE_ReadISR(&CLOCK_queue,&clock_display,SPI1_IRQn);
         if( clock_display.msg == DISPLAY_MESSAGE)
         {
             Display_StMachine();
