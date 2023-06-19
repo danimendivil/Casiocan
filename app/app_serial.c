@@ -446,10 +446,10 @@ static uint8_t CAN_size;
 void Serial_Task( void )
 {     
     /*poll the state machine until the queue is empty and it return to IDLE*/
-    while( HIL_QUEUE_IsEmpty( &CAN_queue ) == FALSE )
+    while( HIL_QUEUE_IsEmptyISR( &CAN_queue, TIM16_FDCAN_IT0_IRQn  ) == FALSE )
     {
         /*Read the first message*/
-        (void)HIL_QUEUE_Read( &CAN_queue, &Data_msg );
+        (void)HIL_QUEUE_ReadISR( &CAN_queue, &Data_msg, TIM16_FDCAN_IT0_IRQn );
         if((CanTp_SingleFrameRx( Data_msg, &CAN_size )) == TRUE)
         {
             cases = Data_msg[1];
@@ -495,7 +495,7 @@ static void Serial_StMachine(void)
                     CAN_td_message.tm.tm_min=Data_msg[3];
                     CAN_td_message.tm.tm_sec=Data_msg[4];
                     CAN_td_message.msg=SERIAL_MSG_TIME;
-                    (void)HIL_QUEUE_Write( &SERIAL_queue, &CAN_td_message );
+                    (void)HIL_QUEUE_WriteISR( &SERIAL_queue, &CAN_td_message, TIM16_FDCAN_IT0_IRQn );
                     cases = STATE_OK;
                 }
                 else
@@ -516,7 +516,7 @@ static void Serial_StMachine(void)
                     CAN_td_message.tm.tm_year_lsb = Data_msg[5];
                     CAN_td_message.tm.tm_wday = dayofweek(CAN_td_message.tm.tm_year_msb,CAN_td_message.tm.tm_year_lsb, CAN_td_message.tm.tm_mon, CAN_td_message.tm.tm_mday);
                     CAN_td_message.msg = SERIAL_MSG_DATE;
-                    (void)HIL_QUEUE_Write( &SERIAL_queue, &CAN_td_message );
+                    (void)HIL_QUEUE_WriteISR( &SERIAL_queue, &CAN_td_message, TIM16_FDCAN_IT0_IRQn );
                     cases = STATE_OK;
                 }
                 else
@@ -534,7 +534,7 @@ static void Serial_StMachine(void)
                     CAN_td_message.tm.tm_hour=Data_msg[2];
                     CAN_td_message.tm.tm_min=Data_msg[3];
                     CAN_td_message.msg = SERIAL_MSG_ALARM;
-                    (void)HIL_QUEUE_Write( &SERIAL_queue, &CAN_td_message );
+                    (void)HIL_QUEUE_WriteISR( &SERIAL_queue, &CAN_td_message, TIM16_FDCAN_IT0_IRQn );
                     cases = STATE_OK;
                 }
                 else
