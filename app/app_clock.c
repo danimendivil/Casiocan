@@ -55,7 +55,7 @@ static void Clock_StMachine(uint8_t Clockstate);
 
 
 /**
- * @brief   **This function intiates the RTC and the  variable**
+ * @brief   **This function intiates the RTC**
  *
  *  The Function set the initialization parameters for the RTC module, which include the 24-hour
  *  format for the clock, the asynchronous prescaler value of 0x7F and the synchronous prescaler value of 0xFF.
