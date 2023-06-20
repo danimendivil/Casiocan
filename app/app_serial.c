@@ -460,7 +460,7 @@ static uint8_t CAN_size;
 void Serial_Task( void )
 {     
     /*poll the state machine until the queue is empty and it return to IDLE*/
-    while( HIL_QUEUE_IsEmptyISR( &CAN_queue, TIM16_FDCAN_IT0_IRQn  ) == FALSE )
+    while( HIL_QUEUE_IsEmptyISR( &CAN_queue, TIM16_FDCAN_IT0_IRQn ) == FALSE )
     {
         /*Read the first message*/
         (void)HIL_QUEUE_ReadISR( &CAN_queue, &Data_msg, TIM16_FDCAN_IT0_IRQn );
@@ -563,7 +563,7 @@ static void Serial_StMachine(void)
 
     if(cases == STATE_OK)
     {
-        (void)HIL_QUEUE_WriteISR( &SERIAL_queue, &CAN_td_message, TIM16_FDCAN_IT0_IRQn );
+        (void)HIL_QUEUE_WriteISR( &SERIAL_queue, &CAN_td_message, TIM16_FDCAN_IT0_IRQn);
         Data_msg[array_pos_0]=OK_CANID;
         CAN_size=TRUE;
         CanTp_SingleFrameTx( &Data_msg[array_pos_0],&CAN_size);           
