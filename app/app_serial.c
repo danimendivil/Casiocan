@@ -466,7 +466,7 @@ void Serial_Task( void )
         (void)HIL_QUEUE_ReadISR( &CAN_queue, &Data_msg, TIM16_FDCAN_IT0_IRQn );
         if((CanTp_SingleFrameRx( Data_msg, &CAN_size )) == TRUE)
         {
-            cases = Data_msg[1];
+            cases = Data_msg[array_pos_1];
         }
         
         else
