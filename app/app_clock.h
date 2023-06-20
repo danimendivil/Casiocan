@@ -17,6 +17,7 @@
 
 void Clock_Init( void );
 void Clock_Task( void );
+void Display_msg(void); 
 
 /**
   * @brief  Variable for scheduler.

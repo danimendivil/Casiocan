@@ -201,10 +201,10 @@ void HIL_SCHEDULER_Start( Scheduler_HandleTypeDef *hscheduler )
     HAL_TIM_Base_Init( &TIM6_Handler );
     HAL_TIM_Base_Start_IT( &TIM6_Handler );
 
-    uint32_t i;
-    uint32_t time;
-    uint32_t time_diff;
-    uint32_t period_plus_10p;
+    static uint32_t i;
+    static uint32_t time;
+    static uint32_t time_diff;
+    static uint32_t period_plus_10p;
 
     for (i = ZERO; i < hscheduler->tasks; i++)
     {
@@ -235,18 +235,23 @@ void HIL_SCHEDULER_Start( Scheduler_HandleTypeDef *hscheduler )
                                                                                       
                 }
             }
-            for(i = ZERO; i < hscheduler->timers;i++)
+            for (i = ZERO; i < hscheduler->timers;i++)
             {
-                if(((hscheduler->timerPtr)+i)->Count == ZERO )                                                               /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+                if(((hscheduler->timerPtr) + i)->StartFlag == TRUE)                                                              /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
                 {
-                    ((hscheduler->timerPtr)+i)->Count = ((hscheduler->timerPtr)+i)->Timeout;                                 /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
-                }
-                ((hscheduler->timerPtr)+i)->Count = ((hscheduler->timerPtr)+i)->Count - hscheduler->tick;                    /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
-                if(((hscheduler->timerPtr)+i)->Count == ZERO )                                                               /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
-                {
-                    if(((hscheduler->timerPtr)+i)->callbackPtr != NULL)                                                      /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+                    if(((hscheduler->timerPtr)+i)->Count == ZERO )                                                               /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
                     {
-                        ((hscheduler->timerPtr)+i)->callbackPtr();                                                           /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+                        ((hscheduler->timerPtr)+i)->Count = ((hscheduler->timerPtr)+i)->Timeout;                                 /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+                    }
+                    
+                    ((hscheduler->timerPtr)+i)->Count -= hscheduler->tick;                                                       /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+                    
+                    if(((hscheduler->timerPtr)+i)->Count == ZERO )                                                               /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+                    {
+                        if(((hscheduler->timerPtr)+i)->callbackPtr != NULL)                                                      /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+                        {
+                            ((hscheduler->timerPtr)+i)->callbackPtr();                                                           /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+                        }
                     }
                 }
             }
@@ -282,7 +287,8 @@ uint8_t HIL_SCHEDULER_RegisterTimer( Scheduler_HandleTypeDef *hscheduler, uint32
         {
             ((hscheduler->timerPtr) + hscheduler->timerCount)->callbackPtr = CallbackPtr;   /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
         }
-        Timer_ID = hscheduler->tasksCount + ONE;
+        Timer_ID = hscheduler->timerCount + ONE;
+        hscheduler->timerCount++;
     }
 
     return Timer_ID;
@@ -306,7 +312,7 @@ uint32_t HIL_SCHEDULER_GetTimer( Scheduler_HandleTypeDef *hscheduler, uint32_t T
     assert_error( (hscheduler->tick != FALSE), SCHEDULER_ERROR );   /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     uint32_t current_time = ZERO;
 
-    if ((Timer < hscheduler->timerCount) && (Timer > ZERO))    /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+    if ((Timer <= hscheduler->timerCount) && (Timer > ZERO))    /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
     {
         current_time = ((hscheduler->timerPtr)+(Timer-ONE))->Count;     /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
     }
@@ -334,7 +340,7 @@ uint8_t HIL_SCHEDULER_ReloadTimer( Scheduler_HandleTypeDef *hscheduler, uint32_t
 
     if((Timeout > hscheduler->tick) && ((Timeout % (hscheduler->tick)) == FALSE) )
     {
-        if ((Timer < hscheduler->timerCount) && (Timer > ZERO))    /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+        if ((Timer <= hscheduler->timerCount) && (Timer > ZERO))    /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
         {
             ((hscheduler->timerPtr)+(Timer-ONE))->Timeout = Timeout;     /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
             ((hscheduler->timerPtr)+(Timer-ONE))->StartFlag = TRUE;      /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
@@ -362,7 +368,7 @@ uint8_t HIL_SCHEDULER_StartTimer( Scheduler_HandleTypeDef *hscheduler, uint32_t 
     assert_error( (hscheduler->tick != FALSE), SCHEDULER_ERROR );   /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     uint8_t Timer_Status = FALSE;
 
-    if ((Timer < hscheduler->timerCount) && (Timer > ZERO))    /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+    if ((Timer <= hscheduler->timerCount) && (Timer > ZERO))    /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
     {
         ((hscheduler->timerPtr)+(Timer-ONE))->StartFlag = TRUE;     /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
         ((hscheduler->timerPtr)+(Timer-ONE))->Count = ((hscheduler->timerPtr)+(Timer-ONE))->Timeout;     /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */       
@@ -389,7 +395,7 @@ uint8_t HIL_SCHEDULER_StopTimer( Scheduler_HandleTypeDef *hscheduler, uint32_t T
     assert_error( (hscheduler->tick != FALSE), SCHEDULER_ERROR );   /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     uint8_t Timer_Status = FALSE;
 
-    if ((Timer < hscheduler->timerCount) && (Timer > ZERO))    /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
+    if ((Timer <= hscheduler->timerCount) && (Timer > ZERO))    /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
     {
         ((hscheduler->timerPtr)+(Timer-ONE))->StartFlag = FALSE;     /* cppcheck-suppress misra-c2012-18.4 ; operator to pointer is needed */
         Timer_Status = TRUE;

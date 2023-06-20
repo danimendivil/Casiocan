@@ -3,14 +3,16 @@
 #include "app_clock.h"
 #include "app_display.h"
 #include "scheduler.h"
+
 //Add more includes if need them
 /** 
-  * @defgroup Tasks periodicity value.
+  * @defgroup Tasks and timers periodicity value.
   @{ */
 #define HEARTH_TICK_VALUE   300u    /*!<hearth toggle value*/   
 #define SERIAL_TASK_TICK    10u     /*!<Serial task periodicity*/  
 #define CLOCK_TASK_TICK     50u     /*!<Clock task periodicity*/     
 #define DISPLAY_TASK_TICK   100u    /*!<Display task periodicity*/
+#define ONE_SEC_TIMER       1000u   /*!<Software timer one second value*/
 /**
   @} */
 
@@ -33,8 +35,9 @@
 /** 
   * @defgroup Scheduler values configuration.
   @{ */  
-#define TASK_NUMERS            5    /*!<Number of tasks to be handle by the scheduler*/
-#define SCHEDULER_TICK         5    /*!<Tick value of the scheduler*/
+#define TASK_NUMBERS          5    /*!<Number of tasks to be handle by the scheduler*/
+#define SCHEDULER_TICK        5    /*!<Tick value of the scheduler*/
+#define TIMER_NUMBERS         1    /*!<Tick value of the scheduler*/
 /**
   @} */
 
@@ -52,7 +55,6 @@ HAL_StatusTypeDef Status;
 * @brief  Variable for scheduler.
 */
 Scheduler_HandleTypeDef sched;
-
 static void hearth_init(void);
 static void hearth_beat(void);
 static void init_watchdog(void);
@@ -69,13 +71,20 @@ static void peth_the_dog(void);
 */
 int main( void )
 {
+  uint32_t timer_1S; 
   
-  Task_TypeDef hsche_tasks[TASK_NUMERS];
-  sched.tasks   = TASK_NUMERS;
+  Task_TypeDef hsche_tasks[TASK_NUMBERS];
+  sched.tasks   = TASK_NUMBERS;
   sched.tick    = SCHEDULER_TICK;
   sched.taskPtr = hsche_tasks;
-
   HIL_SCHEDULER_Init(&sched);
+
+  Timer_TypeDef hsche_timer[TIMER_NUMBERS];
+  sched.timers   = TIMER_NUMBERS;
+  sched.timerPtr = hsche_timer;
+  timer_1S = HIL_SCHEDULER_RegisterTimer( &sched, ONE_SEC_TIMER, Display_msg );
+  (void)HIL_SCHEDULER_StartTimer( &sched,timer_1S);
+
   HAL_Init();
 
   (void)HIL_SCHEDULER_RegisterTask( &sched,init_watchdog,peth_the_dog,WATCHDOG_REFRESH);
@@ -101,7 +110,7 @@ void hearth_init(void)
   HAL_Init();                                     
   __HAL_RCC_GPIOC_CLK_ENABLE();                   
   
-  GPIO_InitStruct.Pin = GPIO_PIN_0;           
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1 ;           
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;     
   GPIO_InitStruct.Pull = GPIO_NOPULL;             
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;   
