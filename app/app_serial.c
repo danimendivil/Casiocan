@@ -43,6 +43,20 @@
 /**
   @} */
 
+/** 
+  * @defgroup array_pos array positions
+  @{ */
+#define array_pos_0 0     /*!<array position 0*/
+#define array_pos_1 1     /*!<array position 1*/
+#define array_pos_2 2     /*!<array position 2*/
+#define array_pos_3 3     /*!<array position 3*/
+#define array_pos_4 4     /*!<array position 4*/
+#define array_pos_5 5     /*!<array position 5*/
+#define array_pos_6 6     /*!<array position 6*/
+#define array_pos_7 7     /*!<array position 7*/
+/**
+  @} */
+
 /**
  * @brief APP Messages.
  *
@@ -489,13 +503,13 @@ static void Serial_StMachine(void)
 
             if(CAN_size == TIME_DATA_SIZE)
             {
-                if( valid_time(Data_msg[2],Data_msg[3],Data_msg[4]) == TRUE)
+                if( valid_time(Data_msg[array_pos_2],Data_msg[array_pos_3],Data_msg[array_pos_4]) == TRUE)
                 {
-                    CAN_td_message.tm.tm_hour=Data_msg[2];
-                    CAN_td_message.tm.tm_min=Data_msg[3];
-                    CAN_td_message.tm.tm_sec=Data_msg[4];
+                    CAN_td_message.tm.tm_hour=Data_msg[array_pos_2];
+                    CAN_td_message.tm.tm_min=Data_msg[array_pos_3];
+                    CAN_td_message.tm.tm_sec=Data_msg[array_pos_4];
                     CAN_td_message.msg=SERIAL_MSG_TIME;
-                    (void)HIL_QUEUE_WriteISR( &SERIAL_queue, &CAN_td_message, TIM16_FDCAN_IT0_IRQn );
+                    
                     cases = STATE_OK;
                 }
                 else
@@ -508,15 +522,14 @@ static void Serial_StMachine(void)
         case STATE_DATE:
             if(CAN_size == DATE_DATA_SIZE)
             {
-                if(valid_date(Data_msg[2],Data_msg[3], Data_msg[4],Data_msg[5]) == TRUE)
+                if(valid_date(Data_msg[array_pos_2],Data_msg[array_pos_3], Data_msg[array_pos_4],Data_msg[array_pos_5]) == TRUE)
                 {
-                    CAN_td_message.tm.tm_mday = Data_msg[2];
-                    CAN_td_message.tm.tm_mon = Data_msg[3];
-                    CAN_td_message.tm.tm_year_msb = bcdToDecimal(Data_msg[4]);
-                    CAN_td_message.tm.tm_year_lsb = Data_msg[5];
+                    CAN_td_message.tm.tm_mday = Data_msg[array_pos_2];
+                    CAN_td_message.tm.tm_mon = Data_msg[array_pos_3];
+                    CAN_td_message.tm.tm_year_msb = bcdToDecimal(Data_msg[array_pos_4]);
+                    CAN_td_message.tm.tm_year_lsb = Data_msg[array_pos_5];
                     CAN_td_message.tm.tm_wday = dayofweek(CAN_td_message.tm.tm_year_msb,CAN_td_message.tm.tm_year_lsb, CAN_td_message.tm.tm_mon, CAN_td_message.tm.tm_mday);
                     CAN_td_message.msg = SERIAL_MSG_DATE;
-                    (void)HIL_QUEUE_WriteISR( &SERIAL_queue, &CAN_td_message, TIM16_FDCAN_IT0_IRQn );
                     cases = STATE_OK;
                 }
                 else
@@ -529,12 +542,11 @@ static void Serial_StMachine(void)
         case STATE_ALARM:
             if(CAN_size == ALARM_DATA_SIZE)
             {
-                if(valid_alarm( Data_msg[2],Data_msg[3]) == TRUE)
+                if(valid_alarm( Data_msg[array_pos_2],Data_msg[array_pos_3]) == TRUE)
                 {
-                    CAN_td_message.tm.tm_hour=Data_msg[2];
-                    CAN_td_message.tm.tm_min=Data_msg[3];
+                    CAN_td_message.tm.tm_hour=Data_msg[array_pos_2];
+                    CAN_td_message.tm.tm_min=Data_msg[array_pos_3];
                     CAN_td_message.msg = SERIAL_MSG_ALARM;
-                    (void)HIL_QUEUE_WriteISR( &SERIAL_queue, &CAN_td_message, TIM16_FDCAN_IT0_IRQn );
                     cases = STATE_OK;
                 }
                 else
@@ -549,24 +561,17 @@ static void Serial_StMachine(void)
         break;
     }
 
-    switch(cases)
+    if(cases == STATE_OK)
     {
-        case STATE_FAILED:
-            
-            Data_msg[0]=FAILED_CANID;
-            CAN_size=1;
-            CanTp_SingleFrameTx( &Data_msg[0],&CAN_size);
-            break;
-
-        case STATE_OK:
-            
-            Data_msg[0]=OK_CANID;
-            CAN_size=1;
-            CanTp_SingleFrameTx( &Data_msg[0],&CAN_size);  
-            break;
- 
-        default:
-            break;
-    
+        (void)HIL_QUEUE_WriteISR( &SERIAL_queue, &CAN_td_message, TIM16_FDCAN_IT0_IRQn );
+        Data_msg[array_pos_0]=OK_CANID;
+        CAN_size=TRUE;
+        CanTp_SingleFrameTx( &Data_msg[array_pos_0],&CAN_size);           
+    }
+    else
+    {
+        Data_msg[array_pos_0]=FAILED_CANID;
+        CAN_size=TRUE;
+        CanTp_SingleFrameTx( &Data_msg[array_pos_0],&CAN_size);
     }
 }
