@@ -111,6 +111,10 @@ QUEUE_HandleTypeDef SERIAL_queue;
 */
 static uint8_t cases = STATE_IDLE;
 
+/**
+* @brief  Variable for the state of the alarm
+*/
+uint8_t Alarm_State;
 
 static uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL);
 static uint8_t dayofweek(uint32_t yearM, uint32_t yearL, uint32_t month, uint32_t day);
@@ -497,68 +501,83 @@ void Serial_Task( void )
 */
 static void Serial_StMachine(void)
 {
-    switch(cases)
+    if(Alarm_State != ALARM_ACTIVE)
     {
-        case STATE_TIME:
+        switch(cases)
+        {
+            case STATE_TIME:
 
-            if(CAN_size == TIME_DATA_SIZE)
-            {
-                if( valid_time(Data_msg[array_pos_2],Data_msg[array_pos_3],Data_msg[array_pos_4]) == TRUE)
+                if(CAN_size == TIME_DATA_SIZE)
                 {
-                    CAN_td_message.tm.tm_hour=Data_msg[array_pos_2];
-                    CAN_td_message.tm.tm_min=Data_msg[array_pos_3];
-                    CAN_td_message.tm.tm_sec=Data_msg[array_pos_4];
-                    CAN_td_message.msg=SERIAL_MSG_TIME;
-                    
-                    cases = STATE_OK;
+                    if( valid_time(Data_msg[array_pos_2],Data_msg[array_pos_3],Data_msg[array_pos_4]) == TRUE)
+                    {
+                        CAN_td_message.tm.tm_hour=Data_msg[array_pos_2];
+                        CAN_td_message.tm.tm_min=Data_msg[array_pos_3];
+                        CAN_td_message.tm.tm_sec=Data_msg[array_pos_4];
+                        CAN_td_message.msg=SERIAL_MSG_TIME;
+                        
+                        cases = STATE_OK;
+                    }
+                    else
+                    {
+                        cases = STATE_FAILED;
+                    }
                 }
-                else
-                {
-                    cases = STATE_FAILED;
-                }
-            }
-        break;
+            break;
 
-        case STATE_DATE:
-            if(CAN_size == DATE_DATA_SIZE)
-            {
-                if(valid_date(Data_msg[array_pos_2],Data_msg[array_pos_3], Data_msg[array_pos_4],Data_msg[array_pos_5]) == TRUE)
+            case STATE_DATE:
+                if(CAN_size == DATE_DATA_SIZE)
                 {
-                    CAN_td_message.tm.tm_mday = Data_msg[array_pos_2];
-                    CAN_td_message.tm.tm_mon = Data_msg[array_pos_3];
-                    CAN_td_message.tm.tm_year_msb = bcdToDecimal(Data_msg[array_pos_4]);
-                    CAN_td_message.tm.tm_year_lsb = Data_msg[array_pos_5];
-                    CAN_td_message.tm.tm_wday = dayofweek(CAN_td_message.tm.tm_year_msb,CAN_td_message.tm.tm_year_lsb, CAN_td_message.tm.tm_mon, CAN_td_message.tm.tm_mday);
-                    CAN_td_message.msg = SERIAL_MSG_DATE;
-                    cases = STATE_OK;
+                    if(valid_date(Data_msg[array_pos_2],Data_msg[array_pos_3], Data_msg[array_pos_4],Data_msg[array_pos_5]) == TRUE)
+                    {
+                        CAN_td_message.tm.tm_mday = Data_msg[array_pos_2];
+                        CAN_td_message.tm.tm_mon = Data_msg[array_pos_3];
+                        CAN_td_message.tm.tm_year_msb = bcdToDecimal(Data_msg[array_pos_4]);
+                        CAN_td_message.tm.tm_year_lsb = Data_msg[array_pos_5];
+                        CAN_td_message.tm.tm_wday = dayofweek(CAN_td_message.tm.tm_year_msb,CAN_td_message.tm.tm_year_lsb, CAN_td_message.tm.tm_mon, CAN_td_message.tm.tm_mday);
+                        CAN_td_message.msg = SERIAL_MSG_DATE;
+                        cases = STATE_OK;
+                    }
+                    else
+                    {
+                        cases = STATE_FAILED;
+                    }
                 }
-                else
-                {
-                    cases = STATE_FAILED;
-                }
-            }
-        break;
+            break;
 
-        case STATE_ALARM:
-            if(CAN_size == ALARM_DATA_SIZE)
-            {
-                if(valid_alarm( Data_msg[array_pos_2],Data_msg[array_pos_3]) == TRUE)
+            case STATE_ALARM:
+                if(CAN_size == ALARM_DATA_SIZE)
                 {
-                    CAN_td_message.tm.tm_hour=Data_msg[array_pos_2];
-                    CAN_td_message.tm.tm_min=Data_msg[array_pos_3];
-                    CAN_td_message.msg = SERIAL_MSG_ALARM;
-                    cases = STATE_OK;
+                    if(valid_alarm( Data_msg[array_pos_2],Data_msg[array_pos_3]) == TRUE)
+                    {
+                        CAN_td_message.tm.tm_hour=Data_msg[array_pos_2];
+                        CAN_td_message.tm.tm_min=Data_msg[array_pos_3];
+                        CAN_td_message.msg = SERIAL_MSG_ALARM;
+                        cases = STATE_OK;
+                    }
+                    else
+                    {
+                        cases = STATE_FAILED;
+                    }
                 }
-                else
-                {
-                    cases = STATE_FAILED;
-                }
-            }
-        break;
+            break;
 
-        default:
+            default:
+                cases = STATE_FAILED;
+            break;
+        }
+    }
+    else
+    {
+        if(cases == STATE_TIME || cases == STATE_DATE || cases == STATE_ALARM )
+        {
+            Alarm_State = ALARM_OFF;
+            cases = STATE_OK;
+        }
+        else
+        {
             cases = STATE_FAILED;
-        break;
+        }   
     }
 
     if(cases == STATE_OK)

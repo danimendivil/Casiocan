@@ -25,7 +25,7 @@ typedef enum
 /**
  * @brief  Variable for rtc configuration
  */
-static RTC_HandleTypeDef hrtc = {0};
+RTC_HandleTypeDef hrtc = {0};
 
 /**
  * @brief  Variable for rtc Date configuration
@@ -84,7 +84,7 @@ void Clock_Init( void )
 
     sTime.Hours      = 0x02;
     sTime.Minutes    = 0x20;
-    sTime.Seconds    = 0x25;
+    sTime.Seconds    = 0x55;
     sTime.SubSeconds = 0x00;
     sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
     sTime.StoreOperation = RTC_STOREOPERATION_RESET;
@@ -100,12 +100,18 @@ void Clock_Init( void )
     Status = HAL_RTC_SetDate( &hrtc, &sDate, RTC_FORMAT_BCD );
     assert_error( Status == HAL_OK, RTC_SETDATE_ERROR );    /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     
-    sAlarm.AlarmTime.Hours = 0x00;      
-    sAlarm.AlarmTime.Minutes = 0x00;    
-    sAlarm.AlarmTime.Seconds = 0x00;    
-    sAlarm.AlarmTime.SubSeconds = 0x00; 
-    sAlarm.Alarm = RTC_ALARM_A;         
-
+    sAlarm.AlarmTime.Hours          = FALSE;
+    sAlarm.AlarmTime.Minutes        = FALSE;
+    sAlarm.AlarmTime.Seconds        = FALSE;
+    sAlarm.AlarmTime.SubSeconds     = FALSE;
+    sAlarm.AlarmTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+    sAlarm.AlarmTime.StoreOperation = RTC_STOREOPERATION_RESET;
+    sAlarm.AlarmMask                = RTC_ALARMMASK_DATEWEEKDAY;;
+    sAlarm.AlarmDateWeekDaySel      = RTC_ALARMDATEWEEKDAYSEL_DATE;
+    sAlarm.AlarmDateWeekDay         = RTC_WEEKDAY_MONDAY;
+    sAlarm.Alarm                    = RTC_ALARM_A;        
+    
+    
     Status = HAL_RTC_DeactivateAlarm(&hrtc, RTC_ALARM_A);
     assert_error( Status == HAL_OK, RTC_SDESACTIVATE_ALARM_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     
@@ -116,6 +122,7 @@ void Clock_Init( void )
     CLOCK_queue.size = sizeof(APP_MsgTypeDef);
     HIL_QUEUE_Init(&CLOCK_queue);
 
+    Alarm_State = ALARM_OFF;
 }
 
 /**
@@ -188,15 +195,12 @@ void Clock_StMachine(uint8_t Clockstate)
         case CLOCK_ST_CHANGE_ALARM:
         {
             sAlarm.AlarmTime.Hours      = CAN_to_clock_message.tm.tm_hour;      
-            sAlarm.AlarmTime.Minutes    = CAN_to_clock_message.tm.tm_min;    
-            sAlarm.AlarmTime.Seconds    = CAN_to_clock_message.tm.tm_sec;    
-            sAlarm.AlarmTime.SubSeconds = 0x00; 
-            sAlarm.Alarm = RTC_ALARM_A;         
+            sAlarm.AlarmTime.Minutes    = CAN_to_clock_message.tm.tm_min;              
             Status = HAL_RTC_DeactivateAlarm(&hrtc, RTC_ALARM_A);
             assert_error( Status == HAL_OK, RTC_SDESACTIVATE_ALARM_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
             Status = HAL_RTC_SetAlarm_IT(&hrtc, &sAlarm, RTC_FORMAT_BCD);
             assert_error( Status == HAL_OK, RTC_SET_ALARM_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-        
+            Alarm_State = ALARM_ON;
             Display = TRUE;
             break;
         }

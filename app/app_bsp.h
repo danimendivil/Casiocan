@@ -13,6 +13,15 @@
   @} */
 
   /** 
+  * @defgroup Alarm Values.
+  @{ */
+  #define    ALARM_ON        0u   /*!< An alarm is going to happen*/
+  #define    ALARM_OFF       1u   /*!< Alarm is off*/
+  #define    ALARM_ACTIVE    2u   /*!< An alarm is happening*/
+  /**
+  @} */
+
+  /** 
   * @defgroup Display Display task values.
   @{ */
   #define    DISPLAY_MESSAGE        1u   /*!< State for changing the time of the clock*/
@@ -109,6 +118,15 @@
   */
   extern FDCAN_HandleTypeDef CANHandler; /* cppcheck-suppress misra-c2012-8.4 ; this function can`t be modify */
 
+  /**
+  * @brief  Variable for the state of the alarm
+  */
+  extern uint8_t Alarm_State;
+
+  /**
+  * @brief  Variable for rtc configuration
+  */
+  extern RTC_HandleTypeDef hrtc;
      
 #endif
 

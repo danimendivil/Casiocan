@@ -121,22 +121,38 @@ void Display_StMachine(void)
     week(&fila_1[13],clock_display.tm.tm_wday);
     Status = HEL_LCD_String(&LCDHandle, fila_1);
     assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-            
-    //DISPLAY_STATE_PRINTH_HOUR:
-    Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,3 );
-    assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-    fila_2[0] = ((clock_display.tm.tm_hour / 10u) + 48u);
-    fila_2[1] = ((clock_display.tm.tm_hour % 10u) + 48u);
-            
-    //DISPLAY_STATE_PRINTH_MINUTES:
-    fila_2[3] = ((clock_display.tm.tm_min / 10u) + 48u);
-    fila_2[4] = ((clock_display.tm.tm_min % 10u) + 48u);
-            
-    //DISPLAY_STATE_PRINTH_SECONDS:
-    fila_2[6] = ((clock_display.tm.tm_sec / 10u) + 48u);
-    fila_2[7] = ((clock_display.tm.tm_sec % 10u) + 48u);
-    Status = HEL_LCD_String(&LCDHandle, fila_2);
-    assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+
+    if(Alarm_State != ALARM_ACTIVE)
+    {
+        if(Alarm_State == ALARM_ON)  
+        {
+            Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,0 );
+            assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+            HEL_LCD_Data( &LCDHandle, 'A' );
+        }     
+        //DISPLAY_STATE_PRINTH_HOUR:
+        Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,3 );
+        assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+        fila_2[0] = ((clock_display.tm.tm_hour / 10u) + 48u);
+        fila_2[1] = ((clock_display.tm.tm_hour % 10u) + 48u);
+                
+        //DISPLAY_STATE_PRINTH_MINUTES:
+        fila_2[3] = ((clock_display.tm.tm_min / 10u) + 48u);
+        fila_2[4] = ((clock_display.tm.tm_min % 10u) + 48u);
+                
+        //DISPLAY_STATE_PRINTH_SECONDS:
+        fila_2[6] = ((clock_display.tm.tm_sec / 10u) + 48u);
+        fila_2[7] = ((clock_display.tm.tm_sec % 10u) + 48u);
+        Status = HEL_LCD_String(&LCDHandle, fila_2);
+        assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    }
+    else
+    {
+        Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,4 );
+        assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+        Status = HEL_LCD_String(&LCDHandle, "ALARM!!!");
+        assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    }
 }
 
 /**
@@ -185,4 +201,5 @@ void week(char *week,char pos)
         *(week+i)=*(sem+i+position);        /* cppcheck-suppress misra-c2012-18.4 ; operators to pointer is needed*/
    }
 }
+
 
