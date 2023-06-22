@@ -5,8 +5,8 @@
 /** 
   * @defgroup Alarm state defines .
   @{ */
-#define ONE_MINUTE          60      /*!<value for counter to 60 seconds*/    
-#define EVEN_SECONDS        2       /*!<value for use for even numbers*/
+#define ONE_MINUTE          60u      /*!<value for counter to 60 seconds*/    
+#define EVEN_SECONDS        2u       /*!<value for use for even numbers*/
 /**
   @} */
 /** 
@@ -37,6 +37,8 @@ uint8_t button;
 static void month(char *mon,char pos);
 static void week(char *week,char pos);
 static void Display_StMachine(void);
+void HAL_GPIO_EXTI_Falling_Callback( uint16_t GPIO_Pin );  
+void HAL_GPIO_EXTI_Rising_Callback( uint16_t GPIO_Pin );
 
 /**
  * @brief  Variable for the pwm timer
@@ -195,7 +197,8 @@ void Display_StMachine(void)
             {
                 Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,0 );
                 assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-                HEL_LCD_Data( &LCDHandle, 'A' );
+                Status = HEL_LCD_Data( &LCDHandle, 'A' );
+                assert_error( Status == HAL_OK, SPI_STRING_ERROR );     /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
             }  
             fila_2[5] =':';
             //DISPLAY_STATE_PRINTH_HOUR:
@@ -220,7 +223,8 @@ void Display_StMachine(void)
             {
             Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,0 );
             assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-            Status = HEL_LCD_String(&LCDHandle, "ALARM NO CONFIG");
+            /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+            Status = HEL_LCD_String(&LCDHandle, "ALARM NO CONFIG");  /* cppcheck-suppress misra-c2012-7.4 ; no need for a constant value */
             assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
             }
             else
@@ -233,7 +237,8 @@ void Display_StMachine(void)
                 fila_2[6] =' ';
                 Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,0 );
                 assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-                Status = HEL_LCD_String(&LCDHandle, "   ALARM=");
+                /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+                Status = HEL_LCD_String(&LCDHandle, "   ALARM=");       /* cppcheck-suppress misra-c2012-7.4 ; no need for a constant value */
                 assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
                 Status = HEL_LCD_String(&LCDHandle, fila_2);
                 assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
@@ -244,12 +249,14 @@ void Display_StMachine(void)
     {
         alarm_counter++;
         Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,0 );
-        assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-        Status = HEL_LCD_String(&LCDHandle, "    ALARM!!!");
+        /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+        assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); 
+        /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+        Status = HEL_LCD_String(&LCDHandle, "    ALARM!!!");    /* cppcheck-suppress misra-c2012-7.4 ; no need for a constant value */
         assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
         HEL_LCD_Backlight(&LCDHandle, TOGGLE);
 
-        if (alarm_counter % EVEN_SECONDS == FALSE)
+        if ((alarm_counter % EVEN_SECONDS) == FALSE)
         {
             __HAL_TIM_SET_COMPARE( &TimHandle, TIM_CHANNEL_1, PWM_50 );
         }
@@ -269,7 +276,8 @@ void Display_StMachine(void)
             Alarm_State = ALARM_OFF;
             Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,0 );
             assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-            Status = HEL_LCD_String(&LCDHandle, "               ");
+            /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+            Status = HEL_LCD_String(&LCDHandle, "               "); /* cppcheck-suppress misra-c2012-7.4 ; no need for a constant value */
             assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
             __HAL_TIM_SET_COMPARE( &TimHandle, TIM_CHANNEL_1, PWM_0 );
         }  
@@ -331,7 +339,8 @@ void week(char *week,char pos)
  *  also puts the button value on true to display the alarm status on the second row. 
  *         
  */
-void HAL_GPIO_EXTI_Falling_Callback( uint16_t GPIO_Pin )
+ /* cppcheck-suppress misra-c2012-2.7 ; function cannot be modify is a library function */
+void HAL_GPIO_EXTI_Falling_Callback( uint16_t GPIO_Pin )    
 {
     if(Alarm_State == ALARM_ACTIVE)
     {
@@ -349,11 +358,13 @@ void HAL_GPIO_EXTI_Falling_Callback( uint16_t GPIO_Pin )
 *  no mather when this button is pressed ereasing the second row is necesary
 *  also puts the button on false wich will tell other functions that the button is not pressed        
 */
+ /* cppcheck-suppress misra-c2012-2.7 ; function cannot be modify is a library function */
 void HAL_GPIO_EXTI_Rising_Callback( uint16_t GPIO_Pin )
 {
     Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,0 );
     assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-    Status = HEL_LCD_String(&LCDHandle, "               ");
+    /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+    Status = HEL_LCD_String(&LCDHandle, "               ");     /* cppcheck-suppress misra-c2012-7.4 ; no need for a constant value */
     assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     button = FALSE; 
 }

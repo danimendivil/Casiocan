@@ -23,9 +23,9 @@ typedef enum
   @} */
 
 /**
- * @brief  Variable for rtc configuration
- */
-RTC_HandleTypeDef hrtc = {0};
+* @brief  Variable for rtc configuration
+*/
+RTC_HandleTypeDef hrtc = {0};       /* cppcheck-suppress misra-c2012-5.8 ; other declaration is not used */
 
 /**
  * @brief  Variable for rtc Date configuration

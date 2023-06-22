@@ -71,7 +71,8 @@ void HAL_FDCAN_MspInit(FDCAN_HandleTypeDef *hfdcan)  /* cppcheck-suppress misra-
 }
 
 /* cppcheck-suppress misra-c2012-8.4 ; this is a library function */
-void HAL_RTC_MspInit( RTC_HandleTypeDef* hrtc )   /* cppcheck-suppress misra-c2012-2.7 ; this is a library function */
+/* cppcheck-suppress misra-c2012-2.7 ; this declaration is not used */
+void HAL_RTC_MspInit( RTC_HandleTypeDef* hrtc )   /* cppcheck-suppress misra-c2012-2.7 ; this is a library function */ 
 {
     RCC_OscInitTypeDef        RCC_OscInitStruct ;
     RCC_PeriphCLKInitTypeDef  PeriphClkInitStruct ;
@@ -161,7 +162,8 @@ void HEL_LCD_MspInit( LCD_HandleTypeDef *hlcd ) /* cppcheck-suppress misra-c2012
     HAL_GPIO_WritePin( hlcd->BklPort, hlcd->BklPin, SET );
 }
 
-void HAL_TIM_PWM_MspInit( TIM_HandleTypeDef *htim )
+/* cppcheck-suppress misra-c2012-8.4 ; there is no need for external linkage*/
+void HAL_TIM_PWM_MspInit( TIM_HandleTypeDef *htim ) /* cppcheck-suppress misra-c2012-2.7 ; this is a library function */
 {
     GPIO_InitTypeDef   GPIO_InitStruct;
 

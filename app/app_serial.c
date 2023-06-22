@@ -52,8 +52,6 @@
 #define array_pos_3 3     /*!<array position 3*/
 #define array_pos_4 4     /*!<array position 4*/
 #define array_pos_5 5     /*!<array position 5*/
-#define array_pos_6 6     /*!<array position 6*/
-#define array_pos_7 7     /*!<array position 7*/
 /**
   @} */
 
@@ -504,7 +502,7 @@ void Serial_Task( void )
 *   then if cases is STATE_FAILED a message will be send in can with an id that indicates that the message was not compatible
 *   and if cases is STATE_OK a message will be send in can with an id that indicates that the message correct.
 *   when an alarm is active this function will not send any message instead it will trigger the alarm flag
-*   so that the alarm stops but only if the message arrive is a STATE_TIME,STATE_TIME or STATE_ALARM.
+*   so that the alarm stops but only if the message arrive is a STATE_TIME,STATE_DATE or STATE_ALARM.
 */
 static void Serial_StMachine(void)
 {
@@ -532,7 +530,7 @@ static void Serial_StMachine(void)
                 }
             break;
 
-            case STATE_TIME:
+            case STATE_DATE:
                 if(CAN_size == DATE_DATA_SIZE)
                 {
                     if(valid_date(Data_msg[array_pos_2],Data_msg[array_pos_3], Data_msg[array_pos_4],Data_msg[array_pos_5]) == TRUE)
@@ -576,7 +574,7 @@ static void Serial_StMachine(void)
     }
     else
     {
-        if(cases == STATE_TIME || cases == STATE_DATE || cases == STATE_ALARM )
+        if((cases == (uint8_t)STATE_TIME) || (cases == (uint8_t)STATE_DATE) || (cases == (uint8_t)STATE_ALARM) )
         {
             Alarm_Flag = TRUE;
         }
@@ -586,7 +584,7 @@ static void Serial_StMachine(void)
         }   
     }
 
-    if(cases == STATE_OK)
+    if(cases == (uint8_t)STATE_OK)
     {
         (void)HIL_QUEUE_WriteISR( &SERIAL_queue, &CAN_td_message, TIM16_FDCAN_IT0_IRQn);
         Data_msg[array_pos_0]=OK_CANID;
