@@ -94,7 +94,9 @@
   {
     uint32_t tm_sec;         /*!< seconds,  range 0 to 59          */
     uint32_t tm_min;         /*!< minutes, range 0 to 59           */
+    uint32_t tm_min_alarm;   /*!< minutes, range 0 to 59           */
     uint32_t tm_hour;        /*!< hours, range 0 to 23             */
+    uint32_t tm_hour_alarm;        /*!< hours, range 0 to 23             */
     uint32_t tm_mday;        /*!< day of the month, range 1 to 31  */
     uint32_t tm_mon;         /*!< month, range 0 to 11             */
     uint32_t tm_year_msb;    /*!< year most significant bits in range 1900 2100       */
@@ -124,9 +126,19 @@
   extern uint8_t Alarm_State;
 
   /**
+  * @brief  Flag for turning off the alarm
+  */
+  extern uint8_t Alarm_Flag;
+
+  /**
   * @brief  Variable for rtc configuration
   */
   extern RTC_HandleTypeDef hrtc;
+
+  /**
+  * @brief  Variable for button state
+  */
+  extern uint8_t button;
      
 #endif
 

@@ -244,6 +244,12 @@ void Display_msg(void)
     ClockMsg.tm.tm_min = sTime.Minutes;
     ClockMsg.tm.tm_sec = sTime.Seconds;
 
+    if (button == TRUE)
+    {
+        HAL_RTC_GetAlarm(&hrtc, &sAlarm, RTC_ALARM_A, RTC_FORMAT_BIN);
+        ClockMsg.tm.tm_hour_alarm = sAlarm.AlarmTime.Hours;
+        ClockMsg.tm.tm_min_alarm = sAlarm.AlarmTime.Minutes;
+    }
     ClockMsg.msg = DISPLAY_MESSAGE;
     (void)HIL_QUEUE_WriteISR( &CLOCK_queue, &ClockMsg, RTC_TAMP_IRQn );
 }

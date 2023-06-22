@@ -114,7 +114,12 @@ static uint8_t cases = STATE_IDLE;
 /**
 * @brief  Variable for the state of the alarm
 */
-uint8_t Alarm_State;
+uint8_t Alarm_State = ALARM_OFF;
+
+/**
+* @brief  Flag for turning off the alarm
+*/
+uint8_t Alarm_Flag = FALSE;
 
 static uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL);
 static uint8_t dayofweek(uint32_t yearM, uint32_t yearL, uint32_t month, uint32_t day);
@@ -571,8 +576,7 @@ static void Serial_StMachine(void)
     {
         if(cases == STATE_TIME || cases == STATE_DATE || cases == STATE_ALARM )
         {
-            Alarm_State = ALARM_OFF;
-            cases = STATE_OK;
+            Alarm_Flag = TRUE;
         }
         else
         {
