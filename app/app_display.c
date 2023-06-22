@@ -6,9 +6,16 @@
   * @defgroup Alarm state defines .
   @{ */
 #define ONE_MINUTE          60      /*!<value for counter to 60 seconds*/    
-#define PWM_50              800     /*!<value for 50% of pwm*/
-#define PWM_0               0       /*!<value for 0% of pwm*/
 #define EVEN_SECONDS        2       /*!<value for use for even numbers*/
+/**
+  @} */
+/** 
+  * @defgroup PWM defines .
+  @{ */
+#define PERIOD_1KHZ             3200     /*!<value for counter to 60 seconds*/    
+#define PREESCALER_1KHZ         10      /*!<value for counter to 60 seconds*/
+#define PWM_50                  500     /*!<value for 50% of pwm*/
+#define PWM_0                   0       /*!<value for 0% of pwm*/
 /**
   @} */
 
@@ -16,6 +23,11 @@
  * @brief  Variable for LCD configuration
  */
 static LCD_HandleTypeDef LCDHandle;
+
+/**
+ * @brief  Variable to read the buffer
+ */
+static APP_MsgTypeDef clock_display;
 
 /**
 * @brief  Variable for button state
@@ -36,7 +48,13 @@ static TIM_HandleTypeDef TimHandle;
  *
  *  The Function sets the pins for the SPI and LCD  needed and initialize by 
  *  calling the HEL_LCD_MspInit and configuring  and initializing the SPI
- *  then calls the function HEL_LCD_Init wich is a routine for the LCD
+ *  then calls the function HEL_LCD_Init wich is a routine for the LCD.
+ *  this function also eneables the pin 7 of the gpio B wich is a button
+ *  and eneables the interrupt of the button on falling and rising.
+ *  it also eneables a pwm that is conected to a buzzer 
+ *  the calculations for the pwm are:
+ *  PWM frequency = (timer clock / (Prescaler * Period + 1))
+ *  PWM frequency = (32Mhz / (10 * 3200 + 1)) = 1kHz
  */
 void Display_Init( void )
 {
@@ -88,8 +106,8 @@ void Display_Init( void )
 
      /* Configuramos el timer TIM1 para generar un periodo de 1ms */
     TimHandle.Instance = TIM14;
-    TimHandle.Init.Prescaler     = 10;
-    TimHandle.Init.Period        = 1600*2;
+    TimHandle.Init.Prescaler     = PREESCALER_1KHZ;
+    TimHandle.Init.Period        = PERIOD_1KHZ;
     TimHandle.Init.CounterMode   = TIM_COUNTERMODE_UP;
     HAL_TIM_PWM_Init(&TimHandle);
 
@@ -97,13 +115,12 @@ void Display_Init( void )
     sConfig.OCMode     = TIM_OCMODE_PWM1;
     sConfig.OCPolarity = TIM_OCPOLARITY_HIGH;
     sConfig.OCFastMode = TIM_OCFAST_DISABLE;
-    sConfig.Pulse = 160;
+    sConfig.Pulse = 0;
     HAL_TIM_PWM_ConfigChannel( &TimHandle, &sConfig, TIM_CHANNEL_1 );
     HAL_TIM_PWM_Start( &TimHandle, TIM_CHANNEL_1 );
-    __HAL_TIM_SET_COMPARE( &TimHandle, TIM_CHANNEL_1, 0 );
 }
 
-static APP_MsgTypeDef clock_display;
+
 /**
 * @brief   **This function executes the display state machine**
 *
@@ -127,25 +144,24 @@ static APP_MsgTypeDef clock_display;
 }
 
 /**
- * @brief   **Display a message recived by clock_display on the LCD **
- *
- *  the fisrt part is STATE_PRINTH_MONTH where it calls the function month to get
- *  the first 3 letter of fila_1 to be modify with the initials of a month,
- *  then it changes the state to STATE_PRINTH_DAY where it separates the digits
- *  of the day and sums 48 to get the ascii value the next state is STATE_PRINTH_YEAR
- *  where for the msb it calls the function bcdToDecimal because that number is in BCD code
- *  once we got the correct value we do the same as we did on printh day for the msb and lsb
- *  then it goes to STATE_PRINTH_WDAY where it calls the function HEL_LCD_SetCursor to set 
- *  the cursor on the first position and then calls the function week to get the week initials
- *  is does the same as in function month but with other values, then we print the row with
- *  the function HEL_LCD_String, and we pass to STATE_PRINTH_HOUR where we call HEL_LCD_SetCursor
- *  to get the curor on the second row and then we get the values of the hours as we do on 
- *  year state, then we do the same for the next to states that are SSTATE_PRINTH_MINUTES
- *  and STATE_PRINTH_SECONDS and on seconds state we print the string on the lcd with HEL_LCD_String
- *  lastly we change the state to STATE_IDLE
- * 
- * @retval  None 
- */
+* @brief   **Display a message recived by clock_display on the LCD **
+*
+*   this function starts by displaying the date on the first row of the lcd
+*   the data show by the lcd is read through the circular buffer on the display task function
+*   alse when data is going to be display we add 48 to get the correct ascii character,
+*   once the first row is displayed we check if the alarm is not actived, if its not active
+*   then we need to check if the button its not pressed, we checked if an alarm has been set, 
+*   if it has been set we print an A on the lcd if not then we print nothing, then we print the time
+*   like we did with the date, if the button was pressed then instead of printing the time on the second row
+*   we print if an alarm has been set or the time of the alarm that has been set.
+*   And if the alarm is actived we print alarm!!! and set the pwm to 800 wich is 50% of the pwm to make a sound
+*   and since this function is called every second we add a counter to see how long the alarm is going to run
+*   and on even numbers we turned off the pwm and odd numbers we turn on the pwm.
+*   the alarm part of the function will run till the counter gets to 60 seconds or the flag value is changed
+*   to true that can be done with the button or by sending a message in CAN, and when the alarm is turned off
+*   we change the value of the alarm state to OFF, reset the counter value and the alarm flag.
+* @retval  None 
+*/
 void Display_StMachine(void)
 {
     static char fila_2[] = "00:00:00 ";  /* cppcheck-suppress misra-c2012-7.4 ; string need to be modify*/
@@ -270,8 +286,7 @@ void Display_StMachine(void)
  *
  * @param   mon[in] Indicates the string that we want to modify
  * @param   pos[in] Indicates wich month abreviation we want
- *
- * @retval  None          
+ *       
  */
 void month(char *mon,char pos)
 {
@@ -294,8 +309,7 @@ void month(char *mon,char pos)
  *
  * @param   mon[in] Indicates the string that we want to modify
  * @param   pos[in] Indicates wich month abreviation we want
- *
- * @retval  None          
+ *        
  */
 void week(char *week,char pos)
 {
@@ -307,6 +321,16 @@ void week(char *week,char pos)
    }
 }
 
+
+/**
+ * @brief   **Interruption for falling gpio pin 7 **
+ *
+ *  This function will be called as an interruption when a falling event 
+ *  happens on the gpio pin 7 B.
+ *  if the alarm is active this function will tell the alarm flag to stop the alarm
+ *  also puts the button value on true to display the alarm status on the second row. 
+ *         
+ */
 void HAL_GPIO_EXTI_Falling_Callback( uint16_t GPIO_Pin )
 {
     if(Alarm_State == ALARM_ACTIVE)
@@ -316,8 +340,15 @@ void HAL_GPIO_EXTI_Falling_Callback( uint16_t GPIO_Pin )
     button = TRUE;
 }
 
-/* when the pin changes from low to high this function will be called by HAL_GPIO_EXTI_IRQHandler
-which is in turn called from the EXTI4_15_IRQHandler interrupt vector*/
+/**
+* @brief   **Interruption for falling gpio pin 7 **
+*
+*  This function will be called as an interruption when a rising event 
+*  happens on the gpio pin 7 B.
+*  this function will ereased the second row of the lcd, this is because
+*  no mather when this button is pressed ereasing the second row is necesary
+*  also puts the button on false wich will tell other functions that the button is not pressed        
+*/
 void HAL_GPIO_EXTI_Rising_Callback( uint16_t GPIO_Pin )
 {
     Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,0 );

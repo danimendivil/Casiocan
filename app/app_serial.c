@@ -503,6 +503,8 @@ void Serial_Task( void )
 *   cases will be STATE_FAILED.
 *   then if cases is STATE_FAILED a message will be send in can with an id that indicates that the message was not compatible
 *   and if cases is STATE_OK a message will be send in can with an id that indicates that the message correct.
+*   when an alarm is active this function will not send any message instead it will trigger the alarm flag
+*   so that the alarm stops but only if the message arrive is a STATE_TIME,STATE_TIME or STATE_ALARM.
 */
 static void Serial_StMachine(void)
 {
@@ -530,7 +532,7 @@ static void Serial_StMachine(void)
                 }
             break;
 
-            case STATE_DATE:
+            case STATE_TIME:
                 if(CAN_size == DATE_DATA_SIZE)
                 {
                     if(valid_date(Data_msg[array_pos_2],Data_msg[array_pos_3], Data_msg[array_pos_4],Data_msg[array_pos_5]) == TRUE)

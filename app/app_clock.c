@@ -223,6 +223,7 @@ void Clock_StMachine(uint8_t Clockstate)
 *  circular buffer. 
 *  this function will also be called every second by the software timer configured
 *  on the main function.   
+*  if the button is pressed this function will also send the alarm data
 */
 void Display_msg(void)
 {
