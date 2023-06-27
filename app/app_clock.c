@@ -13,6 +13,7 @@ typedef enum
     CLOCK_ST_CHANGE_TIME,
     CLOCK_ST_CHANGE_DATE,
     CLOCK_ST_CHANGE_ALARM,
+    CLOCK_ST_ALARM_OFF
 } CLOCK_STATES;
 
 /** 
@@ -42,6 +43,16 @@ static RTC_TimeTypeDef sTime;
 static RTC_AlarmTypeDef sAlarm;
 
 /**
+ * @brief  Variable for Alarm state
+ */
+static uint8_t Alarm_State = ALARM_OFF;
+
+/**
+ * @brief  Variable for Alarm state
+ */
+static uint8_t Alarm_Flag_Clock = FALSE;
+
+/**
  * @brief  Variable for serial to clock messages
  */
 static APP_MsgTypeDef CAN_to_clock_message;
@@ -52,7 +63,6 @@ static APP_MsgTypeDef CAN_to_clock_message;
 QUEUE_HandleTypeDef CLOCK_queue;
 
 static void Clock_StMachine(uint8_t Clockstate);
-
 
 /**
  * @brief   **This function intiates the RTC**
@@ -160,53 +170,68 @@ void Clock_Task( void )
 void Clock_StMachine(uint8_t Clockstate)
 {
     uint8_t Display = FALSE;
-    switch(Clockstate)
-    {   
-        case CLOCK_ST_CHANGE_TIME:
-        {
-            sTime.Hours          = CAN_to_clock_message.tm.tm_hour;
-            sTime.Minutes        = CAN_to_clock_message.tm.tm_min;
-            sTime.Seconds        = CAN_to_clock_message.tm.tm_sec;
-            sTime.SubSeconds     = 0x00;
-            sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
-            sTime.StoreOperation = RTC_STOREOPERATION_RESET;
+    Alarm_Flag_Clock = FALSE;
+    if(Clockstate == (uint8_t)CLOCK_ST_ALARM_OFF)
+    {
+        Status = HAL_RTC_DeactivateAlarm(&hrtc, RTC_ALARM_A);
+        assert_error( Status == HAL_OK, RTC_SDESACTIVATE_ALARM_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+        Alarm_State =  ALARM_OFF;   
+    }
+    if (Alarm_State != ALARM_ACTIVE)
+    {
+        switch(Clockstate)
+        {   
+            case CLOCK_ST_CHANGE_TIME:
+            {
+                sTime.Hours          = CAN_to_clock_message.tm.tm_hour;
+                sTime.Minutes        = CAN_to_clock_message.tm.tm_min;
+                sTime.Seconds        = CAN_to_clock_message.tm.tm_sec;
+                sTime.SubSeconds     = 0x00;
+                sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+                sTime.StoreOperation = RTC_STOREOPERATION_RESET;
+                
+                Status = HAL_RTC_SetTime( &hrtc, &sTime, RTC_FORMAT_BCD );
+                assert_error( Status == HAL_OK, RTC_SETTIME_ERROR );    /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+                
+                Display = TRUE;
+                break;
+            }
             
-            Status = HAL_RTC_SetTime( &hrtc, &sTime, RTC_FORMAT_BCD );
-            assert_error( Status == HAL_OK, RTC_SETTIME_ERROR );    /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+            case CLOCK_ST_CHANGE_DATE:
+            {
+                sDate.WeekDay   = CAN_to_clock_message.tm.tm_wday;
+                sDate.Month     = CAN_to_clock_message.tm.tm_mon;
+                sDate.Date      = CAN_to_clock_message.tm.tm_mday;
+                sDate.Year      = CAN_to_clock_message.tm.tm_year_lsb;
+
+                Status = HAL_RTC_SetDate( &hrtc, &sDate, RTC_FORMAT_BCD );
+                assert_error( Status == HAL_OK, RTC_SETDATE_ERROR );        /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+
+                Display = TRUE;
+                break;
+            }
             
-            Display = TRUE;
-            break;
+            case CLOCK_ST_CHANGE_ALARM:
+            {
+                sAlarm.AlarmTime.Hours      = CAN_to_clock_message.tm.tm_hour;      
+                sAlarm.AlarmTime.Minutes    = CAN_to_clock_message.tm.tm_min;              
+                Status = HAL_RTC_DeactivateAlarm(&hrtc, RTC_ALARM_A);
+                assert_error( Status == HAL_OK, RTC_SDESACTIVATE_ALARM_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+                Status = HAL_RTC_SetAlarm_IT(&hrtc, &sAlarm, RTC_FORMAT_BCD);
+                assert_error( Status == HAL_OK, RTC_SET_ALARM_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+                Alarm_State = ALARM_ON;
+                Display = TRUE;
+                break;
+            }
+            default:
+                break;
+            
         }
-        
-        case CLOCK_ST_CHANGE_DATE:
-        {
-            sDate.WeekDay   = CAN_to_clock_message.tm.tm_wday;
-            sDate.Month     = CAN_to_clock_message.tm.tm_mon;
-            sDate.Date      = CAN_to_clock_message.tm.tm_mday;
-            sDate.Year      = CAN_to_clock_message.tm.tm_year_lsb;
-
-            Status = HAL_RTC_SetDate( &hrtc, &sDate, RTC_FORMAT_BCD );
-            assert_error( Status == HAL_OK, RTC_SETDATE_ERROR );        /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-
-            Display = TRUE;
-            break;
-        }
-        
-        case CLOCK_ST_CHANGE_ALARM:
-        {
-            sAlarm.AlarmTime.Hours      = CAN_to_clock_message.tm.tm_hour;      
-            sAlarm.AlarmTime.Minutes    = CAN_to_clock_message.tm.tm_min;              
-            Status = HAL_RTC_DeactivateAlarm(&hrtc, RTC_ALARM_A);
-            assert_error( Status == HAL_OK, RTC_SDESACTIVATE_ALARM_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-            Status = HAL_RTC_SetAlarm_IT(&hrtc, &sAlarm, RTC_FORMAT_BCD);
-            assert_error( Status == HAL_OK, RTC_SET_ALARM_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-            Alarm_State = ALARM_ON;
-            Display = TRUE;
-            break;
-        }
-        default:
-            break;
-        
+    }
+    else
+    {
+        Alarm_Flag_Clock = TRUE;
+        Display     = TRUE;
     }
     if(Display == TRUE)
     {
@@ -245,6 +270,9 @@ void Display_msg(void)
     ClockMsg.tm.tm_min = sTime.Minutes;
     ClockMsg.tm.tm_sec = sTime.Seconds;
 
+    ClockMsg.S_alarm = Alarm_State;
+    ClockMsg.F_alarm = Alarm_Flag_Clock;
+
     if (button == TRUE)
     {
         HAL_RTC_GetAlarm(&hrtc, &sAlarm, RTC_ALARM_A, RTC_FORMAT_BIN);
@@ -253,4 +281,17 @@ void Display_msg(void)
     }
     ClockMsg.msg = DISPLAY_MESSAGE;
     (void)HIL_QUEUE_WriteISR( &CLOCK_queue, &ClockMsg, RTC_TAMP_IRQn );
+}
+
+
+/**
+* @brief   **Interruption for alarm **
+*
+*  This function will be triggered when it is alarm time
+*  the function modifies a variable to tell the program that an alarm event is happening       
+*/
+/* cppcheck-suppress misra-c2012-8.4 ; function cannot be modify is a library function */
+void HAL_RTC_AlarmAEventCallback( RTC_HandleTypeDef *hrtc ) /* cppcheck-suppress misra-c2012-2.7 ; this is a library function */
+{
+    Alarm_State = ALARM_ACTIVE ;
 }

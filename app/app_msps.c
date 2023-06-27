@@ -72,7 +72,7 @@ void HAL_FDCAN_MspInit(FDCAN_HandleTypeDef *hfdcan)  /* cppcheck-suppress misra-
 
 /* cppcheck-suppress misra-c2012-8.4 ; this is a library function */
 /* cppcheck-suppress misra-c2012-2.7 ; this declaration is not used */
-void HAL_RTC_MspInit( RTC_HandleTypeDef* hrtc )   /* cppcheck-suppress misra-c2012-2.7 ; this is a library function */ 
+void HAL_RTC_MspInit( RTC_HandleTypeDef* hrtc )   /* cppcheck-suppress misra-c2012-5.8 ; this declaration is not used */
 {
     RCC_OscInitTypeDef        RCC_OscInitStruct ;
     RCC_PeriphCLKInitTypeDef  PeriphClkInitStruct ;

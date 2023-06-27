@@ -9,6 +9,14 @@
 #define EVEN_SECONDS        2u       /*!<value for use for even numbers*/
 /**
   @} */
+
+/** 
+  * @defgroup ascii number .
+  @{ */
+#define ASCII               48u      /*!<value for getting the ascii value of a number*/    
+/**
+  @} */
+
 /** 
   * @defgroup PWM defines .
   @{ */
@@ -18,6 +26,26 @@
 #define PWM_0                   0       /*!<value for 0% of pwm*/
 /**
   @} */
+
+/**
+  * @defgroup Numbers defines
+  * @{
+  */
+#define CERO        0u    /*!< Value for counter: 0 */
+#define ONE         1u    /*!< Value for counter: 1 */
+#define THREE       3u    /*!< Value for counter: 3 */
+#define FOUR        4u    /*!< Value for counter: 4 */
+#define FIVE        5u    /*!< Value for counter: 5 */
+#define SIX         6u    /*!< Value for counter: 6 */
+#define SEVEN       7u    /*!< Value for counter: 7 */
+#define EIGHT       8u    /*!< Value for counter: 8 */
+#define NINE        9u    /*!< Value for counter: 9 */
+#define TEN         10u   /*!< Value for counter: 10 */
+#define ELEVEN      11u   /*!< Value for counter: 11 */
+#define THIRTEEN    13u  /*!< Value for counter: 13 */
+/**
+  * @}
+  */
 
 /**
  * @brief  Variable for LCD configuration
@@ -33,6 +61,11 @@ static APP_MsgTypeDef clock_display;
 * @brief  Variable for button state
 */
 uint8_t button;
+
+/**
+* @brief  Variable for button turning off the alarm
+*/
+static uint8_t button_flag;
 
 static void month(char *mon,char pos);
 static void week(char *week,char pos);
@@ -117,7 +150,7 @@ void Display_Init( void )
     sConfig.OCMode     = TIM_OCMODE_PWM1;
     sConfig.OCPolarity = TIM_OCPOLARITY_HIGH;
     sConfig.OCFastMode = TIM_OCFAST_DISABLE;
-    sConfig.Pulse = 0;
+    sConfig.Pulse = CERO;
     HAL_TIM_PWM_ConfigChannel( &TimHandle, &sConfig, TIM_CHANNEL_1 );
     HAL_TIM_PWM_Start( &TimHandle, TIM_CHANNEL_1 );
 }
@@ -168,60 +201,62 @@ void Display_StMachine(void)
 {
     static char fila_2[] = "00:00:00 ";  /* cppcheck-suppress misra-c2012-7.4 ; string need to be modify*/
     static char fila_1[] =" XXX,XX XXXX XX ";   /* cppcheck-suppress misra-c2012-7.4 ; string need to be modify*/
-    static uint8_t alarm_counter = 0;
+    static uint8_t alarm_counter = FALSE;
+    static uint8_t Alarm_Flag;
+    Alarm_Flag = clock_display.F_alarm;
     //DISPLAY_STATE_PRINTH_MONTH:
-    month(&fila_1[1],clock_display.tm.tm_mon);
+    month(&fila_1[ONE],clock_display.tm.tm_mon);
             
     //DISPLAY_STATE_PRINTH_DAY:
-    fila_1[5] = ((clock_display.tm.tm_mday / 10u) + 48u);
-    fila_1[6] = ((clock_display.tm.tm_mday % 10u) + 48u);
+    fila_1[FIVE] = ((clock_display.tm.tm_mday / TEN) + ASCII);
+    fila_1[SIX] = ((clock_display.tm.tm_mday % TEN) + ASCII);
             
     //DISPLAY_STATE_PRINTH_YEAR:
-    fila_1[8]   = ( (clock_display.tm.tm_year_msb / 10u) + 48u);
-    fila_1[9]   = ( (clock_display.tm.tm_year_msb % 10u) + 48u);
-    fila_1[10]  = ( (clock_display.tm.tm_year_lsb / 10u) + 48u);
-    fila_1[11]  = ( (clock_display.tm.tm_year_lsb % 10u) + 48u);
+    fila_1[EIGHT]   = ( (clock_display.tm.tm_year_msb / TEN) + ASCII);
+    fila_1[NINE]   = ( (clock_display.tm.tm_year_msb % TEN) + ASCII);
+    fila_1[TEN]  = ( (clock_display.tm.tm_year_lsb / TEN) + ASCII);
+    fila_1[ELEVEN]  = ( (clock_display.tm.tm_year_lsb % TEN) + ASCII);
             
     //DISPLAY_STATE_PRINTH_WDAY:
-    Status = HEL_LCD_SetCursor(&LCDHandle,FIRST_ROW,0);
+    Status = HEL_LCD_SetCursor(&LCDHandle,FIRST_ROW,CERO);
     assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-    week(&fila_1[13],clock_display.tm.tm_wday);
+    week(&fila_1[THIRTEEN],clock_display.tm.tm_wday);
     Status = HEL_LCD_String(&LCDHandle, fila_1);
     assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
 
-    if(Alarm_State != ALARM_ACTIVE)
+    if(clock_display.S_alarm != ALARM_ACTIVE)
     {
         if (button == FALSE)
         {
-            if(Alarm_State == ALARM_ON)  
+            if(clock_display.S_alarm == ALARM_ON)  
             {
-                Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,0 );
+                Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,CERO );
                 assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
                 Status = HEL_LCD_Data( &LCDHandle, 'A' );
                 assert_error( Status == HAL_OK, SPI_STRING_ERROR );     /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
             }  
-            fila_2[5] =':';
-            //DISPLAY_STATE_PRINTH_HOUR:
-            Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,3 );
+            fila_2[FIVE] =':';
+            /*DISPLAY_STATE_PRINTH_HOUR:*/
+            Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,THREE);
             assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-            fila_2[0] = ((clock_display.tm.tm_hour / 10u) + 48u);
-            fila_2[1] = ((clock_display.tm.tm_hour % 10u) + 48u);
+            fila_2[CERO] = ((clock_display.tm.tm_hour / TEN) + ASCII);
+            fila_2[ONE] = ((clock_display.tm.tm_hour % TEN) + ASCII);
                     
-            //DISPLAY_STATE_PRINTH_MINUTES:
-            fila_2[3] = ((clock_display.tm.tm_min / 10u) + 48u);
-            fila_2[4] = ((clock_display.tm.tm_min % 10u) + 48u);
+            /*DISPLAY_STATE_PRINTH_MINUTES:*/
+            fila_2[THREE] = ((clock_display.tm.tm_min / TEN) + ASCII);
+            fila_2[FOUR] = ((clock_display.tm.tm_min % TEN) + ASCII);
                     
-            //DISPLAY_STATE_PRINTH_SECONDS:
-            fila_2[6] = ((clock_display.tm.tm_sec / 10u) + 48u);
-            fila_2[7] = ((clock_display.tm.tm_sec % 10u) + 48u);
+            /*DISPLAY_STATE_PRINTH_SECONDS:*/
+            fila_2[SIX] = ((clock_display.tm.tm_sec / TEN) + ASCII);
+            fila_2[SEVEN] = ((clock_display.tm.tm_sec % TEN) + ASCII);
             Status = HEL_LCD_String(&LCDHandle, fila_2);
             assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
         }
         else
         {
-            if (Alarm_State == ALARM_OFF)
+            if (clock_display.S_alarm == ALARM_OFF)
             {
-            Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,0 );
+            Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,CERO );
             assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
             /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
             Status = HEL_LCD_String(&LCDHandle, "ALARM NO CONFIG");  /* cppcheck-suppress misra-c2012-7.4 ; no need for a constant value */
@@ -229,13 +264,13 @@ void Display_StMachine(void)
             }
             else
             {
-                fila_2[0] = ((clock_display.tm.tm_hour_alarm / 10u) + 48u);
-                fila_2[1] = ((clock_display.tm.tm_hour_alarm % 10u) + 48u);
-                fila_2[3] = ((clock_display.tm.tm_min_alarm / 10u) + 48u);
-                fila_2[4] = ((clock_display.tm.tm_min_alarm % 10u) + 48u);
-                fila_2[5] =' ';
-                fila_2[6] =' ';
-                Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,0 );
+                fila_2[CERO] = ((clock_display.tm.tm_hour_alarm / TEN) + ASCII);
+                fila_2[ONE] = ((clock_display.tm.tm_hour_alarm % TEN) + ASCII);
+                fila_2[THREE] = ((clock_display.tm.tm_min_alarm / TEN) + ASCII);
+                fila_2[FOUR] = ((clock_display.tm.tm_min_alarm % TEN) + ASCII);
+                fila_2[FIVE] =' ';
+                fila_2[SIX] =' ';
+                Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,CERO );
                 assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
                 /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
                 Status = HEL_LCD_String(&LCDHandle, "   ALARM=");       /* cppcheck-suppress misra-c2012-7.4 ; no need for a constant value */
@@ -248,7 +283,7 @@ void Display_StMachine(void)
     else
     {
         alarm_counter++;
-        Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,0 );
+        Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,CERO );
         /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
         assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); 
         /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
@@ -264,7 +299,7 @@ void Display_StMachine(void)
         {
             __HAL_TIM_SET_COMPARE( &TimHandle, TIM_CHANNEL_1, PWM_0 );
         }
-        if(Alarm_Flag == TRUE)
+        if((Alarm_Flag == TRUE) ||(button_flag == TRUE))
         {
             Alarm_Flag = FALSE;
             alarm_counter = ONE_MINUTE;
@@ -273,13 +308,16 @@ void Display_StMachine(void)
         {
             HEL_LCD_Backlight(&LCDHandle, ON);
             alarm_counter = FALSE;
-            Alarm_State = ALARM_OFF;
-            Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,0 );
+            button_flag = FALSE;
+            clock_display.S_alarm = ALARM_OFF;
+            Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,CERO );
             assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
             /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
             Status = HEL_LCD_String(&LCDHandle, "               "); /* cppcheck-suppress misra-c2012-7.4 ; no need for a constant value */
             assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
             __HAL_TIM_SET_COMPARE( &TimHandle, TIM_CHANNEL_1, PWM_0 );
+            clock_display.msg = FOUR;
+            (void)HIL_QUEUE_Write( &SERIAL_queue, &clock_display);
         }  
     }
 }
@@ -298,9 +336,9 @@ void Display_StMachine(void)
  */
 void month(char *mon,char pos)
 {
-   char position = (pos-1)*4;
+   char position = (pos-ONE)*FOUR;
    char *mes = "JAN,FEB,MAR,APR,MAY,JUN,JUL,AUG,SEP,OCT,NOV,DEC," ; /* cppcheck-suppress misra-c2012-7.4 ; string need to be modify*/
-   for(int i=0;i<4;i++)
+   for(uint8_t i=CERO;i<FOUR;i++)
    {
         *(mon+i)=*(mes+i+position);         /* cppcheck-suppress misra-c2012-18.4 ; operators to pointer is needed*/
    }
@@ -321,9 +359,9 @@ void month(char *mon,char pos)
  */
 void week(char *week,char pos)
 {
-  char position = (pos-1)*3;
+  char position = (pos-ONE)*THREE;
    char *sem = "MO TU WE TH FR SA SU" ;     /* cppcheck-suppress misra-c2012-7.4 ; string need to be modify*/
-   for(int i=0;i<3;i++)
+   for(uint8_t i=CERO;i<THREE;i++)
    {
         *(week+i)=*(sem+i+position);        /* cppcheck-suppress misra-c2012-18.4 ; operators to pointer is needed*/
    }
@@ -342,9 +380,9 @@ void week(char *week,char pos)
  /* cppcheck-suppress misra-c2012-2.7 ; function cannot be modify is a library function */
 void HAL_GPIO_EXTI_Falling_Callback( uint16_t GPIO_Pin )    
 {
-    if(Alarm_State == ALARM_ACTIVE)
+    if(clock_display.S_alarm == ALARM_ACTIVE)
     {
-       Alarm_Flag = TRUE; 
+        button_flag = TRUE;
     }
     button = TRUE;
 }

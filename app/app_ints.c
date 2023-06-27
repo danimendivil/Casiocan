@@ -91,7 +91,6 @@ void FLASH_IRQHandler(void)     /* cppcheck-suppress misra-c2012-8.4 ; this func
 
 void RTC_TAMP_IRQHandler( void )             /* cppcheck-suppress misra-c2012-8.4 ; function does no need extern linkage */
 {
-    Alarm_State = ALARM_ACTIVE ;
     HAL_RTC_AlarmIRQHandler( &hrtc );
 }
 
