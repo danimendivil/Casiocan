@@ -205,8 +205,7 @@ void Display_Init( void )
         if( clock_display.msg == DISPLAY_MESSAGE)
         {
             LCD_State = PRINTH_MONTH;
-            while(LCD_State != (uint8_t)IDLE)
-            Display_StMachine();
+            while(Display_StMachine() != (uint8_t)IDLE){}   
         }
     }
 }
