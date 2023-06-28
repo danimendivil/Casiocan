@@ -494,9 +494,6 @@ static void Serial_StMachine(uint8_t cases )
     static uint8_t Event[CAN_DATA_LENGHT];
     switch(cases)
     {
-        case STATE_IDLE:
-        break;
-
         case STATE_TIME:
 
             if(CAN_size == TIME_DATA_SIZE)
@@ -509,13 +506,13 @@ static void Serial_StMachine(uint8_t cases )
                     CAN_td_message.msg=SERIAL_MSG_TIME;
                     Event[array_pos_0] = TRUE; 
                     Event[array_pos_1] = STATE_OK; 
-                    (void)HIL_QUEUE_Write( &CAN_queue, Event );
+                    (void)HIL_QUEUE_WriteISR( &CAN_queue, Event, TIM16_FDCAN_IT0_IRQn  );
                 }
                 else
                 {
                     Event[array_pos_0] = TRUE; 
                     Event[array_pos_1] = STATE_FAILED; 
-                    (void)HIL_QUEUE_Write( &CAN_queue, Event );
+                    (void)HIL_QUEUE_WriteISR( &CAN_queue, Event, TIM16_FDCAN_IT0_IRQn  );
                 }
             }
         break;
@@ -533,13 +530,13 @@ static void Serial_StMachine(uint8_t cases )
                     CAN_td_message.msg = SERIAL_MSG_DATE;
                     Event[array_pos_0] = TRUE; 
                     Event[array_pos_1] = STATE_OK; 
-                    (void)HIL_QUEUE_Write( &CAN_queue, Event );
+                    (void)HIL_QUEUE_WriteISR( &CAN_queue, Event, TIM16_FDCAN_IT0_IRQn  );
                 }
                 else
                 {
                     Event[array_pos_0] = TRUE; 
                     Event[array_pos_1] = STATE_FAILED; 
-                    (void)HIL_QUEUE_Write( &CAN_queue, Event );
+                    (void)HIL_QUEUE_WriteISR( &CAN_queue, Event, TIM16_FDCAN_IT0_IRQn  );
                 }
             }
         break;
@@ -554,13 +551,13 @@ static void Serial_StMachine(uint8_t cases )
                     CAN_td_message.msg = SERIAL_MSG_ALARM;
                     Event[array_pos_0] = TRUE; 
                     Event[array_pos_1] = STATE_OK; 
-                    (void)HIL_QUEUE_Write( &CAN_queue, Event );
+                    (void)HIL_QUEUE_WriteISR( &CAN_queue, Event, TIM16_FDCAN_IT0_IRQn  );
                 }
                 else
                 {
                     Event[array_pos_0] = TRUE; 
                     Event[array_pos_1] = STATE_FAILED; 
-                    (void)HIL_QUEUE_Write( &CAN_queue, Event );
+                    (void)HIL_QUEUE_WriteISR( &CAN_queue, Event, TIM16_FDCAN_IT0_IRQn  );
                 }
             }
         break;
