@@ -104,18 +104,12 @@ static QUEUE_HandleTypeDef CAN_queue;
 */
 QUEUE_HandleTypeDef SERIAL_queue;
 
-/**
-* @brief  Variable for circular buffer state machine.
-*/
-static uint8_t cases;
-
-
 static uint8_t valid_date(uint8_t day, uint8_t month, uint8_t yearM, uint8_t yearL);
 static uint8_t dayofweek(uint32_t yearM, uint32_t yearL, uint32_t month, uint32_t day);
 static uint8_t valid_time(uint8_t hour,uint8_t minutes,uint8_t seconds);
 static uint8_t valid_alarm(uint8_t hour,uint8_t minutes);
 static uint8_t bcdToDecimal(uint8_t bcdValue); 
-static void Serial_StMachine(void);
+static void Serial_StMachine(uint8_t cases );
 /**
 * @brief   **Init function fot serial task(CAN init)**
 *
@@ -464,20 +458,13 @@ void Serial_Task( void )
         (void)HIL_QUEUE_ReadISR( &CAN_queue, &Data_msg, TIM16_FDCAN_IT0_IRQn );
         if((CanTp_SingleFrameRx( Data_msg, &CAN_size )) == TRUE)
         {
-            cases = Data_msg[array_pos_1];
-            while( cases != (uint8_t)STATE_IDLE)
-            {
-                Serial_StMachine();
-            }
+            Serial_StMachine(Data_msg[array_pos_1]); 
         }
         
         else
         {
-            cases = STATE_FAILED;
-            while( cases != (uint8_t)STATE_IDLE)
-            {
-                Serial_StMachine();
-            }
+            Data_msg[array_pos_1] = STATE_FAILED;
+            Serial_StMachine(Data_msg[array_pos_1]);
         }
     }
 }
@@ -502,8 +489,9 @@ void Serial_Task( void )
 *   when an alarm is active this function will not send any message instead it will trigger the alarm flag
 *   so that the alarm stops but only if the message arrive is a STATE_TIME,STATE_DATE or STATE_ALARM.
 */
-static void Serial_StMachine(void )
+static void Serial_StMachine(uint8_t cases )
 {
+    static uint8_t Event[CAN_DATA_LENGHT];
     switch(cases)
     {
         case STATE_IDLE:
@@ -519,12 +507,15 @@ static void Serial_StMachine(void )
                     CAN_td_message.tm.tm_min=Data_msg[array_pos_3];
                     CAN_td_message.tm.tm_sec=Data_msg[array_pos_4];
                     CAN_td_message.msg=SERIAL_MSG_TIME;
-                    
-                    cases = STATE_OK;
+                    Event[array_pos_0] = TRUE; 
+                    Event[array_pos_1] = STATE_OK; 
+                    (void)HIL_QUEUE_Write( &CAN_queue, Event );
                 }
                 else
                 {
-                    cases = STATE_FAILED;
+                    Event[array_pos_0] = TRUE; 
+                    Event[array_pos_1] = STATE_FAILED; 
+                    (void)HIL_QUEUE_Write( &CAN_queue, Event );
                 }
             }
         break;
@@ -540,11 +531,15 @@ static void Serial_StMachine(void )
                     CAN_td_message.tm.tm_year_lsb = Data_msg[array_pos_5];
                     CAN_td_message.tm.tm_wday = dayofweek(CAN_td_message.tm.tm_year_msb,CAN_td_message.tm.tm_year_lsb, CAN_td_message.tm.tm_mon, CAN_td_message.tm.tm_mday);
                     CAN_td_message.msg = SERIAL_MSG_DATE;
-                    cases = STATE_OK;
+                    Event[array_pos_0] = TRUE; 
+                    Event[array_pos_1] = STATE_OK; 
+                    (void)HIL_QUEUE_Write( &CAN_queue, Event );
                 }
                 else
                 {
-                    cases = STATE_FAILED;
+                    Event[array_pos_0] = TRUE; 
+                    Event[array_pos_1] = STATE_FAILED; 
+                    (void)HIL_QUEUE_Write( &CAN_queue, Event );
                 }
             }
         break;
@@ -557,11 +552,15 @@ static void Serial_StMachine(void )
                     CAN_td_message.tm.tm_hour=Data_msg[array_pos_2];
                     CAN_td_message.tm.tm_min=Data_msg[array_pos_3];
                     CAN_td_message.msg = SERIAL_MSG_ALARM;
-                    cases = STATE_OK;
+                    Event[array_pos_0] = TRUE; 
+                    Event[array_pos_1] = STATE_OK; 
+                    (void)HIL_QUEUE_Write( &CAN_queue, Event );
                 }
                 else
                 {
-                    cases = STATE_FAILED;
+                    Event[array_pos_0] = TRUE; 
+                    Event[array_pos_1] = STATE_FAILED; 
+                    (void)HIL_QUEUE_Write( &CAN_queue, Event );
                 }
             }
         break;
@@ -571,18 +570,15 @@ static void Serial_StMachine(void )
             Data_msg[array_pos_0]=OK_CANID;
             CAN_size=TRUE;
             CanTp_SingleFrameTx( &Data_msg[array_pos_0],&CAN_size); 
-            cases = STATE_IDLE;
         break;
 
         case STATE_FAILED:
             Data_msg[array_pos_0]=FAILED_CANID;
                 CAN_size=TRUE;
             CanTp_SingleFrameTx( &Data_msg[array_pos_0],&CAN_size);
-            cases = STATE_IDLE;
         break;
 
         default:
-            cases = STATE_IDLE;
         break;
     }
 }
