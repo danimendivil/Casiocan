@@ -71,7 +71,7 @@ QUEUE_HandleTypeDef CLOCK_queue;
 */
 static uint8_t Clockstate;
 
-static uint8_t Clock_StMachine(uint8_t state);
+static void Clock_StMachine(uint8_t state);
 
 /**
  * @brief   **This function intiates the RTC**
@@ -163,7 +163,10 @@ void Clock_Task( void )
         /*Read the first message*/
         (void)HIL_QUEUE_ReadISR( &SERIAL_queue, &CAN_to_clock_message, RTC_TAMP_IRQn);
         Clockstate = CLOCK_ST_CHECK_FLAG;
-        while(Clock_StMachine(CAN_to_clock_message.msg) != (uint8_t)CLOCK_ST_IDLE){}  
+        while(Clockstate != (uint8_t)CLOCK_ST_IDLE)
+        {
+            Clock_StMachine(CAN_to_clock_message.msg);
+        }  
     }
 }
 
@@ -177,7 +180,7 @@ void Clock_Task( void )
 *  a true value wich will call Display_msg function.
 *   
 */
-static uint8_t Clock_StMachine(uint8_t state)
+static void Clock_StMachine(uint8_t state)
 {
     switch(Clockstate)
     {   
@@ -269,7 +272,6 @@ static uint8_t Clock_StMachine(uint8_t state)
         break;
         
     }
-    return Clockstate;
 }
 
 /**

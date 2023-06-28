@@ -102,7 +102,7 @@ static uint8_t button_flag;
 
 static void month(char *mon,char pos);
 static void week(char *week,char pos);
-static uint8_t Display_StMachine(void);
+static void Display_StMachine(void);
 
 /**
  * @brief  Variable for the pwm timer
@@ -205,7 +205,10 @@ void Display_Init( void )
         if( clock_display.msg == DISPLAY_MESSAGE)
         {
             LCD_State = PRINTH_MONTH;
-            while(Display_StMachine() != (uint8_t)IDLE){}   
+            while(LCD_State != (uint8_t)IDLE)
+            {
+                Display_StMachine();
+            }   
         }
     }
 }
@@ -229,7 +232,7 @@ void Display_Init( void )
 *   we change the value of the alarm state to OFF, reset the counter value and the alarm flag.
 * @retval  None 
 */
-uint8_t Display_StMachine(void)
+void Display_StMachine(void)
 {
     static char fila_2[] = "00:00:00 ";  /* cppcheck-suppress misra-c2012-7.4 ; string need to be modify*/
     static char fila_1[] =" XXX,XX XXXX XX ";   /* cppcheck-suppress misra-c2012-7.4 ; string need to be modify*/
@@ -417,8 +420,6 @@ uint8_t Display_StMachine(void)
         default:
         break;
     }
-
-    return LCD_State;  
 }
 
 /**

@@ -115,7 +115,7 @@ static uint8_t dayofweek(uint32_t yearM, uint32_t yearL, uint32_t month, uint32_
 static uint8_t valid_time(uint8_t hour,uint8_t minutes,uint8_t seconds);
 static uint8_t valid_alarm(uint8_t hour,uint8_t minutes);
 static uint8_t bcdToDecimal(uint8_t bcdValue); 
-static uint8_t Serial_StMachine(void);
+static void Serial_StMachine(void);
 /**
 * @brief   **Init function fot serial task(CAN init)**
 *
@@ -465,13 +465,19 @@ void Serial_Task( void )
         if((CanTp_SingleFrameRx( Data_msg, &CAN_size )) == TRUE)
         {
             cases = Data_msg[array_pos_1];
-            while(Serial_StMachine() != (uint8_t)STATE_IDLE){}
+            while( cases != (uint8_t)STATE_IDLE)
+            {
+                Serial_StMachine();
+            }
         }
         
         else
         {
             cases = STATE_FAILED;
-            while(Serial_StMachine() != (uint8_t)STATE_IDLE){}
+            while( cases != (uint8_t)STATE_IDLE)
+            {
+                Serial_StMachine();
+            }
         }
     }
 }
@@ -496,7 +502,7 @@ void Serial_Task( void )
 *   when an alarm is active this function will not send any message instead it will trigger the alarm flag
 *   so that the alarm stops but only if the message arrive is a STATE_TIME,STATE_DATE or STATE_ALARM.
 */
-static uint8_t Serial_StMachine(void )
+static void Serial_StMachine(void )
 {
     switch(cases)
     {
@@ -579,6 +585,4 @@ static uint8_t Serial_StMachine(void )
             cases = STATE_IDLE;
         break;
     }
-    
-    return cases;
 }
