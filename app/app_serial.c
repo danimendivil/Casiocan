@@ -456,7 +456,7 @@ void Serial_Task( void )
     while( HIL_QUEUE_IsEmptyISR( &CAN_queue, TIM16_FDCAN_IT0_IRQn ) == FALSE )
     {
         /*Read the first message*/
-        HIL_QUEUE_ReadISR( &CAN_queue, &Data_msg, TIM16_FDCAN_IT0_IRQn );
+        (void)HIL_QUEUE_ReadISR( &CAN_queue, &Data_msg, TIM16_FDCAN_IT0_IRQn );
         if((CanTp_SingleFrameRx( Data_msg, &CAN_size )) == TRUE)
         {
             Serial_StMachine(Data_msg[array_pos_1]);
