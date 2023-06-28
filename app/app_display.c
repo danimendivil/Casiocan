@@ -86,6 +86,11 @@ static LCD_HandleTypeDef LCDHandle;
 static APP_MsgTypeDef clock_display;
 
 /**
+ * @brief  Variable for LCD state machine
+ */
+static uint8_t LCD_State;
+
+/**
 * @brief  Variable for button state
 */
 uint8_t button;
@@ -97,7 +102,7 @@ static uint8_t button_flag;
 
 static void month(char *mon,char pos);
 static void week(char *week,char pos);
-static void Display_StMachine(void);
+static uint8_t Display_StMachine(void);
 
 /**
  * @brief  Variable for the pwm timer
@@ -199,6 +204,8 @@ void Display_Init( void )
         (void)HIL_QUEUE_ReadISR(&CLOCK_queue,&clock_display,SPI1_IRQn);
         if( clock_display.msg == DISPLAY_MESSAGE)
         {
+            LCD_State = PRINTH_MONTH;
+            while(LCD_State != (uint8_t)IDLE)
             Display_StMachine();
         }
     }
@@ -223,199 +230,196 @@ void Display_Init( void )
 *   we change the value of the alarm state to OFF, reset the counter value and the alarm flag.
 * @retval  None 
 */
-void Display_StMachine(void)
+uint8_t Display_StMachine(void)
 {
     static char fila_2[] = "00:00:00 ";  /* cppcheck-suppress misra-c2012-7.4 ; string need to be modify*/
     static char fila_1[] =" XXX,XX XXXX XX ";   /* cppcheck-suppress misra-c2012-7.4 ; string need to be modify*/
     static uint8_t alarm_counter = FALSE;
     static uint8_t Alarm_Flag;
-    static uint8_t LCD_State;
-    LCD_State = PRINTH_MONTH;
-
     Alarm_Flag = clock_display.F_alarm;
-    while(LCD_State != (uint8_t)IDLE)
+    
+    switch(LCD_State)
     {
-        switch(LCD_State)
-        {
-            case IDLE:
-            break;
+        case IDLE:
+        break;
 
-            case PRINTH_MONTH:
-                month(&fila_1[ONE],clock_display.tm.tm_mon);
-                LCD_State=PRINTH_DAY;
-            break;
+        case PRINTH_MONTH:
+            month(&fila_1[ONE],clock_display.tm.tm_mon);
+            LCD_State=PRINTH_DAY;
+        break;
 
-            case PRINTH_DAY:
-                fila_1[FIVE] = ((clock_display.tm.tm_mday / TEN) + ASCII);
-                fila_1[SIX] = ((clock_display.tm.tm_mday % TEN) + ASCII);
-                LCD_State =  PRINTH_YEAR;
-            break;
+        case PRINTH_DAY:
+            fila_1[FIVE] = ((clock_display.tm.tm_mday / TEN) + ASCII);
+            fila_1[SIX] = ((clock_display.tm.tm_mday % TEN) + ASCII);
+            LCD_State =  PRINTH_YEAR;
+        break;
 
-            case PRINTH_YEAR:
-                fila_1[EIGHT]   = ( (clock_display.tm.tm_year_msb / TEN) + ASCII);
-                fila_1[NINE]   = ( (clock_display.tm.tm_year_msb % TEN) + ASCII);
-                fila_1[TEN]  = ( (clock_display.tm.tm_year_lsb / TEN) + ASCII);
-                fila_1[ELEVEN]  = ( (clock_display.tm.tm_year_lsb % TEN) + ASCII);
-                LCD_State = PRINTH_WDAY;
-            break;
+        case PRINTH_YEAR:
+            fila_1[EIGHT]   = ( (clock_display.tm.tm_year_msb / TEN) + ASCII);
+            fila_1[NINE]   = ( (clock_display.tm.tm_year_msb % TEN) + ASCII);
+            fila_1[TEN]  = ( (clock_display.tm.tm_year_lsb / TEN) + ASCII);
+            fila_1[ELEVEN]  = ( (clock_display.tm.tm_year_lsb % TEN) + ASCII);
+            LCD_State = PRINTH_WDAY;
+        break;
 
-            case PRINTH_WDAY:
-                Status = HEL_LCD_SetCursor(&LCDHandle,FIRST_ROW,CERO);
+        case PRINTH_WDAY:
+            Status = HEL_LCD_SetCursor(&LCDHandle,FIRST_ROW,CERO);
+            assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+            week(&fila_1[THIRTEEN],clock_display.tm.tm_wday);
+            Status = HEL_LCD_String(&LCDHandle, fila_1);
+            assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+            LCD_State=CHECK_ALARM;
+        break;
+
+        case CHECK_ALARM:
+            if(clock_display.S_alarm != ALARM_ACTIVE)
+            {
+                LCD_State = CHECK_BUTTON;
+            }
+            else
+            {
+                LCD_State = PRINT_ALARM;
+            }
+        break;
+
+        case CHECK_BUTTON:
+            if (button == FALSE) 
+            {
+                LCD_State = PRINT_A;
+            }
+            else
+            {
+                LCD_State = PRINT_ALARM_STATUS;
+            }
+        break;
+
+        case PRINT_A:
+            if(clock_display.S_alarm == ALARM_ON)  
+            {
+                Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,CERO );
                 assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-                week(&fila_1[THIRTEEN],clock_display.tm.tm_wday);
-                Status = HEL_LCD_String(&LCDHandle, fila_1);
-                assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-                LCD_State=CHECK_ALARM;
-            break;
+                Status = HEL_LCD_Data( &LCDHandle, 'A' );
+                assert_error( Status == HAL_OK, SPI_STRING_ERROR );     /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+            } 
+            fila_2[FIVE] =':';
+            LCD_State = PRINTH_HOUR;
+        break;
 
-            case CHECK_ALARM:
-                if(clock_display.S_alarm != ALARM_ACTIVE)
-                {
-                    LCD_State = CHECK_BUTTON;
-                }
-                else
-                {
-                    LCD_State = PRINT_ALARM;
-                }
-            break;
+        case PRINTH_HOUR:
+            Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,THREE);
+            assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+            fila_2[CERO] = ((clock_display.tm.tm_hour / TEN) + ASCII);
+            fila_2[ONE] = ((clock_display.tm.tm_hour % TEN) + ASCII);
+            LCD_State = PRINTH_MINUTES;
+        break;
 
-            case CHECK_BUTTON:
-                if (button == FALSE) 
-                {
-                    LCD_State = PRINT_A;
-                }
-                else
-                {
-                    LCD_State = PRINT_ALARM_STATUS;
-                }
-            break;
+        case PRINTH_MINUTES:
+            fila_2[THREE] = ((clock_display.tm.tm_min / TEN) + ASCII);
+            fila_2[FOUR] = ((clock_display.tm.tm_min % TEN) + ASCII);
+            LCD_State = PRINTH_SECONDS;
+        break;
+        
+        case PRINTH_SECONDS:
+            fila_2[SIX] = ((clock_display.tm.tm_sec / TEN) + ASCII);
+            fila_2[SEVEN] = ((clock_display.tm.tm_sec % TEN) + ASCII);
+            Status = HEL_LCD_String(&LCDHandle, fila_2);
+            assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+            LCD_State = IDLE;
+        break;
+        case PRINT_ALARM_STATUS:
+            if (clock_display.S_alarm == ALARM_OFF)
+            {
+                LCD_State = PRINT_ALARM_OFF;
+            }
+            else
+            {
+                LCD_State = PRINT_ALARM_ON;
+            }
+        break;
 
-            case PRINT_A:
-                if(clock_display.S_alarm == ALARM_ON)  
-                {
-                    Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,CERO );
-                    assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-                    Status = HEL_LCD_Data( &LCDHandle, 'A' );
-                    assert_error( Status == HAL_OK, SPI_STRING_ERROR );     /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-                } 
-                fila_2[FIVE] =':';
-                LCD_State = PRINTH_HOUR;
-            break;
+        case PRINT_ALARM_OFF:
+            Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,CERO );
+            assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+            /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+            Status = HEL_LCD_String(&LCDHandle, "ALARM NO CONFIG");  /* cppcheck-suppress misra-c2012-7.4 ; no need for a constant value */
+            assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+            LCD_State = IDLE;
+        break;
 
-            case PRINTH_HOUR:
-                Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,THREE);
-                assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-                fila_2[CERO] = ((clock_display.tm.tm_hour / TEN) + ASCII);
-                fila_2[ONE] = ((clock_display.tm.tm_hour % TEN) + ASCII);
-                LCD_State = PRINTH_MINUTES;
-            break;
+        case PRINT_ALARM_ON:
+            fila_2[CERO] = ((clock_display.tm.tm_hour_alarm / TEN) + ASCII);
+            fila_2[ONE] = ((clock_display.tm.tm_hour_alarm % TEN) + ASCII);
+            fila_2[THREE] = ((clock_display.tm.tm_min_alarm / TEN) + ASCII);
+            fila_2[FOUR] = ((clock_display.tm.tm_min_alarm % TEN) + ASCII);
+            fila_2[FIVE] =' ';
+            fila_2[SIX] =' ';
+            Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,CERO );
+            assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+            /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+            Status = HEL_LCD_String(&LCDHandle, "   ALARM=");       /* cppcheck-suppress misra-c2012-7.4 ; no need for a constant value */
+            assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+            Status = HEL_LCD_String(&LCDHandle, fila_2);
+            assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+            LCD_State = IDLE;
+        break;
 
-            case PRINTH_MINUTES:
-                fila_2[THREE] = ((clock_display.tm.tm_min / TEN) + ASCII);
-                fila_2[FOUR] = ((clock_display.tm.tm_min % TEN) + ASCII);
-                LCD_State = PRINTH_SECONDS;
-            break;
-            
-            case PRINTH_SECONDS:
-                fila_2[SIX] = ((clock_display.tm.tm_sec / TEN) + ASCII);
-                fila_2[SEVEN] = ((clock_display.tm.tm_sec % TEN) + ASCII);
-                Status = HEL_LCD_String(&LCDHandle, fila_2);
-                assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-                LCD_State = IDLE;
-            break;
-            case PRINT_ALARM_STATUS:
-                if (clock_display.S_alarm == ALARM_OFF)
-                {
-                    LCD_State = PRINT_ALARM_OFF;
-                }
-                else
-                {
-                    LCD_State = PRINT_ALARM_ON;
-                }
-            break;
+        case PRINT_ALARM:
+            alarm_counter++;
+            Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,CERO );
+            /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+            assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); 
+            /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+            Status = HEL_LCD_String(&LCDHandle, "    ALARM!!!");    /* cppcheck-suppress misra-c2012-7.4 ; no need for a constant value */
+            assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+            HEL_LCD_Backlight(&LCDHandle, TOGGLE);
+            LCD_State = BUZZER_STATE;
+        break;
 
-            case PRINT_ALARM_OFF:
+        case BUZZER_STATE:
+            if ((alarm_counter % EVEN_SECONDS) == FALSE)
+            {
+                __HAL_TIM_SET_COMPARE( &TimHandle, TIM_CHANNEL_1, PWM_50 );
+            }
+            else
+            {
+                __HAL_TIM_SET_COMPARE( &TimHandle, TIM_CHANNEL_1, PWM_0 );
+            }
+            LCD_State = FLAG_STATE;
+        break;
+
+        case FLAG_STATE:
+            if((Alarm_Flag == TRUE) ||(button_flag == TRUE))
+            {
+                Alarm_Flag = FALSE;
+                alarm_counter = ONE_MINUTE;
+            }
+            LCD_State = COUNTER_STATE;
+        break;
+
+        case COUNTER_STATE:
+            if(alarm_counter == ONE_MINUTE)
+            {
+                HEL_LCD_Backlight(&LCDHandle, ON);
+                alarm_counter = FALSE;
+                button_flag = FALSE;
+                clock_display.S_alarm = ALARM_OFF;
                 Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,CERO );
                 assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
                 /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-                Status = HEL_LCD_String(&LCDHandle, "ALARM NO CONFIG");  /* cppcheck-suppress misra-c2012-7.4 ; no need for a constant value */
+                Status = HEL_LCD_String(&LCDHandle, "               "); /* cppcheck-suppress misra-c2012-7.4 ; no need for a constant value */
                 assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-                LCD_State = IDLE;
-            break;
+                __HAL_TIM_SET_COMPARE( &TimHandle, TIM_CHANNEL_1, PWM_0 );
+                clock_display.msg = FOUR;
+                (void)HIL_QUEUE_Write( &SERIAL_queue, &clock_display);
+            } 
+            LCD_State = IDLE;
+        break;
+        
+        default:
+        break;
+    }
 
-            case PRINT_ALARM_ON:
-                fila_2[CERO] = ((clock_display.tm.tm_hour_alarm / TEN) + ASCII);
-                fila_2[ONE] = ((clock_display.tm.tm_hour_alarm % TEN) + ASCII);
-                fila_2[THREE] = ((clock_display.tm.tm_min_alarm / TEN) + ASCII);
-                fila_2[FOUR] = ((clock_display.tm.tm_min_alarm % TEN) + ASCII);
-                fila_2[FIVE] =' ';
-                fila_2[SIX] =' ';
-                Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,CERO );
-                assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-                /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-                Status = HEL_LCD_String(&LCDHandle, "   ALARM=");       /* cppcheck-suppress misra-c2012-7.4 ; no need for a constant value */
-                assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-                Status = HEL_LCD_String(&LCDHandle, fila_2);
-                assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-                LCD_State = IDLE;
-            break;
-
-            case PRINT_ALARM:
-                alarm_counter++;
-                Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,CERO );
-                /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-                assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); 
-                /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-                Status = HEL_LCD_String(&LCDHandle, "    ALARM!!!");    /* cppcheck-suppress misra-c2012-7.4 ; no need for a constant value */
-                assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-                HEL_LCD_Backlight(&LCDHandle, TOGGLE);
-                LCD_State = BUZZER_STATE;
-            break;
-
-            case BUZZER_STATE:
-                if ((alarm_counter % EVEN_SECONDS) == FALSE)
-                {
-                    __HAL_TIM_SET_COMPARE( &TimHandle, TIM_CHANNEL_1, PWM_50 );
-                }
-                else
-                {
-                    __HAL_TIM_SET_COMPARE( &TimHandle, TIM_CHANNEL_1, PWM_0 );
-                }
-                LCD_State = FLAG_STATE;
-            break;
-
-            case FLAG_STATE:
-                if((Alarm_Flag == TRUE) ||(button_flag == TRUE))
-                {
-                    Alarm_Flag = FALSE;
-                    alarm_counter = ONE_MINUTE;
-                }
-                LCD_State = COUNTER_STATE;
-            break;
-
-            case COUNTER_STATE:
-                if(alarm_counter == ONE_MINUTE)
-                {
-                    HEL_LCD_Backlight(&LCDHandle, ON);
-                    alarm_counter = FALSE;
-                    button_flag = FALSE;
-                    clock_display.S_alarm = ALARM_OFF;
-                    Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,CERO );
-                    assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-                    /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-                    Status = HEL_LCD_String(&LCDHandle, "               "); /* cppcheck-suppress misra-c2012-7.4 ; no need for a constant value */
-                    assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-                    __HAL_TIM_SET_COMPARE( &TimHandle, TIM_CHANNEL_1, PWM_0 );
-                    clock_display.msg = FOUR;
-                    (void)HIL_QUEUE_Write( &SERIAL_queue, &clock_display);
-                } 
-                LCD_State = IDLE;
-            break;
-            
-            default:
-            break;
-        }
-    }  
+    return LCD_State;  
 }
 
 /**
