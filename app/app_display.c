@@ -98,8 +98,6 @@ static uint8_t button_flag;
 static void month(char *mon,char pos);
 static void week(char *week,char pos);
 static void Display_StMachine(void);
-void HAL_GPIO_EXTI_Falling_Callback( uint16_t GPIO_Pin );  
-void HAL_GPIO_EXTI_Rising_Callback( uint16_t GPIO_Pin );
 
 /**
  * @brief  Variable for the pwm timer
@@ -476,7 +474,7 @@ void week(char *week,char pos)
  *         
  */
  /* cppcheck-suppress misra-c2012-2.7 ; function cannot be modify is a library function */
-void HAL_GPIO_EXTI_Falling_Callback( uint16_t GPIO_Pin )    
+void HAL_GPIO_EXTI_Falling_Callback( uint16_t GPIO_Pin )    /* cppcheck-suppress misra-c2012-8.4 ; no need for a declaration since is a library function*/    
 {
     if(clock_display.S_alarm == ALARM_ACTIVE)
     {
@@ -495,7 +493,7 @@ void HAL_GPIO_EXTI_Falling_Callback( uint16_t GPIO_Pin )
 *  also puts the button on false wich will tell other functions that the button is not pressed        
 */
  /* cppcheck-suppress misra-c2012-2.7 ; function cannot be modify is a library function */
-void HAL_GPIO_EXTI_Rising_Callback( uint16_t GPIO_Pin )
+void HAL_GPIO_EXTI_Rising_Callback( uint16_t GPIO_Pin ) /* cppcheck-suppress misra-c2012-8.4 ; no need for a declaration since is a library function*/
 {
     Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,0 );
     assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
