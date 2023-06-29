@@ -158,7 +158,7 @@ void Clock_Task( void )
     {
         /*Read the first message*/
         (void)HIL_QUEUE_ReadISR( &SERIAL_queue, &CAN_to_clock_message, RTC_TAMP_IRQn);
-        if ((Alarm_State != ALARM_ACTIVE) || (CAN_to_clock_message.msg == CLOCK_ST_FLAG_OFF))
+        if ((Alarm_State != ALARM_ACTIVE) || (CAN_to_clock_message.msg == (uint8_t)CLOCK_ST_FLAG_OFF))
         {
             Clock_StMachine(CAN_to_clock_message.msg);
         }
