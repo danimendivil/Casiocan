@@ -88,3 +88,14 @@ void FLASH_IRQHandler(void)     /* cppcheck-suppress misra-c2012-8.4 ; this func
         assert_error( Status == HAL_OK, ECC_TWO_ERROR );    /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     }
 }
+
+void RTC_TAMP_IRQHandler( void )             /* cppcheck-suppress misra-c2012-8.4 ; function does no need extern linkage */
+{
+    HAL_RTC_AlarmIRQHandler( &hrtc );
+}
+
+void EXTI4_15_IRQHandler( void )            /* cppcheck-suppress misra-c2012-8.4 ; function does no need extern linkage */
+{
+    /*HAL library fucntions that attend interrupt on inputs*/
+    HAL_GPIO_EXTI_IRQHandler( GPIO_PIN_7 );
+}
