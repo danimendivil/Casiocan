@@ -86,11 +86,6 @@ static LCD_HandleTypeDef LCDHandle;
 static APP_MsgTypeDef clock_display;
 
 /**
- * @brief  Variable for LCD state machine
- */
-static uint8_t LCD_State;
-
-/**
 * @brief  Variable for button state
 */
 uint8_t button;
@@ -102,7 +97,7 @@ static uint8_t button_flag;
 
 static void month(char *mon,char pos);
 static void week(char *week,char pos);
-static void Display_StMachine(void);
+static void Display_StMachine(uint8_t LCD_State);
 
 /**
  * @brief  Variable for the pwm timer
@@ -202,14 +197,7 @@ void Display_Init( void )
     {
         /*Read the first message*/
         (void)HIL_QUEUE_ReadISR(&CLOCK_queue,&clock_display,SPI1_IRQn);
-        if( clock_display.msg == DISPLAY_MESSAGE)
-        {
-            LCD_State = PRINTH_MONTH;
-            while(LCD_State != (uint8_t)IDLE)
-            {
-                Display_StMachine();
-            }   
-        }
+        Display_StMachine(clock_display.msg);
     }
 }
 
@@ -232,7 +220,7 @@ void Display_Init( void )
 *   we change the value of the alarm state to OFF, reset the counter value and the alarm flag.
 * @retval  None 
 */
-void Display_StMachine(void)
+void Display_StMachine(uint8_t LCD_State)
 {
     static char fila_2[] = "00:00:00 ";  /* cppcheck-suppress misra-c2012-7.4 ; string need to be modify*/
     static char fila_1[] =" XXX,XX XXXX XX ";   /* cppcheck-suppress misra-c2012-7.4 ; string need to be modify*/
@@ -247,13 +235,15 @@ void Display_StMachine(void)
 
         case PRINTH_MONTH:
             month(&fila_1[ONE],clock_display.tm.tm_mon);
-            LCD_State=PRINTH_DAY;
+            clock_display.msg=PRINTH_DAY;
+            (void)HIL_QUEUE_WriteISR( &CLOCK_queue, &clock_display,SPI1_IRQn);
         break;
 
         case PRINTH_DAY:
             fila_1[FIVE] = ((clock_display.tm.tm_mday / TEN) + ASCII);
             fila_1[SIX] = ((clock_display.tm.tm_mday % TEN) + ASCII);
-            LCD_State =  PRINTH_YEAR;
+            clock_display.msg =  PRINTH_YEAR;
+            (void)HIL_QUEUE_WriteISR( &CLOCK_queue, &clock_display,SPI1_IRQn);
         break;
 
         case PRINTH_YEAR:
@@ -261,7 +251,8 @@ void Display_StMachine(void)
             fila_1[NINE]   = ( (clock_display.tm.tm_year_msb % TEN) + ASCII);
             fila_1[TEN]  = ( (clock_display.tm.tm_year_lsb / TEN) + ASCII);
             fila_1[ELEVEN]  = ( (clock_display.tm.tm_year_lsb % TEN) + ASCII);
-            LCD_State = PRINTH_WDAY;
+            clock_display.msg = PRINTH_WDAY;
+            (void)HIL_QUEUE_WriteISR( &CLOCK_queue, &clock_display,SPI1_IRQn);
         break;
 
         case PRINTH_WDAY:
@@ -270,28 +261,33 @@ void Display_StMachine(void)
             week(&fila_1[THIRTEEN],clock_display.tm.tm_wday);
             Status = HEL_LCD_String(&LCDHandle, fila_1);
             assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-            LCD_State=CHECK_ALARM;
+            clock_display.msg = CHECK_ALARM;
+            (void)HIL_QUEUE_WriteISR( &CLOCK_queue, &clock_display,SPI1_IRQn);
         break;
 
         case CHECK_ALARM:
             if(clock_display.S_alarm != ALARM_ACTIVE)
             {
-                LCD_State = CHECK_BUTTON;
+                clock_display.msg = CHECK_BUTTON;
+                (void)HIL_QUEUE_WriteISR( &CLOCK_queue, &clock_display,SPI1_IRQn);
             }
             else
             {
-                LCD_State = PRINT_ALARM;
+                clock_display.msg = PRINT_ALARM;
+                (void)HIL_QUEUE_WriteISR( &CLOCK_queue, &clock_display,SPI1_IRQn);
             }
         break;
 
         case CHECK_BUTTON:
             if (button == FALSE) 
             {
-                LCD_State = PRINT_A;
+                clock_display.msg = PRINT_A;
+                (void)HIL_QUEUE_WriteISR( &CLOCK_queue, &clock_display,SPI1_IRQn);
             }
             else
             {
-                LCD_State = PRINT_ALARM_STATUS;
+                clock_display.msg = PRINT_ALARM_STATUS;
+                (void)HIL_QUEUE_WriteISR( &CLOCK_queue, &clock_display,SPI1_IRQn);
             }
         break;
 
@@ -304,7 +300,8 @@ void Display_StMachine(void)
                 assert_error( Status == HAL_OK, SPI_STRING_ERROR );     /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
             } 
             fila_2[FIVE] =':';
-            LCD_State = PRINTH_HOUR;
+            clock_display.msg = PRINTH_HOUR;
+            (void)HIL_QUEUE_WriteISR( &CLOCK_queue, &clock_display,SPI1_IRQn);
         break;
 
         case PRINTH_HOUR:
@@ -312,13 +309,15 @@ void Display_StMachine(void)
             assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
             fila_2[CERO] = ((clock_display.tm.tm_hour / TEN) + ASCII);
             fila_2[ONE] = ((clock_display.tm.tm_hour % TEN) + ASCII);
-            LCD_State = PRINTH_MINUTES;
+            clock_display.msg = PRINTH_MINUTES;
+            (void)HIL_QUEUE_WriteISR( &CLOCK_queue, &clock_display,SPI1_IRQn);
         break;
 
         case PRINTH_MINUTES:
             fila_2[THREE] = ((clock_display.tm.tm_min / TEN) + ASCII);
             fila_2[FOUR] = ((clock_display.tm.tm_min % TEN) + ASCII);
-            LCD_State = PRINTH_SECONDS;
+            clock_display.msg = PRINTH_SECONDS;
+            (void)HIL_QUEUE_WriteISR( &CLOCK_queue, &clock_display,SPI1_IRQn);
         break;
         
         case PRINTH_SECONDS:
@@ -326,16 +325,20 @@ void Display_StMachine(void)
             fila_2[SEVEN] = ((clock_display.tm.tm_sec % TEN) + ASCII);
             Status = HEL_LCD_String(&LCDHandle, fila_2);
             assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-            LCD_State = IDLE;
+            clock_display.msg = IDLE;
+            (void)HIL_QUEUE_WriteISR( &CLOCK_queue, &clock_display,SPI1_IRQn);
         break;
+        
         case PRINT_ALARM_STATUS:
             if (clock_display.S_alarm == ALARM_OFF)
             {
-                LCD_State = PRINT_ALARM_OFF;
+                clock_display.msg = PRINT_ALARM_OFF;
+                (void)HIL_QUEUE_WriteISR( &CLOCK_queue, &clock_display,SPI1_IRQn);
             }
             else
             {
-                LCD_State = PRINT_ALARM_ON;
+                clock_display.msg = PRINT_ALARM_ON;
+                (void)HIL_QUEUE_WriteISR( &CLOCK_queue, &clock_display,SPI1_IRQn);
             }
         break;
 
@@ -345,7 +348,8 @@ void Display_StMachine(void)
             /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
             Status = HEL_LCD_String(&LCDHandle, "ALARM NO CONFIG");  /* cppcheck-suppress misra-c2012-7.4 ; no need for a constant value */
             assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-            LCD_State = IDLE;
+            clock_display.msg = IDLE;
+            (void)HIL_QUEUE_WriteISR( &CLOCK_queue, &clock_display,SPI1_IRQn);
         break;
 
         case PRINT_ALARM_ON:
@@ -362,7 +366,8 @@ void Display_StMachine(void)
             assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
             Status = HEL_LCD_String(&LCDHandle, fila_2);
             assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-            LCD_State = IDLE;
+            clock_display.msg = IDLE;
+            (void)HIL_QUEUE_WriteISR( &CLOCK_queue, &clock_display,SPI1_IRQn);
         break;
 
         case PRINT_ALARM:
@@ -374,7 +379,8 @@ void Display_StMachine(void)
             Status = HEL_LCD_String(&LCDHandle, "    ALARM!!!");    /* cppcheck-suppress misra-c2012-7.4 ; no need for a constant value */
             assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
             HEL_LCD_Backlight(&LCDHandle, TOGGLE);
-            LCD_State = BUZZER_STATE;
+            clock_display.msg = BUZZER_STATE;
+            (void)HIL_QUEUE_WriteISR( &CLOCK_queue, &clock_display,SPI1_IRQn);
         break;
 
         case BUZZER_STATE:
@@ -386,7 +392,8 @@ void Display_StMachine(void)
             {
                 __HAL_TIM_SET_COMPARE( &TimHandle, TIM_CHANNEL_1, PWM_0 );
             }
-            LCD_State = FLAG_STATE;
+            clock_display.msg = FLAG_STATE;
+            (void)HIL_QUEUE_WriteISR( &CLOCK_queue, &clock_display,SPI1_IRQn);
         break;
 
         case FLAG_STATE:
@@ -395,7 +402,8 @@ void Display_StMachine(void)
                 Alarm_Flag = FALSE;
                 alarm_counter = ONE_MINUTE;
             }
-            LCD_State = COUNTER_STATE;
+            clock_display.msg = COUNTER_STATE;
+            (void)HIL_QUEUE_WriteISR( &CLOCK_queue, &clock_display,SPI1_IRQn);
         break;
 
         case COUNTER_STATE:
@@ -408,13 +416,14 @@ void Display_StMachine(void)
                 Status = HEL_LCD_SetCursor(&LCDHandle,SECOND_ROW,CERO );
                 assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
                 /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-                Status = HEL_LCD_String(&LCDHandle, "               "); /* cppcheck-suppress misra-c2012-7.4 ; no need for a constant value */
+                Status = HEL_LCD_String(&LCDHandle, "                "); /* cppcheck-suppress misra-c2012-7.4 ; no need for a constant value */
                 assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
                 __HAL_TIM_SET_COMPARE( &TimHandle, TIM_CHANNEL_1, PWM_0 );
-                clock_display.msg = FOUR;
+                clock_display.msg = NINE;
                 (void)HIL_QUEUE_Write( &SERIAL_queue, &clock_display);
             } 
-            LCD_State = IDLE;
+            clock_display.msg = IDLE;
+            (void)HIL_QUEUE_WriteISR( &CLOCK_queue, &clock_display,SPI1_IRQn);
         break;
         
         default:

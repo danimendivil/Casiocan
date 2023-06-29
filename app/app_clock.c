@@ -17,7 +17,8 @@ typedef enum
     CLOCK_ST_IDLE,
     CLOCK_ST_DISPLAY,
     CLOCK_ST_CHECK_ALARM,
-    CLOCK_ST_CHECK_FLAG
+    CLOCK_ST_CHECK_FLAG,
+    CLOCK_ST_FLAG_OFF
 } CLOCK_STATES;
 
 /** 
@@ -65,11 +66,6 @@ static APP_MsgTypeDef CAN_to_clock_message;
 * @brief  Circular buffer variable for CAN msg recived to serial task.
 */
 QUEUE_HandleTypeDef CLOCK_queue;
-
-/**
-* @brief  Variable for clock state machine.
-*/
-static uint8_t Clockstate;
 
 static void Clock_StMachine(uint8_t state);
 
@@ -162,11 +158,14 @@ void Clock_Task( void )
     {
         /*Read the first message*/
         (void)HIL_QUEUE_ReadISR( &SERIAL_queue, &CAN_to_clock_message, RTC_TAMP_IRQn);
-        Clockstate = CLOCK_ST_CHECK_FLAG;
-        while(Clockstate != (uint8_t)CLOCK_ST_IDLE)
+        if ((Alarm_State != ALARM_ACTIVE) || (CAN_to_clock_message.msg == CLOCK_ST_FLAG_OFF))
         {
             Clock_StMachine(CAN_to_clock_message.msg);
-        }  
+        }
+        else
+        {
+            Clock_StMachine(CLOCK_ST_ALARM_OFF);
+        } 
     }
 }
 
@@ -180,13 +179,11 @@ void Clock_Task( void )
 *  a true value wich will call Display_msg function.
 *   
 */
-static void Clock_StMachine(uint8_t state)
+static void Clock_StMachine(uint8_t Clockstate)
 {
+   
     switch(Clockstate)
     {   
-        case CLOCK_ST_IDLE:
-        break;
-          
         case CLOCK_ST_CHANGE_TIME:
         
             sTime.Hours          = CAN_to_clock_message.tm.tm_hour;
@@ -198,8 +195,9 @@ static void Clock_StMachine(uint8_t state)
             
             Status = HAL_RTC_SetTime( &hrtc, &sTime, RTC_FORMAT_BCD );
             assert_error( Status == HAL_OK, RTC_SETTIME_ERROR );    /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
+            CAN_to_clock_message.msg = CLOCK_ST_DISPLAY;
+            (void)HIL_QUEUE_WriteISR( &SERIAL_queue, &CAN_to_clock_message, RTC_TAMP_IRQn);
             
-            Clockstate = CLOCK_ST_DISPLAY;
         break;
         
         
@@ -213,7 +211,8 @@ static void Clock_StMachine(uint8_t state)
             Status = HAL_RTC_SetDate( &hrtc, &sDate, RTC_FORMAT_BCD );
             assert_error( Status == HAL_OK, RTC_SETDATE_ERROR );        /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
 
-            Clockstate = CLOCK_ST_DISPLAY;
+            CAN_to_clock_message.msg = CLOCK_ST_DISPLAY;
+            (void)HIL_QUEUE_WriteISR( &SERIAL_queue, &CAN_to_clock_message, RTC_TAMP_IRQn);
         break;
         
         
@@ -226,48 +225,27 @@ static void Clock_StMachine(uint8_t state)
             Status = HAL_RTC_SetAlarm_IT(&hrtc, &sAlarm, RTC_FORMAT_BCD);
             assert_error( Status == HAL_OK, RTC_SET_ALARM_ERROR );  /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
             Alarm_State = ALARM_ON;
-            Clockstate = CLOCK_ST_DISPLAY;
+            CAN_to_clock_message.msg = CLOCK_ST_DISPLAY;
+            (void)HIL_QUEUE_WriteISR( &SERIAL_queue, &CAN_to_clock_message, RTC_TAMP_IRQn);
         break;
         
         case CLOCK_ST_ALARM_OFF:
-            Alarm_Flag_Clock = FALSE;
             Status = HAL_RTC_DeactivateAlarm(&hrtc, RTC_ALARM_A);
             assert_error( Status == HAL_OK, RTC_SDESACTIVATE_ALARM_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */ 
-            Clockstate = CLOCK_ST_DISPLAY;
+            Alarm_Flag_Clock = TRUE;
+            CAN_to_clock_message.msg = CLOCK_ST_DISPLAY;
+            Display_msg();
         break;
         
         case CLOCK_ST_DISPLAY:
-        
             Display_msg();
-            Clockstate = CLOCK_ST_IDLE;
-        break;
-        
-        case CLOCK_ST_CHECK_ALARM:
-        
-            if (Alarm_State != ALARM_ACTIVE)
-            {
-                Clockstate = state; 
-            }
-            else
-            {
-                Alarm_Flag_Clock = TRUE;
-                Clockstate = CLOCK_ST_DISPLAY;
-            }
         break;
 
-        case CLOCK_ST_CHECK_FLAG:
-        
-            if(state == (uint8_t)CLOCK_ST_ALARM_OFF)
-            {
-                Alarm_State =  ALARM_OFF; 
-                Clockstate = CLOCK_ST_CHECK_ALARM;
-            }
-            else
-            {
-                Clockstate = CLOCK_ST_CHECK_ALARM;
-            }
+        case CLOCK_ST_FLAG_OFF:
+            Alarm_State =  ALARM_OFF;
+            Alarm_Flag_Clock = FALSE;   
         break;
-        
+         
         default:
         break;
         
