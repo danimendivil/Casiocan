@@ -2,7 +2,9 @@
 #include "app_serial.h"
 #include "app_clock.h"
 #include "app_display.h"
+#include "app_analog.h"
 #include "scheduler.h"
+
 
 //Add more includes if need them
 /** 
@@ -35,7 +37,7 @@
 /** 
   * @defgroup Scheduler values configuration.
   @{ */  
-#define TASK_NUMBERS          5    /*!<Number of tasks to be handle by the scheduler*/
+#define TASK_NUMBERS          6    /*!<Number of tasks to be handle by the scheduler*/
 #define SCHEDULER_TICK        5    /*!<Tick value of the scheduler*/
 #define TIMER_NUMBERS         1    /*!<Tick value of the scheduler*/
 /**
@@ -92,6 +94,7 @@ int main( void )
   (void)HIL_SCHEDULER_RegisterTask( &sched,Clock_Init,Clock_Task,CLOCK_TASK_TICK);
   (void)HIL_SCHEDULER_RegisterTask( &sched,Display_Init,Display_Task,DISPLAY_TASK_TICK);
   (void)HIL_SCHEDULER_RegisterTask( &sched,hearth_init,hearth_beat,HEARTH_TICK_VALUE);
+  (void)HIL_SCHEDULER_RegisterTask( &sched,Analogs_Init,Display_LcdTask,50);
 
   HIL_SCHEDULER_Start(&sched);
 }

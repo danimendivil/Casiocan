@@ -1,6 +1,7 @@
 #include "app_display.h"
 #include "hel_lcd.h"
 #include "hil_queue.h"
+#include "app_analog.h"
 
 /**
  * @brief LCD-state machine states.
@@ -78,7 +79,7 @@ typedef enum
 /**
  * @brief  Variable for LCD configuration
  */
-static LCD_HandleTypeDef LCDHandle;
+LCD_HandleTypeDef LCDHandle;
 
 /**
  * @brief  Variable to read the buffer
@@ -222,10 +223,11 @@ void Display_Init( void )
 */
 void Display_StMachine(uint8_t LCD_State)
 {
-    static char fila_2[] = "00:00:00 ";  /* cppcheck-suppress misra-c2012-7.4 ; string need to be modify*/
+    static char fila_2[] = "00:00:00     ";  /* cppcheck-suppress misra-c2012-7.4 ; string need to be modify*/
     static char fila_1[] =" XXX,XX XXXX XX ";   /* cppcheck-suppress misra-c2012-7.4 ; string need to be modify*/
     static uint8_t alarm_counter = FALSE;
     static uint8_t Alarm_Flag;
+    static uint8_t temperature;
     Alarm_Flag = clock_display.F_alarm;
     
     switch(LCD_State)
@@ -323,6 +325,10 @@ void Display_StMachine(uint8_t LCD_State)
         case PRINTH_SECONDS:
             fila_2[SIX] = ((clock_display.tm.tm_sec / TEN) + ASCII);
             fila_2[SEVEN] = ((clock_display.tm.tm_sec % TEN) + ASCII);
+            temperature = Analogs_GetTemperature();
+            fila_2[NINE] = ((temperature / TEN) + ASCII);
+            fila_2[TEN] = ((temperature / TEN) + ASCII);
+            fila_2[ELEVEN] = 'C';
             Status = HEL_LCD_String(&LCDHandle, fila_2);
             assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
             clock_display.msg = IDLE;

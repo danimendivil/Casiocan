@@ -131,6 +131,16 @@
   * @brief  Variable for button state
   */
   extern uint8_t button;
+
+  /**
+  * @brief  Variable for DMA configuration
+  */
+  extern DMA_HandleTypeDef DmaHandler;           /*dma handler estructure*/
+
+  /**
+  * @brief  Variable for ADC configuration
+  */
+  extern ADC_HandleTypeDef  AdcHandler;          /*adc handler estructure*/
      
 #endif
 

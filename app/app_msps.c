@@ -176,4 +176,31 @@ void HAL_TIM_PWM_MspInit( TIM_HandleTypeDef *htim ) /* cppcheck-suppress misra-c
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF2_TIM1;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+    __TIM3_CLK_ENABLE();  
+    __GPIOB_CLK_ENABLE(); 
+
+    GPIO_InitStruct.Pin = GPIO_PIN_4; 
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF1_TIM3;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+}
+/* cppcheck-suppress misra-c2012-2.7 ; this is a library function */
+void HAL_ADC_MspInit( ADC_HandleTypeDef* hadc )         /* cppcheck-suppress misra-c2012-8.4 ; function does no need extern linkage */
+{
+    GPIO_InitTypeDef  GPIO_InitStruct;
+
+    __ADC_CLK_ENABLE();  /*enable adc clock*/
+    __GPIOA_CLK_ENABLE(); /*enable clock port where the adc 0 is connected*/
+      
+    GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1;
+    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG; /*pin in analog mode*/
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+    /*enable ADC vector interupt*/
+    HAL_NVIC_SetPriority( ADC1_COMP_IRQn, 2, 0 );
+    HAL_NVIC_EnableIRQ( ADC1_COMP_IRQn );
 }
