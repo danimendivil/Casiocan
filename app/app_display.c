@@ -382,7 +382,7 @@ void Display_StMachine(uint8_t LCD_State)
             /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
             assert_error( Status == HAL_OK, SPI_SET_CURSOR_ERROR ); 
             /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
-            Status = HEL_LCD_String(&LCDHandle, "    ALARM!!!");    /* cppcheck-suppress misra-c2012-7.4 ; no need for a constant value */
+            Status = HEL_LCD_String(&LCDHandle, "    ALARM!!!     ");    /* cppcheck-suppress misra-c2012-7.4 ; no need for a constant value */
             assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
             HEL_LCD_Backlight(&LCDHandle, TOGGLE);
             clock_display.msg = BUZZER_STATE;
