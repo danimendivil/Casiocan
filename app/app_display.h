@@ -15,5 +15,6 @@
 
     void Display_Init( void );
     void Display_Task( void );
+    void Display_LcdTask( void );
 
 #endif

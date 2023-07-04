@@ -17,6 +17,7 @@
 
 void Analogs_Init( void );
 int8_t Analogs_GetTemperature( void );
-void Display_LcdTask( void );
+uint8_t Analogs_GetIntensity( void );
+uint8_t Analogs_GetContrast( void );
 
 #endif

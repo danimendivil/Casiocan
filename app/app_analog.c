@@ -1,26 +1,41 @@
 #include "app_analog.h"
 
+/**
+  * @defgroup Numbers defines
+  * @{
+  */
+#define CERO        0u    /*!< Value for counter: 0 */
+#define ONE         1u    /*!< Value for counter: 1 */
+#define TWO         2u    /*!< Value for counter: 2 */
+#define THREE       3u    /*!< Value for counter: 3 */
+#define FOUR        4u    /*!< Value for counter: 4 */
+#define FIVE        5u    /*!< Value for counter: 4 */
+/**
+  * @}
+  */
+
 /** 
   * @defgroup DMA values configurations
   @{ */
-#define ARRAY_LENGHT      3u    /*!< Lenght of the array to stored with dma*/
-/**
-  @} */
-
-/** 
-  * @defgroup PWM configuration values
-  @{ */
-#define PREESCALER      320    /*!< Preescaler to get 1000hz*/
-#define PERIOD          100    /*!< Period to get 1000 hz*/
+#define ARRAY_LENGHT      5u    /*!< Lenght of the array to stored with dma*/
 /**
   @} */
 
 /** 
   * @defgroup POT configuration values
   @{ */ 
-#define MAX_CONTRAST          15u     /*!< Max value accepted by the lcd contrast command*/
-#define MAX_INTENSITY         100u    /*!< Max value of the backlight pwm*/
-#define MAX_POT_VALUE         255u    /*!< Max value of the pot*/
+#define MAX_CONTRAST              15u      /*!< Max value accepted by the lcd contrast command*/
+#define MAX_INTENSITY             100u     /*!< Max value of the backlight pwm*/
+#define MAX_POT_VALUE             255u     /*!< Max value of the pot*/
+#define POT_INTENSITY             0     /*!< Value to use pot intensity*/
+#define POT_CONTRAST              1      /*!< Value to use pot for contrast*/
+#define POT_INTENSITY_CHECK       2    /*!< Value to use pot intensity check*/
+#define POT_CONTRAST_CHECK        3     /*!< Value to use pot for contrast check*/
+#define POT_TEMPERATURE           4     /*!< Value to use pot for contrast check*/
+#define PERCENT_100               100      /*!< Value to use pot for functinal safety calculations*/
+#define PERCENT_90                90       /*!< Value to use pot for functinal safety calculations*/
+#define PERCENT_110               110      /*!< Value to use pot for functinal safety calculations*/
+
 /**
   @} */
 
@@ -31,24 +46,6 @@
 #define PERIOD_ADC_TIM          64         /*!< Period to get 50ms*/
 /**
   @} */
-
-/**
-  * @defgroup Numbers defines
-  * @{
-  */
-#define CERO        0u    /*!< Value for counter: 0 */
-#define ONE         1u    /*!< Value for counter: 1 */
-#define TWO         2u    /*!< Value for counter: 2 */
-#define THREE       3u    /*!< Value for counter: 3 */
-#define FOUR        4u    /*!< Value for counter: 4 */
-/**
-  * @}
-  */
-
-/**
- * @brief  Variable for tim used by the pwm
- */
-static TIM_HandleTypeDef TimHandle2;            /*TIM initial structure*/
 
 /**
  * @brief  Array were data of the DMA will be stored
@@ -66,8 +63,8 @@ DMA_HandleTypeDef DmaHandler;           /*dma handler estructure*/
 ADC_HandleTypeDef  AdcHandler;          /*adc handler estructure*/
 
 
-static uint8_t Analogs_GetContrast( void );
-static uint8_t Analogs_GetIntensity( void );
+uint8_t Analogs_GetContrast( void );
+uint8_t Analogs_GetIntensity( void );
 
 /**
 * @brief   **This function intiates the functions used by the analog file**
@@ -91,27 +88,11 @@ void Analogs_Init( void )
   static ADC_ChannelConfTypeDef  sChanConfig;    /*adc channel configuration structure*/
   static TIM_HandleTypeDef TimHandler;            /*TIM initial structure*/
   static TIM_MasterConfigTypeDef sMasterConfig;  /*trigger config structure*/
-  static TIM_OC_InitTypeDef sConfig;       /*estructura para controlar canal de PWM*/
   
   
   HAL_Init();    
 
   __HAL_RCC_DMA1_CLK_ENABLE();    
-  __TIM4_CLK_ENABLE(); 
-
-  TimHandle2.Instance = TIM3;
-  TimHandle2.Init.Prescaler     = PREESCALER;
-  TimHandle2.Init.Period        = PERIOD;
-  TimHandle2.Init.CounterMode   = TIM_COUNTERMODE_UP;
-  HAL_TIM_PWM_Init(&TimHandle2);
-  
-  sConfig.OCMode     = TIM_OCMODE_PWM1;
-  sConfig.OCPolarity = TIM_OCPOLARITY_HIGH;
-  sConfig.OCFastMode = TIM_OCFAST_DISABLE;
-
-  HAL_TIM_PWM_ConfigChannel( &TimHandle2, &sConfig, TIM_CHANNEL_1 );
-  HAL_TIM_PWM_Start( &TimHandle2, TIM_CHANNEL_1 );
-
   DmaHandler.Instance                  = DMA1_Channel1;       /*DMA1 channel 1 only*/
   DmaHandler.Init.Request              = DMA_REQUEST_ADC1;    /*request from the ADC*/
   DmaHandler.Init.Direction            = DMA_PERIPH_TO_MEMORY;    /*trnasfer data from peripheral to memory*/
@@ -174,10 +155,21 @@ void Analogs_Init( void )
   sChanConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
   HAL_ADC_ConfigChannel( &AdcHandler, &sChanConfig );
 
+
+  sChanConfig.Channel = ADC_CHANNEL_5;
+  sChanConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
+  sChanConfig.SamplingTime = ADC_SAMPLINGTIME_COMMON_1;
+  HAL_ADC_ConfigChannel( &AdcHandler, &sChanConfig );
+
+  sChanConfig.Channel = ADC_CHANNEL_6;
+  sChanConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
+  sChanConfig.SamplingTime = ADC_SAMPLINGTIME_COMMON_1;
+  HAL_ADC_ConfigChannel( &AdcHandler, &sChanConfig );
+
   
   HAL_ADCEx_Calibration_Start( &AdcHandler );
 
-  HAL_ADC_Start_DMA( &AdcHandler, &AdcData[CERO], THREE );
+  HAL_ADC_Start_DMA( &AdcHandler, &AdcData[CERO], FIVE );
 
   HAL_TIM_Base_Start( &TimHandler );
 }
@@ -197,7 +189,7 @@ int8_t Analogs_GetTemperature( void )
 {
   int8_t temperature;
 
-  temperature = __HAL_ADC_CALC_TEMPERATURE( VDD_VALUE, AdcData[TWO], ADC_RESOLUTION8b);
+  temperature = __HAL_ADC_CALC_TEMPERATURE( VDD_VALUE, AdcData[POT_TEMPERATURE], ADC_RESOLUTION8b);
 
   return temperature;
 }
@@ -208,14 +200,20 @@ int8_t Analogs_GetTemperature( void )
 *  this function returns the contrast of the lcd, this is given
 *  by the pot value stored on AdcData[1], and we do a convertion
 *  so that the value will be betwen 0 and 15;
+*  this function checks the pot that is connected to another pins
+*  if it is 10% off its value
 *  
 * @retval  contrast contrast of the sensor
 */
 uint8_t Analogs_GetContrast( void )
 {
   uint8_t contrast;
+  uint8_t pot_check;
+  pot_check = (AdcData[POT_CONTRAST_CHECK]*PERCENT_100)/AdcData[POT_CONTRAST];
+  assert_error( pot_check > PERCENT_90 ||pot_check < PERCENT_110, POT_CONTRAST_ERROR );
 
-  contrast = (AdcData[1]*MAX_CONTRAST)/MAX_POT_VALUE;
+  contrast = (AdcData[POT_CONTRAST]*MAX_CONTRAST)/MAX_POT_VALUE;
+  
 
   return contrast;
 }
@@ -226,44 +224,16 @@ uint8_t Analogs_GetContrast( void )
 *  this function returns the intensity of the lcd, this is given
 *  by the pot value stored on AdcData[0], and we do a convertion
 *  so that the value will be betwen 0 and 100;
-*  
+*  this function checks the pot that is connected to another pins
+*  if it is 10% off its value 
 * @retval  intensity intensity of the sensor
 */
 uint8_t Analogs_GetIntensity( void )
 {
   uint8_t intensity;
-
-  intensity = (AdcData[CERO]*MAX_INTENSITY)/MAX_POT_VALUE;
-
+  uint8_t pot_check;
+  pot_check = (AdcData[POT_INTENSITY_CHECK]*PERCENT_100)/AdcData[POT_INTENSITY];
+  assert_error( pot_check > PERCENT_90 ||pot_check < PERCENT_110, POT_INTENSITY_ERROR );
+  intensity = (AdcData[POT_INTENSITY]*MAX_INTENSITY)/MAX_POT_VALUE;
   return intensity;
-}
-
-/**
-* @brief   **This function applied the of intensity and contrast to the lcd**
-*
-*  the function first checks if the value read by the pot is different to the one
-*  that was previously applied, in both cases if its different then it applies the value
-*  in the case of the intensity level this is applied by changing the pwm period of the 
-*  lcd backlight.
-*  in the case of the contrast the value changes by calling the function HEL_LCD_Contrast
-*  wich sends a command to the lcd to change the contrast, the second parameter is the contrast value
-*  we use the previous fucntion to get this values.
-*  
-*/
-void Display_LcdTask( void )
-{
-  static uint8_t intensity_level   = FALSE;
-  static uint8_t contrast_level    = FALSE;
-  
-  if(intensity_level !=Analogs_GetIntensity())
-  {
-    intensity_level =Analogs_GetIntensity();
-    __HAL_TIM_SET_COMPARE( &TimHandle2, TIM_CHANNEL_1, intensity_level );
-  }
-  if(contrast_level !=Analogs_GetContrast())
-  {
-    contrast_level =Analogs_GetContrast();
-    (void)HEL_LCD_Contrast( &LCDHandle, contrast_level );
-  }
-  
 }

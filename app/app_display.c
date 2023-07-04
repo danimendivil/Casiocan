@@ -55,6 +55,13 @@ typedef enum
 #define PWM_0                   0       /*!<value for 0% of pwm*/
 /**
   @} */
+/** 
+  * @defgroup PWM for lcd configuration values
+  @{ */
+#define PREESCALER      320    /*!< Preescaler to get 1000hz*/
+#define PERIOD          100    /*!< Period to get 1000 hz*/
+/**
+  @} */
 
 /**
   * @defgroup Numbers defines
@@ -95,6 +102,11 @@ uint8_t button;
 * @brief  Variable for button turning off the alarm
 */
 static uint8_t button_flag;
+
+/**
+ * @brief  Variable for tim used by the pwm
+ */
+static TIM_HandleTypeDef TimHandle2; 
 
 static void month(char *mon,char pos);
 static void week(char *week,char pos);
@@ -180,6 +192,21 @@ void Display_Init( void )
     sConfig.Pulse = CERO;
     HAL_TIM_PWM_ConfigChannel( &TimHandle, &sConfig, TIM_CHANNEL_1 );
     HAL_TIM_PWM_Start( &TimHandle, TIM_CHANNEL_1 );
+
+    __TIM4_CLK_ENABLE(); 
+
+    TimHandle2.Instance = TIM3;
+    TimHandle2.Init.Prescaler     = PREESCALER;
+    TimHandle2.Init.Period        = PERIOD;
+    TimHandle2.Init.CounterMode   = TIM_COUNTERMODE_UP;
+    HAL_TIM_PWM_Init(&TimHandle2);
+    
+    sConfig.OCMode     = TIM_OCMODE_PWM1;
+    sConfig.OCPolarity = TIM_OCPOLARITY_HIGH;
+    sConfig.OCFastMode = TIM_OCFAST_DISABLE;
+
+    HAL_TIM_PWM_ConfigChannel( &TimHandle2, &sConfig, TIM_CHANNEL_1 );
+    HAL_TIM_PWM_Start( &TimHandle2, TIM_CHANNEL_1 );
 }
 
 
@@ -520,6 +547,35 @@ void HAL_GPIO_EXTI_Rising_Callback( uint16_t GPIO_Pin ) /* cppcheck-suppress mis
     Status = HEL_LCD_String(&LCDHandle, "               ");     /* cppcheck-suppress misra-c2012-7.4 ; no need for a constant value */
     assert_error( Status == HAL_OK, SPI_STRING_ERROR ); /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
     button = FALSE; 
+}
+
+/**
+* @brief   **This function applied the of intensity and contrast to the lcd**
+*
+*  the function first checks if the value read by the pot is different to the one
+*  that was previously applied, in both cases if its different then it applies the value
+*  in the case of the intensity level this is applied by changing the pwm period of the 
+*  lcd backlight.
+*  in the case of the contrast the value changes by calling the function HEL_LCD_Contrast
+*  wich sends a command to the lcd to change the contrast, the second parameter is the contrast value
+*  we use the previous fucntion to get this values.
+*  
+*/
+void Display_LcdTask( void )
+{
+    static uint8_t intensity_level   = FALSE;
+    static uint8_t contrast_level    = FALSE;
+    
+    if(intensity_level !=Analogs_GetIntensity())
+    {
+        intensity_level =Analogs_GetIntensity();
+        __HAL_TIM_SET_COMPARE( &TimHandle2, TIM_CHANNEL_1, intensity_level );
+    }
+    if(contrast_level !=Analogs_GetContrast())
+    {
+        contrast_level =Analogs_GetContrast();
+        (void)HEL_LCD_Contrast( &LCDHandle, contrast_level );
+    }
 }
     
 

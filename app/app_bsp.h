@@ -84,7 +84,9 @@
     SHCEDULER_SERIAL_ERROR,
     SHCEDULER_CLOCK_ERROR,
     SHCEDULER_DISPLAY_ERROR,
-    SHCEDULER_HEARTH_ERROR
+    SHCEDULER_HEARTH_ERROR,
+    POT_CONTRAST_ERROR,
+    POT_INTENSITY_ERROR
   } App_ErrorsCode;   /* cppcheck-suppress misra-c2012-2.3 ; enum is used on functional safety */
 
   /**
