@@ -14,6 +14,7 @@
 #define SERIAL_TASK_TICK    10u     /*!<Serial task periodicity*/  
 #define CLOCK_TASK_TICK     50u     /*!<Clock task periodicity*/     
 #define DISPLAY_TASK_TICK   100u    /*!<Display task periodicity*/
+#define ANALOG_TIMER       50u   /*!<Software timer one second value*/
 #define ONE_SEC_TIMER       1000u   /*!<Software timer one second value*/
 /**
   @} */
@@ -94,7 +95,7 @@ int main( void )
   (void)HIL_SCHEDULER_RegisterTask( &sched,Clock_Init,Clock_Task,CLOCK_TASK_TICK);
   (void)HIL_SCHEDULER_RegisterTask( &sched,Display_Init,Display_Task,DISPLAY_TASK_TICK);
   (void)HIL_SCHEDULER_RegisterTask( &sched,hearth_init,hearth_beat,HEARTH_TICK_VALUE);
-  (void)HIL_SCHEDULER_RegisterTask( &sched,Analogs_Init,Display_LcdTask,50);
+  (void)HIL_SCHEDULER_RegisterTask( &sched,Analogs_Init,Display_LcdTask,ANALOG_TIMER);
 
   HIL_SCHEDULER_Start(&sched);
 }

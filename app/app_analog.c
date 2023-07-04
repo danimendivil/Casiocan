@@ -32,9 +32,9 @@
 #define POT_INTENSITY_CHECK       2    /*!< Value to use pot intensity check*/
 #define POT_CONTRAST_CHECK        3     /*!< Value to use pot for contrast check*/
 #define POT_TEMPERATURE           4     /*!< Value to use pot for contrast check*/
-#define PERCENT_100               100      /*!< Value to use pot for functinal safety calculations*/
-#define PERCENT_90                90       /*!< Value to use pot for functinal safety calculations*/
-#define PERCENT_110               110      /*!< Value to use pot for functinal safety calculations*/
+#define PERCENT_100               100u      /*!< Value to use pot for functinal safety calculations*/
+#define PERCENT_90                90u       /*!< Value to use pot for functinal safety calculations*/
+#define PERCENT_110               110u      /*!< Value to use pot for functinal safety calculations*/
 
 /**
   @} */
@@ -208,9 +208,9 @@ int8_t Analogs_GetTemperature( void )
 uint8_t Analogs_GetContrast( void )
 {
   uint8_t contrast;
-  uint8_t pot_check;
-  pot_check = (AdcData[POT_CONTRAST_CHECK]*PERCENT_100)/AdcData[POT_CONTRAST];
-  assert_error( pot_check > PERCENT_90 ||pot_check < PERCENT_110, POT_CONTRAST_ERROR );
+  uint32_t pot_check;
+  pot_check = ( ((uint32_t)AdcData[POT_CONTRAST])*PERCENT_100 ) / ((uint32_t)AdcData[POT_CONTRAST_CHECK]);
+  assert_error( (pot_check > PERCENT_90) && (pot_check < PERCENT_110), POT_CONTRAST_ERROR );       /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
 
   contrast = (AdcData[POT_CONTRAST]*MAX_CONTRAST)/MAX_POT_VALUE;
   
@@ -231,9 +231,9 @@ uint8_t Analogs_GetContrast( void )
 uint8_t Analogs_GetIntensity( void )
 {
   uint8_t intensity;
-  uint8_t pot_check;
-  pot_check = (AdcData[POT_INTENSITY_CHECK]*PERCENT_100)/AdcData[POT_INTENSITY];
-  assert_error( pot_check > PERCENT_90 ||pot_check < PERCENT_110, POT_INTENSITY_ERROR );
+  uint32_t pot_check;
+  pot_check = ( ((uint32_t)AdcData[POT_INTENSITY])*PERCENT_100)/ ((uint32_t)AdcData[POT_INTENSITY_CHECK]);
+  assert_error( (pot_check > PERCENT_90) && (pot_check < PERCENT_110), POT_INTENSITY_ERROR );        /* cppcheck-suppress misra-c2012-11.8 ; function cannot be modify */
   intensity = (AdcData[POT_INTENSITY]*MAX_INTENSITY)/MAX_POT_VALUE;
   return intensity;
 }
