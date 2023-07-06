@@ -99,3 +99,15 @@ void EXTI4_15_IRQHandler( void )            /* cppcheck-suppress misra-c2012-8.4
     /*HAL library fucntions that attend interrupt on inputs*/
     HAL_GPIO_EXTI_IRQHandler( GPIO_PIN_7 );
 }
+
+/* cppcheck-suppress misra-c2012-2.7 ; this is a library function */
+void DMA1_Channel1_IRQHandler(void)         /* cppcheck-suppress misra-c2012-8.4 ; function does no need extern linkage */
+{
+    HAL_DMA_IRQHandler( &DmaHandler );
+}
+
+/* cppcheck-suppress misra-c2012-2.7 ; this is a library function */
+void ADC1_COMP_IRQHandler( void )           /* cppcheck-suppress misra-c2012-8.4 ; function does no need extern linkage */
+{
+    HAL_ADC_IRQHandler( &AdcHandler );
+}

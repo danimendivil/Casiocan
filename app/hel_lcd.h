@@ -38,6 +38,11 @@
         uint8_t             screen;      /*!< State of the LCD screen */
         // Add more elements if needed
     } LCD_HandleTypeDef;  
+
+    /**
+    * @brief  Variable for LCD configuration
+    */
+    extern LCD_HandleTypeDef LCDHandle;
  
     uint8_t HEL_LCD_Init( LCD_HandleTypeDef *hlcd );
     void HEL_LCD_MspInit( LCD_HandleTypeDef *hlcd )__attribute__((weak));

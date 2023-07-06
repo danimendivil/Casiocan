@@ -84,7 +84,9 @@
     SHCEDULER_SERIAL_ERROR,
     SHCEDULER_CLOCK_ERROR,
     SHCEDULER_DISPLAY_ERROR,
-    SHCEDULER_HEARTH_ERROR
+    SHCEDULER_HEARTH_ERROR,
+    POT_CONTRAST_ERROR,
+    POT_INTENSITY_ERROR
   } App_ErrorsCode;   /* cppcheck-suppress misra-c2012-2.3 ; enum is used on functional safety */
 
   /**
@@ -131,6 +133,16 @@
   * @brief  Variable for button state
   */
   extern uint8_t button;
+
+  /**
+  * @brief  Variable for DMA configuration
+  */
+  extern DMA_HandleTypeDef DmaHandler;           /*dma handler estructure*/
+
+  /**
+  * @brief  Variable for ADC configuration
+  */
+  extern ADC_HandleTypeDef  AdcHandler;          /*adc handler estructure*/
      
 #endif
 

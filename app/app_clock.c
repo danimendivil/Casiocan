@@ -304,6 +304,7 @@ void Display_msg(void)
 *  the function modifies a variable to tell the program that an alarm event is happening       
 */
 /* cppcheck-suppress misra-c2012-8.4 ; function cannot be modify is a library function */
+/* cppcheck-suppress misra-c2012-5.8 ; file is added*/
 void HAL_RTC_AlarmAEventCallback( RTC_HandleTypeDef *hrtc ) /* cppcheck-suppress misra-c2012-2.7 ; this is a library function */
 {
     Alarm_State = ALARM_ACTIVE ;
