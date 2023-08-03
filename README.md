@@ -44,30 +44,4 @@ Parameter 1 the day of the month, Parameter 2 will indicate the month and Parame
 Parameter 1 will indicate the hours, Parameter 2 will indicate the minutes in BCD format. Parameter 3 and 4 will not be used
 
 
-
-
-This is how the main function looks like
-
-```C
-int main( void )
-{
-    
-    HAL_Init();
-
-    Clock_Init();
-
-    Serial_Init();
-
-    initialise_monitor_handles();
-    
-    //Add more initilizations if need them
-    
-    for( ;; )
-    {
-        Serial_Task();
-        
-        Clock_Task();
-        //Add another task if need it
-    }
-}
 ```
